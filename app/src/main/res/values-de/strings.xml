@@ -368,6 +368,49 @@
     <string name="diagnostics_clear_coil_cache_cleared">Bild-Cache ist geleert.</string>
     <string name="diagnostics_clear_apollo_cache">Netzwerk-Cache leeren</string>
     <string name="diagnostics_clear_apollo_cache_cleared">Netzwerk-Cache ist geleert.</string>
+
+   //loa campaign
+   <string name="general_set_the_arcology">Die Arkologie</string>
+    <string name="loa_expansion">Das Vermächtnis der Ahnen</string>
+    <string name="ancient_ruins">Uralte Ruinen</string>
+    <string name="flooded_ruins">Überschwemmte Ruinen</string>
+    <string name="deep_roots">Tiefe Wurzeln</string>
+    <string name="fungal_forest">Pilzwald</string>
+    <string name="cave_system">Höhlensystem</string>
+    <string name="flooded_passage">Überflutete Passage</string>
+    <string name="locked_passage">Verschlossene Passage</string>
+    <string name="overgrown_passage">Überwuchterte Passage</string>
+    <string name="the_chimney">Der Schlot</string>
+    <string name="oasis_of_sunlight">Oase des Lichts</string>
+    <string name="scuttler_network">Krabblertunnel-Netz</string>
+    <string name="drenching_chamber">Schwemmkammer</string>
+    <string name="desert_of_endless_night">Dünen der Endlosen Nacht</string>
+    <string name="orlins_vault">Orlins Gewölbe</string>
+    <string name="severed_artery">Durchtrennte Arterie</string>
+    <string name="branching_artery">Arterien-Verzweigung</string>
+    <string name="terminal_artery">Arterien-Endstelle</string>
+    <string name="silent_dormitories">Verlassene Unterkünfte</string>
+    <string name="cerulean_curtain">Der Himmelblaue Vorhang</string>
+    <string name="mycelial_conclave">Myzelien-Konzil</string>
+    <string name="carbonforged_maze">Karbongeschmiedeter Irrgarten</string>
+    <string name="the_cistern">Die Zisterne</string>
+    <string name="inverted_forest">Der Kopfstehende Wald</string>
+    <string name="the_verdant_sphere">Die Grünsphäre</string>
+    <string name="the_rootway">Die Wurzelstraße</string>
+    <string name="arboretum_of_memory">Hain der Erinnerung</string>
+    <string name="talpids_squeeze">Sternmulls Enge</string>
+    <string name="the_cage">Der Käfig</string>
+    <string name="connection_restriction_data_type">Verbindungsbeschränkung</string>
+
+    <string name="sotv_expansion">Die Hüter des Tals</string>
+    <string name="talespinner_background">Sagenweber</string>
+    <string name="spirit_speaker_specialty">Geistersprecher</string>
+
+    //Loa Weather
+    <string name="weather_enveloping_silence">Schreiende Stille</string>
+    <string name="weather_glitterain">Glitzernder Niesel</string>
+    <string name="weather_shimmering_runoff">Schimmernder Niederschlag</string>
+
     //Card Filters
     <string name="filters_screen_header">Filter</string>
     <string name="apply_button">Anwenden</string>
@@ -389,6 +432,8 @@
     <string name="types_filter_moment">Moment</string>
 
     //Traits
+    <string name="traits_filter_acquired">Angeeignet</string>
+    <string name="traits_filter_aid">Hilfe</string>
     <string name="traits_filter_avian">Vogel</string>
     <string name="traits_filter_book">Buch</string>
     <string name="traits_filter_clothing">Kleidung</string>
@@ -399,11 +444,17 @@
     <string name="traits_filter_food">Nahrung</string>
     <string name="traits_filter_innate">Angeboren</string>
     <string name="traits_filter_instrument">Instrument</string>
+    <string name="traits_filter_knowledge">Erkenntnis</string>
+    <string name="traits_filter_major">Oberhaupt</string>
     <string name="traits_filter_mammal">Säugetier</string>
     <string name="traits_filter_manifestation">Manifestation</string>
+    <string name="traits_filter_map">Wanderkarte</string>
     <string name="traits_filter_mod">Mod</string>
     <string name="traits_filter_nature">Natur</string>
     <string name="traits_filter_skill">Fähigkeit</string>
+    <string name="traits_filter_spirit">Geist</string>
+    <string name="traits_filter_spiritual">Geisterhaft</string>
+    <string name="traits_filter_tale">Erzählung</string>
     <string name="traits_filter_tech">High-Tech</string>
     <string name="traits_filter_tool">Gerät</string>
     <string name="traits_filter_trail">Wanderweg</string>
@@ -447,4 +498,9 @@
     <string name="packs_sort_header">Erweiterung</string>
     <string name="aspect_card_divider_header">Aspekt</string>
     <string name="equip_card_divider_header">Last</string>
+
+    <string name="campaign_expansions">Campaign expansions</string>
+
+    <string name="cards_update_available_header">Aktualisierte Karten</string>
+    <string name="cards_update_available_text">Aktualisierte Karten verfügbar.</string>
 </resources>
