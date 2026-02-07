@@ -65,7 +65,7 @@ fun CampaignMissionDialog(
     user: FirebaseUser?
 ) {
     val campaign by campaignViewModel.campaign.collectAsState()
-    val mission = campaign!!.missions.firstOrNull { it.name == missionName }
+    val mission = campaign?.missions?.firstOrNull { it.name == missionName }
     var showLoadingDialog by rememberSaveable { mutableStateOf(false) }
     val coroutine = rememberCoroutineScope()
     if (mission == null) {

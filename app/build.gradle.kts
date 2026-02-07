@@ -5,7 +5,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.gms.google-services")
-    id("com.apollographql.apollo") version "4.3.3"
+    id("com.apollographql.apollo") version "4.4.1"
     id("com.google.devtools.ksp") version "2.2.21-2.0.4"
     kotlin("plugin.serialization") version "2.2.21"
 }
@@ -18,8 +18,8 @@ android {
         applicationId = "com.rangerscards"
         minSdk = 24
         targetSdk = 36
-        versionCode = 76
-        versionName = "2.7.7"
+        versionCode = 77
+        versionName = "2.7.8"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -70,13 +70,13 @@ dependencies {
     implementation("androidx.core:core-splashscreen:1.2.0")
 
     // Import the Firebase BoM
-    implementation(platform("com.google.firebase:firebase-bom:34.6.0"))
+    implementation(platform("com.google.firebase:firebase-bom:34.9.0"))
     implementation("com.google.firebase:firebase-auth")
 
     // Import Apollo Kotlin
-    implementation("com.apollographql.apollo:apollo-runtime:4.3.3")
-    implementation("com.apollographql.apollo:apollo-normalized-cache:4.3.3")
-    implementation("com.apollographql.apollo:apollo-normalized-cache-sqlite:4.3.3")
+    implementation("com.apollographql.apollo:apollo-runtime:4.4.1")
+    implementation("com.apollographql.apollo:apollo-normalized-cache:4.4.1")
+    implementation("com.apollographql.apollo:apollo-normalized-cache-sqlite:4.4.1")
 
     //Import Room
     implementation("androidx.room:room-ktx:2.8.4")
@@ -85,15 +85,15 @@ dependencies {
     ksp("androidx.room:room-compiler:2.8.4")
 
     //Import Paging
-    implementation("androidx.paging:paging-runtime-ktx:3.3.6")
-    implementation("androidx.paging:paging-compose:3.3.6")
+    implementation("androidx.paging:paging-runtime-ktx:3.4.0")
+    implementation("androidx.paging:paging-compose:3.4.0")
 
     //Import Coil
     implementation("io.coil-kt.coil3:coil-compose:3.3.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
 
     //Import json serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
 
     //Import charts
     implementation ("io.github.ehsannarmani:compose-charts:0.2.0")
@@ -104,9 +104,9 @@ dependencies {
     implementation("androidx.core:core-ktx:1.17.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
-    implementation("androidx.activity:activity-compose:1.12.1")
-    implementation("androidx.navigation:navigation-compose:2.9.6")
-    implementation(platform("androidx.compose:compose-bom:2025.12.00"))
+    implementation("androidx.activity:activity-compose:1.12.3")
+    implementation("androidx.navigation:navigation-compose:2.9.7")
+    implementation(platform("androidx.compose:compose-bom:2026.01.01"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
@@ -121,7 +121,7 @@ dependencies {
 
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2025.12.00"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2026.01.01"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 
     debugImplementation("androidx.compose.ui:ui-tooling")

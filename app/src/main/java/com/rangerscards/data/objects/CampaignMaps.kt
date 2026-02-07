@@ -193,15 +193,25 @@ object CampaignMaps {
     }
 
     private fun Connection.shouldIncludeForExpansions(activeExpansions: List<String>): Boolean {
+        // If there are no expansion conditions defined for this connection — include it.
+        if (expansionConditions.isEmpty()) return true
 
         // Only consider conditions whose key is present in activeExpansions
         val matched = expansionConditions.filterKeys { it in activeExpansions }.values
 
-        if (expansionConditions.isEmpty()) return true
-        if (matched.any { it == ExpansionMapCondition.REMOVE }) return false
-        if (matched.any { it == ExpansionMapCondition.ADD }) return true
+        // If one or more expansion conditions matched active expansions, apply precedence:
+        // REMOVE wins (exclude), then ADD (include).
+        if (matched.isNotEmpty()) {
+            if (matched.any { it == ExpansionMapCondition.REMOVE }) return false
+            if (matched.any { it == ExpansionMapCondition.ADD }) return true
+        }
 
-        return false // fallback
+        // If none matched active expansions, but this connection's expansionConditions
+        // contains *only* ADDs, then do NOT include it (it's only for expansions that are not active).
+        if (expansionConditions.values.all { it == ExpansionMapCondition.ADD }) return false
+
+        // Fallback: include the connection (not tied to active expansions or mixed conditions).
+        return true
     }
 
     private fun paths(
