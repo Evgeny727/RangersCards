@@ -18,8 +18,8 @@ android {
         applicationId = "com.rangerscards"
         minSdk = 24
         targetSdk = 36
-        versionCode = 77
-        versionName = "2.7.8"
+        versionCode = 78
+        versionName = "2.7.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -39,8 +39,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     buildFeatures {
         compose = true
@@ -57,7 +57,7 @@ android {
 
 kotlin {
     compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_1_8)
+        jvmTarget.set(JvmTarget.JVM_11)
     }
 }
 
@@ -70,7 +70,7 @@ dependencies {
     implementation("androidx.core:core-splashscreen:1.2.0")
 
     // Import the Firebase BoM
-    implementation(platform("com.google.firebase:firebase-bom:34.9.0"))
+    implementation(platform("com.google.firebase:firebase-bom:34.10.0"))
     implementation("com.google.firebase:firebase-auth")
 
     // Import Apollo Kotlin
@@ -89,14 +89,14 @@ dependencies {
     implementation("androidx.paging:paging-compose:3.4.0")
 
     //Import Coil
-    implementation("io.coil-kt.coil3:coil-compose:3.3.0")
-    implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
+    implementation("io.coil-kt.coil3:coil-compose:3.4.0")
+    implementation("io.coil-kt.coil3:coil-network-okhttp:3.4.0")
 
     //Import json serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
 
     //Import charts
-    implementation ("io.github.ehsannarmani:compose-charts:0.2.0")
+    implementation ("io.github.ehsannarmani:compose-charts:0.2.5")
 
     //Import reorderable lists
     implementation("sh.calvin.reorderable:reorderable:3.0.0")
@@ -106,7 +106,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
     implementation("androidx.activity:activity-compose:1.12.3")
     implementation("androidx.navigation:navigation-compose:2.9.7")
-    implementation(platform("androidx.compose:compose-bom:2026.01.01"))
+    implementation(platform("androidx.compose:compose-bom:2026.02.01"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
@@ -121,7 +121,7 @@ dependencies {
 
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2026.01.01"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2026.02.01"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 
     debugImplementation("androidx.compose.ui:ui-tooling")

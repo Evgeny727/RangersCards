@@ -194,12 +194,14 @@ fun BoxScope.DeckRightSideDrawer(
                                 url = url
                             )
                         }
-                        HorizontalDivider(color = CustomTheme.colors.l10)
-                        DrawerSectionButtonRow(
-                            R.drawable.delete_32dp,
-                            stringResource(R.string.options_section_delete_deck),
-                            deleteDeck,
-                        )
+                        if (toNextDeck == null) {
+                            HorizontalDivider(color = CustomTheme.colors.l10)
+                            DrawerSectionButtonRow(
+                                R.drawable.delete_32dp,
+                                stringResource(R.string.options_section_delete_deck),
+                                deleteDeck,
+                            )
+                        }
                     }
                 }
             }
