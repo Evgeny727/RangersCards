@@ -1242,6 +1242,9 @@ fun DeckScreen(
                         }
                         launchSingleTop = true
                     } }} else null,
+                    toDeckHistory = if (deck.previousId != null || deck.nextId != null) {
+                        { navController.navigate("deck/history") { launchSingleTop = true } }
+                    } else null,
                     cloneDeck = { showInputDialog = DialogWithInputType.Clone },
                     upload = if (user == null) null
                     else if (deck.uploaded) {{

@@ -152,6 +152,10 @@ class DeckViewModel(
                 )
             }
 
+    // Holds the Ids of the deck versions.
+    private val _deckVersionIds = MutableStateFlow<List<String>>(emptyList())
+    val deckVersionIds: StateFlow<List<String>> = _deckVersionIds.asStateFlow()
+
     fun loadDeck(id: String) {
         viewModelScope.launch {
             val deck = deckRepository.getDeck(id)
@@ -627,6 +631,18 @@ class DeckViewModel(
             deckToOpen.update { newUuid }
         }
     }
+
+    suspend fun getAllDeckVersions(id: String) {
+        if (_deckVersionIds.value.isEmpty()) {
+            val ids = deckRepository.getAllVersionDeckIds(id)
+            _deckVersionIds.update { ids }
+        }
+    }
+
+    fun clearDeckVersions() {
+        _deckVersionIds.update { emptyList() }
+    }
+
 
     @OptIn(ExperimentalUuidApi::class)
     suspend fun cloneDeck(

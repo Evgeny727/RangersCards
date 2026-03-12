@@ -91,6 +91,7 @@ import com.rangerscards.ui.deck.DeckChangingRole
 import com.rangerscards.ui.deck.DeckFullCardScreen
 import com.rangerscards.ui.deck.DeckFullCardWithPagerScreen
 import com.rangerscards.ui.deck.DeckScreen
+import com.rangerscards.ui.deck.DeckVersionsScreen
 import com.rangerscards.ui.deck.DeckViewModel
 import com.rangerscards.ui.decks.DeckCreationScreen
 import com.rangerscards.ui.decks.DecksScreen
@@ -637,6 +638,28 @@ fun RangersNavHost(
                         isDarkTheme = isDarkTheme,
                         contentPadding = innerPadding,
                         isEditing = isEditing,
+                    )
+                }
+                composable(route = "deck/history") { backStackEntry ->
+                    val parentEntry = remember(backStackEntry) {
+                        navController.getBackStackEntry("deck/{$deckIdArgument}")
+                    }
+                    val deckViewModel: DeckViewModel = viewModel(
+                        factory = AppViewModelProvider.Factory,
+                        viewModelStoreOwner = parentEntry
+                    )
+                    DeckVersionsScreen(
+                        navigateUp = { navController.navigateUp() },
+                        navigateToDeck = { deckId -> navController.navigate(
+                            "deck/$deckId"
+                        ) {
+                            popUpTo(parentEntry.destination.route.orEmpty()) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        } },
+                        deckViewModel = deckViewModel,
+                        contentPadding = innerPadding,
                     )
                 }
                 val typeIndexArgument = "typeIndexArgument"

@@ -221,6 +221,7 @@
     <string name="campaign_section_camp_warning">Error: Deck contains problems!</string>
     <string name="campaign_section_previous_deck">Previous deck</string>
     <string name="campaign_section_next_deck">Next deck</string>
+    <string name="campaign_section_deck_history">Deck history</string>
     <string name="options_section_header">Options</string>
     <string name="options_section_clone_deck">Clone deck</string>
     <string name="clone_deck_name_postfix">(Copy)</string>
@@ -231,6 +232,9 @@
     <string name="options_section_delete_deck_all_versions">Delete all versions of deck</string>
     <string name="options_section_delete_deck_warning">Error: This deck in campaign!</string>
     <string name="delete_deck_text">Are you sure you want to delete this deck? Version: %d.</string>
+
+    //Deck history screen
+    <string name="deck_history_current_deck">Current deck</string>
 
     //Campaigns screen
     <string name="campaigns_current_day">Day %d</string>

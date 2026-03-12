@@ -47,4 +47,6 @@ interface DeckRepository {
         language: String,
         packIds: List<String>
     ): Flow<PagingData<CardDeckListItemProjection>>
+
+    suspend fun getAllVersionDeckIds(startId: String): List<String>
 }

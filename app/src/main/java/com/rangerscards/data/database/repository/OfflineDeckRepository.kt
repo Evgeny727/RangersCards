@@ -370,4 +370,6 @@ class OfflineDeckRepository(private val deckDao: DeckDao) : DeckRepository {
 
         return SimpleSQLiteQuery(sql.toString(), args.toTypedArray())
     }
+
+    override suspend fun getAllVersionDeckIds(startId: String): List<String> = deckDao.getAllVersionDeckIds(startId)
 }

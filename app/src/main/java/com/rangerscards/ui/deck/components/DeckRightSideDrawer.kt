@@ -63,9 +63,10 @@ fun BoxScope.DeckRightSideDrawer(
     isTabooSet: Boolean,
     toNotes: () -> Unit,
     toCharts: () -> Unit,
-    camp:  (() -> Unit)?,
+    camp: (() -> Unit)?,
     toPreviousDeck: (() -> Unit)?,
     toNextDeck: (() -> Unit)?,
+    toDeckHistory: (() -> Unit)?,
     cloneDeck: () -> Unit,
     upload: (() -> Unit)?,
     url: String?,
@@ -171,6 +172,15 @@ fun BoxScope.DeckRightSideDrawer(
                             R.drawable.arrow_forward_32dp,
                             stringResource(R.string.campaign_section_next_deck),
                             toNextDeck,
+                        )
+                    }
+                    if (toDeckHistory != null) {
+                        if (camp != null || toPreviousDeck != null || toNextDeck != null)
+                            HorizontalDivider(color = CustomTheme.colors.l10)
+                        DrawerSectionButtonRow(
+                            R.drawable.cards_32dp,
+                            stringResource(R.string.campaign_section_deck_history),
+                            toDeckHistory,
                         )
                     }
                 }

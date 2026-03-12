@@ -172,4 +172,33 @@ interface DeckDao {
 
     @RawQuery(observedEntities = [Card::class, CardFts::class])
     fun searchCardsRaw(query: SupportSQLiteQuery): PagingSource<Int, CardDeckListItemProjection>
+
+    @Query("""
+    WITH RECURSIVE
+      prevs(id, depth) AS (
+        SELECT previous_id, 1 FROM deck WHERE id = :startId AND previous_id IS NOT NULL
+        UNION ALL
+        SELECT d.previous_id, depth + 1
+        FROM deck d
+        JOIN prevs p ON d.id = p.id
+        WHERE d.previous_id IS NOT NULL
+      ),
+      nexts(id, depth) AS (
+        SELECT next_id, 1 FROM deck WHERE id = :startId AND next_id IS NOT NULL
+        UNION ALL
+        SELECT d.next_id, depth + 1
+        FROM deck d
+        JOIN nexts n ON d.id = n.id
+        WHERE d.next_id IS NOT NULL
+      )
+    SELECT id FROM (
+      SELECT id, -depth AS ord FROM prevs
+      UNION ALL
+      SELECT :startId AS id, 0 AS ord
+      UNION ALL
+      SELECT id, depth AS ord FROM nexts
+    )
+    ORDER BY ord DESC
+  """)
+    suspend fun getAllVersionDeckIds(startId: String): List<String>
 }

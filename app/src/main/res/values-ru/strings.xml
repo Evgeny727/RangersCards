@@ -189,6 +189,8 @@
     <string name="campaign_section_camp_warning">Ошибка: Ваша колода содержит ошибки!</string>
     <string name="campaign_section_previous_deck">Предыдущая колода</string>
     <string name="campaign_section_next_deck">Следующая колода</string>
+    <string name="campaign_section_deck_history">История колоды</string>
+    <string name="deck_history_current_deck">Текущая колода</string>
     <string name="options_section_header">Опции</string>
     <string name="options_section_clone_deck">Копировать колоду</string>
     <string name="clone_deck_name_postfix">(Копия)</string>
