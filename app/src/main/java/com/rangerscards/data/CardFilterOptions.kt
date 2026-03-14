@@ -27,7 +27,8 @@ data class AspectRequirements(
     val awa: Int? = null,
     val spi: Int? = null,
     val foc: Int? = null,
-    val fit: Int? = null
+    val fit: Int? = null,
+    val equalOrLower: Boolean = false
 )
 
 data class SortOption(
@@ -92,17 +93,18 @@ object CardFilters {
 
         // 6) Filter by AspectRequirements: combine into one "(… OR …)" clause
         val aspectChecks = mutableListOf<String>()
+        val checkSign = if (filterOptions.aspectRequirements.equalOrLower) "<=" else "="
         filterOptions.aspectRequirements.awa?.let { awaValue ->
-            aspectChecks += "(aspect_id = 'AWA' AND level = $awaValue)"
+            aspectChecks += "(aspect_id = 'AWA' AND level $checkSign $awaValue AND level IS NOT NULL)"
         }
         filterOptions.aspectRequirements.spi?.let { spiValue ->
-            aspectChecks += "(aspect_id = 'SPI' AND level = $spiValue)"
+            aspectChecks += "(aspect_id = 'SPI' AND level $checkSign $spiValue AND level IS NOT NULL)"
         }
         filterOptions.aspectRequirements.foc?.let { focValue ->
-            aspectChecks += "(aspect_id = 'FOC' AND level = $focValue)"
+            aspectChecks += "(aspect_id = 'FOC' AND level $checkSign $focValue AND level IS NOT NULL)"
         }
         filterOptions.aspectRequirements.fit?.let { fitValue ->
-            aspectChecks += "(aspect_id = 'FIT' AND level = $fitValue)"
+            aspectChecks += "(aspect_id = 'FIT' AND level $checkSign $fitValue AND level IS NOT NULL)"
         }
         if (aspectChecks.isNotEmpty()) {
             val combined = aspectChecks.joinToString(" OR ")

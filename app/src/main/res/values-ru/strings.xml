@@ -427,6 +427,9 @@
     <string name="approaches_filter_exploration">Разведка</string>
     <string name="approaches_filter_reason">Интеллект</string>
 
+    //Aspect requirements
+    <string name="aspect_requirements_equal_or_lower">Включать в поиск значения меньше</string>
+
     //Challenge deck
     <string name="challenge_deck_title">Колода вызова</string>
     <string name="draw_challenge_card_button">Взять карту вызова</string>

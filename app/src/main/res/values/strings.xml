@@ -495,6 +495,9 @@
     <string name="approaches_filter_connection">Connection</string>
     <string name="approaches_filter_exploration">Exploration</string>
     <string name="approaches_filter_reason">Reason</string>
+    
+    //Aspect requirements
+    <string name="aspect_requirements_equal_or_lower">Include lower values</string>
 
     //Challenge deck
     <string name="challenge_deck_title">Challenge deck</string>

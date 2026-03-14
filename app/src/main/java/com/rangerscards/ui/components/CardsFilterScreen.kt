@@ -524,6 +524,9 @@ fun CardsFilterScreen(
                             val fit = remember(localFilterOptions.aspectRequirements) {
                                 localFilterOptions.aspectRequirements.fit ?: 0
                             }
+                            val equalOrLess = remember(localFilterOptions.aspectRequirements) {
+                                localFilterOptions.aspectRequirements.equalOrLower
+                            }
                             Column(
                                 modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -608,6 +611,40 @@ fun CardsFilterScreen(
                                     isPlusEnabled = fit < 9,
                                     numericValue = fit
                                 )
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            localFilterOptions = localFilterOptions.copy(
+                                                aspectRequirements = localFilterOptions.aspectRequirements.copy(
+                                                    equalOrLower = !equalOrLess
+                                                )
+                                            )
+                                        },
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.aspect_requirements_equal_or_lower),
+                                        color = CustomTheme.colors.d30,
+                                        fontFamily = Jost,
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = 18.sp,
+                                        lineHeight = 22.sp,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    RangersRadioButton(
+                                        selected = equalOrLess,
+                                        onClick = {
+                                            localFilterOptions = localFilterOptions.copy(
+                                                aspectRequirements = localFilterOptions.aspectRequirements.copy(
+                                                    equalOrLower = !equalOrLess
+                                                )
+                                            )
+                                        },
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                }
                             }
                         }
                         HorizontalDivider(color = CustomTheme.colors.l10)
