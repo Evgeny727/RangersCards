@@ -6,8 +6,8 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.google.firebase.auth.auth
 import com.google.firebase.Firebase
-import com.rangerscards.data.database.deck.DeckListItemProjection
-import com.rangerscards.data.database.repository.CampaignRepository
+import com.rangerscards.data.local.deck.DeckListItemProjection
+import com.rangerscards.domain.repository.CampaignRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow

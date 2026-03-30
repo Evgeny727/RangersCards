@@ -46,8 +46,8 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import com.rangerscards.R
-import com.rangerscards.data.database.card.CardListItemProjection
-import com.rangerscards.data.objects.DeckMetaMaps
+import com.rangerscards.data.local.card.CardListItemProjection
+import com.rangerscards.objects.DeckMetaMaps
 import com.rangerscards.ui.components.DataPicker
 import com.rangerscards.ui.components.RangersTopAppBar
 import com.rangerscards.ui.components.SquareButton

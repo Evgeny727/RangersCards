@@ -63,8 +63,8 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavHostController
 import com.google.firebase.auth.FirebaseUser
 import com.rangerscards.R
-import com.rangerscards.data.objects.CardTextParser
-import com.rangerscards.data.objects.DeckMetaMaps
+import com.rangerscards.objects.CardTextParser
+import com.rangerscards.objects.DeckMetaMaps
 import com.rangerscards.ui.cards.components.CardListItem
 import com.rangerscards.ui.components.RangersRadioButton
 import com.rangerscards.ui.components.SquareButton

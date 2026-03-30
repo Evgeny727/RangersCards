@@ -15,3 +15,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "RangersCards"
 include(":app")
+include(":domain")
+include(":data")

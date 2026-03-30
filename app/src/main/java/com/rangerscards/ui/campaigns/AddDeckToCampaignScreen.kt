@@ -37,7 +37,7 @@ import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import com.google.firebase.auth.FirebaseUser
 import com.rangerscards.R
-import com.rangerscards.data.database.deck.DeckListItemProjection
+import com.rangerscards.data.local.deck.DeckListItemProjection
 import com.rangerscards.ui.components.RangersSearchOutlinedField
 import com.rangerscards.ui.decks.components.DeckListItem
 import com.rangerscards.ui.settings.components.SettingsBaseCard

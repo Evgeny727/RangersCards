@@ -16,13 +16,13 @@ import com.google.firebase.auth.auth
 import com.google.firebase.Firebase
 import com.rangerscards.CreateDeckMutation
 import com.rangerscards.GetMyDecksQuery
-import com.rangerscards.data.database.card.CardListItemProjection
-import com.rangerscards.data.database.deck.Deck
-import com.rangerscards.data.database.deck.DeckListItemProjection
-import com.rangerscards.data.database.repository.DecksRepository
-import com.rangerscards.data.objects.DeckMetaMaps
-import com.rangerscards.data.objects.StarterDecks
-import com.rangerscards.data.objects.TimestampNormilizer
+import com.rangerscards.data.local.card.CardListItemProjection
+import com.rangerscards.data.local.deck.Deck
+import com.rangerscards.data.local.deck.DeckListItemProjection
+import com.rangerscards.domain.repository.DecksRepository
+import com.rangerscards.objects.DeckMetaMaps
+import com.rangerscards.objects.StarterDecks
+import com.rangerscards.domain.TimestampNormilizer
 import com.rangerscards.ui.settings.UserUIState
 import com.rangerscards.ui.settings.performFirebaseOperationWithRetry
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -158,9 +158,9 @@ class DecksViewModel(
             if (starterDeckId >= 0) {
                 val starterDeck = StarterDecks.starterDecks()[starterDeckId]
                 val backgroundLocalized = DeckMetaMaps
-                    .background[starterDeck.meta.jsonObject["background"]?.jsonPrimitive?.content]
+                    .background[starterDeck.meta.background]
                 val specialtyLocalized = DeckMetaMaps
-                    .specialty[starterDeck.meta.jsonObject["specialty"]?.jsonPrimitive?.content]
+                    .specialty[starterDeck.meta.specialty]
                 val newDeck = apolloClient.mutation(CreateDeckMutation(
                     name = name.ifEmpty { "${activity.getString(backgroundLocalized!!)} - " +
                             "${activity.getString(specialtyLocalized!!)} $postfix" },

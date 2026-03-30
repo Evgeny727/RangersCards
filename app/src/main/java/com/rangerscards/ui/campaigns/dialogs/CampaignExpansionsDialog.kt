@@ -31,7 +31,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.google.firebase.auth.FirebaseUser
 import com.rangerscards.R
-import com.rangerscards.data.objects.CampaignMaps
+import com.rangerscards.objects.CampaignMaps
 import com.rangerscards.ui.campaigns.CampaignViewModel
 import com.rangerscards.ui.campaigns.components.CampaignDialog
 import com.rangerscards.ui.components.RangersRadioButton

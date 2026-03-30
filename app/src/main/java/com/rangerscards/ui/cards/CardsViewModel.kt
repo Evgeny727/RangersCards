@@ -4,11 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import com.rangerscards.data.CardFilterOptions
-import com.rangerscards.data.UserPreferencesRepository
-import com.rangerscards.data.database.card.CardListItemProjection
-import com.rangerscards.data.database.card.FullCardProjection
-import com.rangerscards.data.database.repository.CardsRepository
+import com.rangerscards.objects.CardFilterOptions
+import com.rangerscards.data.local.card.CardListItemProjection
+import com.rangerscards.data.local.card.FullCardProjection
+import com.rangerscards.domain.repository.CardsRepository
+import com.rangerscards.domain.repository.UserPreferencesRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow

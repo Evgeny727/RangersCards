@@ -1,13 +1,13 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.plugin.compose")
-    id("com.google.gms.google-services")
-    id("com.apollographql.apollo") version "4.4.1"
-    id("com.google.devtools.ksp") version "2.2.21-2.0.4"
-    kotlin("plugin.serialization") version "2.2.21"
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.gms)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -62,79 +62,56 @@ kotlin {
 }
 
 dependencies {
+    implementation(project(":domain"))
+    implementation(project(":data"))
+
     //Import In-app updates
-    implementation("com.google.android.play:app-update:2.1.0")
-    implementation("com.google.android.play:app-update-ktx:2.1.0")
+    implementation(libs.play.app.update)
+    implementation(libs.app.update.ktx)
 
     //Import splash screen
-    implementation("androidx.core:core-splashscreen:1.2.0")
-
-    // Import the Firebase BoM
-    implementation(platform("com.google.firebase:firebase-bom:34.10.0"))
-    implementation("com.google.firebase:firebase-auth")
-
-    // Import Apollo Kotlin
-    implementation("com.apollographql.apollo:apollo-runtime:4.4.1")
-    implementation("com.apollographql.apollo:apollo-normalized-cache:4.4.1")
-    implementation("com.apollographql.apollo:apollo-normalized-cache-sqlite:4.4.1")
-
-    //Import Room
-    implementation("androidx.room:room-ktx:2.8.4")
-    implementation("androidx.room:room-runtime:2.8.4")
-    implementation("androidx.room:room-paging:2.8.4")
-    ksp("androidx.room:room-compiler:2.8.4")
+    implementation(libs.androidx.core.splashscreen)
 
     //Import Paging
-    implementation("androidx.paging:paging-runtime-ktx:3.4.0")
-    implementation("androidx.paging:paging-compose:3.4.0")
+    implementation(libs.androidx.paging.runtime.ktx)
+    implementation(libs.androidx.paging.compose)
 
     //Import Coil
-    implementation("io.coil-kt.coil3:coil-compose:3.4.0")
-    implementation("io.coil-kt.coil3:coil-network-okhttp:3.4.0")
-
-    //Import json serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
 
     //Import charts
-    implementation ("io.github.ehsannarmani:compose-charts:0.2.5")
+    implementation(libs.compose.charts)
 
     //Import reorderable lists
-    implementation("sh.calvin.reorderable:reorderable:3.0.0")
+    implementation(libs.reorderable)
 
-    implementation("androidx.core:core-ktx:1.18.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
-    implementation("androidx.activity:activity-compose:1.13.0")
-    implementation("androidx.navigation:navigation-compose:2.9.7")
-    implementation(platform("androidx.compose:compose-bom:2026.03.00"))
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.material:material-icons-core")
-    implementation("androidx.datastore:datastore-preferences:1.2.0")
-    implementation("androidx.appcompat:appcompat:1.7.1")
-    implementation("androidx.appcompat:appcompat-resources:1.7.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.4.0")
+    //Hilt
+    implementation(libs.hilt.android)
+    implementation(libs.hilt.navigation.compose)
+    ksp(libs.hilt.android.compiler)
 
-    testImplementation("junit:junit:4.13.2")
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.navigation.compose)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.core)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.appcompat.resources)
 
-    androidTestImplementation("androidx.test.ext:junit:1.3.0")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2026.03.00"))
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    testImplementation(libs.junit)
 
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
-}
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.espresso.core)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
 
-apollo {
-    service("service") {
-        // The package name for the generated models
-        packageName.set("com.rangerscards")
-        schemaFiles.from("src/main/graphql/schema.graphqls", "src/main/graphql/extra.graphqls")
-        addTypename.set("always")
-        mapScalarToKotlinString("timestamptz")
-        mapScalar("jsonb", "kotlinx.serialization.json.JsonElement", "com.rangerscards.data.objects.JsonElementAdapter")
-    }
+    debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

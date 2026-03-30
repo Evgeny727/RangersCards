@@ -2,8 +2,7 @@ package com.rangerscards.ui.settings
 
 import android.content.Context
 import android.content.Intent
-import android.net.ConnectivityManager
-import android.util.Log
+import android.util.Patterns
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.net.toUri
@@ -15,47 +14,46 @@ import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.cache.normalized.FetchPolicy
 import com.apollographql.apollo.cache.normalized.apolloStore
 import com.apollographql.apollo.cache.normalized.fetchPolicy
-import com.google.firebase.Firebase
-import com.google.firebase.auth.EmailAuthProvider
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.auth
 import com.rangerscards.AcceptFriendRequestMutation
 import com.rangerscards.GetAllCardsQuery
 import com.rangerscards.GetCardsUpdatedAtQuery
 import com.rangerscards.GetProfileQuery
 import com.rangerscards.GetUserInfoByHandleQuery
-import com.rangerscards.MainActivity
 import com.rangerscards.R
 import com.rangerscards.RejectFriendRequestMutation
 import com.rangerscards.SendFriendRequestMutation
 import com.rangerscards.SetAdhereTaboosMutation
 import com.rangerscards.SetPackCollectionMutation
 import com.rangerscards.UpdateHandleMutation
-import com.rangerscards.data.UserAuthRepository
-import com.rangerscards.data.UserPreferencesRepository
-import com.rangerscards.data.database.card.Card
-import com.rangerscards.data.database.repository.CardsRepository
-import com.rangerscards.data.database.repository.SettingsRepository
-import kotlinx.coroutines.delay
+import com.rangerscards.domain.repository.CardsRepository
+import com.rangerscards.domain.repository.SettingsRepository
+import com.rangerscards.data.local.card.Card
+import com.rangerscards.data.remote.NetworkConnectivityObserver
+import com.rangerscards.domain.TimestampNormilizer
+import com.rangerscards.domain.repository.AuthRepository
+import com.rangerscards.domain.repository.UserPreferencesRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 import java.util.Locale
+import javax.inject.Inject
 
 /**
  * Data class to hold state for User's settings
  */
 data class UserUIState(
-    val currentUser: FirebaseUser? = Firebase.auth.currentUser,
+    val currentUser: String? = null,
     val userInfo: GetProfileQuery.Data? = null,
     val language: String = Locale.getDefault().language.substring(0..1),
     val settings: UserSettings = UserSettings()
@@ -66,14 +64,23 @@ data class UserSettings(
     val collection: List<String> = emptyList()
 )
 
+data class UserAuthState(
+    val isEmailVerified: Boolean = true,
+    val isPasswordVerified: Boolean = true,
+    val error: String? = null
+)
+
+
 val SUPPORTED_LANGUAGES = listOf("en", "ru", "de", "fr", "it", "es")
 
 /**
  * ViewModel to maintain user's settings.
  */
-class SettingsViewModel(
+@HiltViewModel
+class SettingsViewModel @Inject constructor(
     private val apolloClient: ApolloClient,
-    private val userAuthRepository: UserAuthRepository,
+    private val authRepository: AuthRepository,
+    private val networkConnectivityObserver: NetworkConnectivityObserver,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val cardsRepository: CardsRepository,
     private  val settingsRepository: SettingsRepository
@@ -83,11 +90,10 @@ class SettingsViewModel(
     var userUiState = _userUiState.asStateFlow()
 
     init {
-        // Collect values from the data store
         viewModelScope.launch {
-            userPreferencesRepository.isTabooSet.collect { taboo ->
-                _userUiState.update {
-                    it.copy(settings = it.settings.copy(taboo = taboo))
+            authRepository.currentUserId.collectLatest {
+                _userUiState.update { userUiState ->
+                    userUiState.copy(currentUser = it)
                 }
             }
         }
@@ -96,13 +102,18 @@ class SettingsViewModel(
     init {
         // Collect values from the data store
         viewModelScope.launch {
-            userPreferencesRepository.collection.collect { collection ->
+            combine(userPreferencesRepository.isTabooSet, userPreferencesRepository.collection) {
+                    taboo, collection -> Pair(taboo, collection)
+            }.collect { (taboo, collection) ->
                 _userUiState.update {
-                    it.copy(settings = it.settings.copy(collection = collection))
+                    it.copy(settings = it.settings.copy(taboo = taboo, collection = collection))
                 }
             }
         }
     }
+
+    private val _userAuthState = MutableStateFlow(UserAuthState())
+    var userAuthState = _userAuthState.asStateFlow()
 
     private var _cardsUpdatedAt = MutableStateFlow("")
 
@@ -142,56 +153,70 @@ class SettingsViewModel(
     private val _searchResults = MutableStateFlow(emptyList<GetUserInfoByHandleQuery.Profile>())
     val searchResults: StateFlow<List<GetUserInfoByHandleQuery.Profile>> = _searchResults.asStateFlow()
 
-    fun setUser(user: FirebaseUser?) {
-        _userUiState.update {
-            it.copy(currentUser = user)
-        }
-    }
+    val isNetworkConnected: StateFlow<Boolean?> =
+        networkConnectivityObserver.isConnected.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = null
+        )
 
-    fun signIn(mainActivity: MainActivity, email: String, password: String) {
-        userAuthRepository.signIn(mainActivity, email, password)
-    }
-
-    fun createAccount(mainActivity: MainActivity, email: String, password: String) {
-        userAuthRepository.createAccount(mainActivity, email, password)
-    }
-
-    fun signOut(mainActivity: MainActivity) {
-        userAuthRepository.signOut(mainActivity)
-        _userUiState.update {
-            it.copy(currentUser = null, userInfo = null)
-        }
-    }
-
-    fun deleteUser(context: Context, email: String, password: String) {
-        if (userAuthRepository.validateEmail(email)) {
-            if (userAuthRepository.validatePassword(password)) {
-                val user = _userUiState.value.currentUser
-                user?.reauthenticate(EmailAuthProvider.getCredential(email, password))
-                    ?.addOnCompleteListener {
-                        if (it.isSuccessful) user.delete().addOnCompleteListener {
-                            Toast.makeText(
-                                context,
-                                context.getString(R.string.account_successfully_deleted_toast),
-                                Toast.LENGTH_SHORT,
-                            ).show()
-                            _userUiState.update { userUiState ->
-                                userUiState.copy(currentUser = null, userInfo = null)
-                            }
-                            apolloClient.apolloStore.clearAll()
-                        } else {
-                            Toast.makeText(
-                                context,
-                                context.getString(R.string.invalid_credentials_toast),
-                                Toast.LENGTH_SHORT,
-                            ).show()
+    fun signIn(email: String, password: String) {
+        viewModelScope.launch {
+            if (validateEmail(email)) {
+                if (validatePassword(password)) {
+                    val result = authRepository.signIn(email, password)
+                    if (result.isFailure) {
+                        _userAuthState.update {
+                            it.copy(error = result.exceptionOrNull()?.localizedMessage)
                         }
-                    }
-            } else {
-                userAuthRepository.invalidPasswordToast(context)
+                    } else _userAuthState.update { UserAuthState() }
+                } else _userAuthState.update { it.copy(isPasswordVerified = false) }
+            } else _userAuthState.update { it.copy(isEmailVerified = false) }
+        }
+    }
+
+    fun createAccount(email: String, password: String) {
+        viewModelScope.launch {
+            if (validateEmail(email)) {
+                if (validatePassword(password)) {
+                    val result = authRepository.createAccount(email, password)
+                    if (result.isFailure) {
+                        _userAuthState.update {
+                            it.copy(error = result.exceptionOrNull()?.localizedMessage)
+                        }
+                    } else _userAuthState.update { UserAuthState() }
+                } else _userAuthState.update { it.copy(isPasswordVerified = false) }
+            } else _userAuthState.update { it.copy(isEmailVerified = false) }
+        }
+    }
+
+    fun signOut() {
+        viewModelScope.launch {
+            authRepository.signOut()
+            _userUiState.update {
+                it.copy(currentUser = null, userInfo = null)
             }
-        } else {
-            userAuthRepository.invalidEmailToast(context)
+        }
+    }
+
+    fun deleteUser(email: String, password: String) {
+        viewModelScope.launch {
+            if (validateEmail(email)) {
+                if (validatePassword(password)) {
+                    val result = authRepository.deleteAccount(email, password)
+                    if (result.isFailure) {
+                        _userAuthState.update {
+                            it.copy(error = result.exceptionOrNull()?.localizedMessage)
+                        }
+                    } else {
+                        //TODO: clear apollo cached data
+                        _userUiState.update { userUiState ->
+                            userUiState.copy(currentUser = null, userInfo = null)
+                        }
+                        _userAuthState.update { UserAuthState() }
+                    }
+                } else _userAuthState.update { it.copy(isPasswordVerified = false) }
+            } else _userAuthState.update { it.copy(isEmailVerified = false) }
         }
     }
 
@@ -200,24 +225,18 @@ class SettingsViewModel(
             .lowercase(Locale.ENGLISH).trim()
     }
 
-    private suspend fun getCurrentToken(context: Context): String? {
-        return userUiState.value.currentUser?.getIdToken(isConnected(context))?.await()?.token
+    private fun validateEmail(email: String): Boolean {
+        return email.isNotEmpty() && Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
-
-    private fun isConnected(context: Context): Boolean {
-        val connectivityManager =
-            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        return connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork) != null
+    private fun validatePassword(password: String): Boolean {
+        return password.length in 6..4096
     }
 
     fun getUserInfo(context: Context, id: String) {
         viewModelScope.launch {
-            var token: String? = ""
-            val result = performFirebaseOperationWithRetry {
-                token = getCurrentToken(context)
-            }
-            if (result != null) apolloClient.query(GetProfileQuery(id))
-                .addHttpHeader("Authorization", "Bearer $token")
+            val result = authRepository.getToken(isNetworkConnected.value ?: false)
+            if (result.isSuccess) apolloClient.query(GetProfileQuery(id))
+                .addHttpHeader("Authorization", "Bearer ${result.getOrNull()}")
                 .toFlow()
                 .collect {
                     if (it.data != null) {
@@ -306,16 +325,16 @@ class SettingsViewModel(
         }
     }
 
-    fun updateLocale(locale: String, context: Context) {
+    fun updateLocale(locale: String) {
         AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(locale))
         _userUiState.update { userUIState ->
             userUIState.copy(language = locale)
         }
-        downloadCards(context)
+        downloadCards()
     }
 
-    private fun downloadCards(context: Context) {
-        if (!isConnected(context)) return
+    private fun downloadCards() {
+        if (!(isNetworkConnected.value ?: true)) return
         _isCardsLoading.update { true }
         viewModelScope.launch {
             val language = if (SUPPORTED_LANGUAGES.contains(_userUiState.value.language)) _userUiState.value.language
@@ -335,18 +354,18 @@ class SettingsViewModel(
         }
     }
 
-    fun updateCardsIfNotUpdated(context: Context) {
-        if (!isConnected(context)) return
+    fun updateCardsIfNotUpdated() {
+        if (!(isNetworkConnected.value ?: true)) return
         _isCardsLoading.update { true }
         viewModelScope.launch {
             val response = apolloClient.query(GetCardsUpdatedAtQuery(_userUiState.value.language))
                .fetchPolicy(FetchPolicy.NetworkOnly).execute()
             if (response.data != null) {
-               if (userPreferencesRepository.compareTimestamps(
+               if (TimestampNormilizer.compareTimestamps(
                        _cardsUpdatedAt.value,
                        response.data!!.card_updated_at.getOrNull(0)?.updated_at.toString()
                )) {
-                   downloadCards(context)
+                   downloadCards()
                } else {
                    _isCardsUpdateAvailable.update { false }
                    _isCardsLoading.update { false }
@@ -360,7 +379,7 @@ class SettingsViewModel(
     }
 
     suspend fun checkCardsUpdateAvailable(context: Context) {
-        if (!isConnected(context)) return
+        if (!(isNetworkConnected.value ?: true)) return
         val response = apolloClient.query(GetCardsUpdatedAtQuery(_userUiState.value.language))
             .fetchPolicy(FetchPolicy.NetworkOnly).execute()
         if (response.data != null) {
@@ -372,10 +391,10 @@ class SettingsViewModel(
         }
     }
 
-    suspend fun downloadCardsIfDatabaseNotExists(context: Context) {
+    suspend fun downloadCardsIfDatabaseNotExists() {
         val exists = cardsRepository.isExists()
         if (!exists) {
-            downloadCards(context)
+            downloadCards()
         }
     }
 
@@ -431,7 +450,7 @@ class SettingsViewModel(
     }
 
     fun sendFriendRequest(toUserId: String, context: Context) {
-        val userId = userUiState.value.currentUser?.uid!!
+        val userId = userUiState.value.currentUser!!
         viewModelScope.launch {
             val token = getCurrentToken(context)
             apolloClient.mutation(SendFriendRequestMutation(toUserId))
@@ -440,7 +459,7 @@ class SettingsViewModel(
         }
     }
     fun acceptFriendRequest(toUserId: String, context: Context) {
-        val userId = userUiState.value.currentUser?.uid!!
+        val userId = userUiState.value.currentUser!!
         viewModelScope.launch {
             val token = getCurrentToken(context)
             apolloClient.mutation(AcceptFriendRequestMutation(toUserId))
@@ -449,7 +468,7 @@ class SettingsViewModel(
         }
     }
     fun rejectFriendRequest(toUserId: String, context: Context) {
-        val userId = userUiState.value.currentUser?.uid!!
+        val userId = userUiState.value.currentUser!!
         viewModelScope.launch {
             val token = getCurrentToken(context)
             apolloClient.mutation(RejectFriendRequestMutation(toUserId))
@@ -474,25 +493,6 @@ class SettingsViewModel(
     fun clearApolloCache() {
         apolloClient.apolloStore.clearAll()
     }
-}
-
-suspend fun <T> performFirebaseOperationWithRetry(
-    maxRetries: Int = 3,
-    initialDelay: Long = 1000L,
-    factor: Double = 2.0,
-    block: suspend () -> T
-): T? {
-    var currentDelay = initialDelay
-    repeat(maxRetries) { attempt ->
-        try {
-            return block()
-        } catch (e: Exception) {
-            Log.w("FirebaseOperation", "Attempt ${attempt + 1} failed: ${e.localizedMessage}")
-        }
-        delay(currentDelay)
-        currentDelay = (currentDelay * factor).toLong()
-    }
-    return null
 }
 
 /**

@@ -39,7 +39,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import com.rangerscards.R
-import com.rangerscards.data.database.campaign.CampaignListItemProjection
+import com.rangerscards.data.local.campaign.CampaignListItemProjection
 import com.rangerscards.ui.campaigns.components.CampaignListItem
 import com.rangerscards.ui.components.RangersSearchOutlinedField
 import com.rangerscards.ui.settings.SettingsViewModel

@@ -42,8 +42,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rangerscards.R
-import com.rangerscards.data.objects.CampaignMaps
-import com.rangerscards.data.objects.Path
+import com.rangerscards.objects.CampaignMaps
+import com.rangerscards.objects.Path
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 

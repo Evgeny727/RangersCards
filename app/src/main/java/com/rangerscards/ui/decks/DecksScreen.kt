@@ -39,7 +39,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import com.rangerscards.R
-import com.rangerscards.data.database.deck.DeckListItemProjection
+import com.rangerscards.data.local.deck.DeckListItemProjection
 import com.rangerscards.ui.components.RangersSearchOutlinedField
 import com.rangerscards.ui.decks.components.DeckListItem
 import com.rangerscards.ui.settings.SettingsViewModel
@@ -65,12 +65,14 @@ fun DecksScreen(
     val decksLazyItems = decksViewModel.searchResults.collectAsLazyPagingItems()
     val context = LocalContext.current.applicationContext
     LaunchedEffect(user.currentUser) {
-        if (userId != user.currentUser?.uid.toString()) {
+        if (userId != user.currentUser.toString()) {
             decksViewModel.getAllNetworkDecks(user.currentUser, context)
-            userId = user.currentUser?.uid.toString()
+            userId = user.currentUser.toString()
             decksViewModel.onSearchQueryChanged(" ")
             decksViewModel.clearSearchQuery()
-            if (user.currentUser != null) settingsViewModel.getUserInfo(context, user.currentUser!!.uid)
+            user.currentUser?.let {
+                settingsViewModel.getUserInfo(context, it)
+            }
         }
     }
 

@@ -51,8 +51,8 @@ import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rangerscards.R
-import com.rangerscards.data.CardFilterOptions
-import com.rangerscards.data.CardFilters
+import com.rangerscards.objects.CardFilterOptions
+import com.rangerscards.objects.CardFilters
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 

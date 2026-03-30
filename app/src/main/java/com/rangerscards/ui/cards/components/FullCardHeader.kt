@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import com.rangerscards.R
-import com.rangerscards.data.objects.ImageSrc
+import com.rangerscards.objects.ImageSrc
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 
@@ -162,7 +162,7 @@ fun FullCardHeaderAspectContainer(
         } else {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(ImageSrc.imageSrc + imageSrc)
+                    .data(ImageSrc.BASE_URL + imageSrc)
                     .build(),
                 placeholder = painterResource(id = R.drawable.per_ranger),
                 error = painterResource(id = R.drawable.per_ranger),

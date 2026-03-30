@@ -24,7 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rangerscards.R
-import com.rangerscards.data.objects.CampaignMaps
+import com.rangerscards.objects.CampaignMaps
 import com.rangerscards.ui.decks.components.DeckListItemImageContainer
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost

@@ -29,12 +29,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rangerscards.R
-import com.rangerscards.data.objects.DeckMetaMaps
-import com.rangerscards.data.objects.StarterDeck
+import com.rangerscards.objects.DeckMetaMaps
+import com.rangerscards.objects.StarterDeck
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonPrimitive
 
 @Composable
 fun StarterDeck(
@@ -83,25 +81,24 @@ fun StarterDeck(
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    if (starterDeck.meta is JsonObject) {
-                        val background = DeckMetaMaps.background[starterDeck.meta["background"]?.jsonPrimitive?.content]
-                        val specialty = DeckMetaMaps.specialty[starterDeck.meta["specialty"]?.jsonPrimitive?.content]
-                        Text(
-                            text = buildAnnotatedString {
-                                if (background != null)
-                                    append(stringResource(background) + " - ")
-                                if (specialty != null)
-                                    append(stringResource(specialty))
-                            },
-                            color = CustomTheme.colors.d20,
-                            fontFamily = Jost,
-                            fontWeight = FontWeight.Normal,
-                            fontStyle = FontStyle.Italic,
-                            fontSize = 16.sp,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
+
+                    val background = DeckMetaMaps.background[starterDeck.meta.background]
+                    val specialty = DeckMetaMaps.specialty[starterDeck.meta.specialty]
+                    Text(
+                        text = buildAnnotatedString {
+                            if (background != null)
+                                append(stringResource(background) + " - ")
+                            if (specialty != null)
+                                append(stringResource(specialty))
+                        },
+                        color = CustomTheme.colors.d20,
+                        fontFamily = Jost,
+                        fontWeight = FontWeight.Normal,
+                        fontStyle = FontStyle.Italic,
+                        fontSize = 16.sp,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
                 RadioButton(
                     selected = isSelected,

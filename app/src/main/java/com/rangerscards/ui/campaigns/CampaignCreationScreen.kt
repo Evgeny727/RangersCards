@@ -47,7 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.rangerscards.R
-import com.rangerscards.data.objects.CampaignMaps
+import com.rangerscards.objects.CampaignMaps
 import com.rangerscards.ui.components.DataPicker
 import com.rangerscards.ui.components.RangersRadioButton
 import com.rangerscards.ui.components.SquareButton

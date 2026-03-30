@@ -53,7 +53,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.rangerscards.MainActivity
 import com.rangerscards.R
-import com.rangerscards.data.objects.CampaignMaps
+import com.rangerscards.objects.CampaignMaps
 import com.rangerscards.ui.AppViewModelProvider
 import com.rangerscards.ui.campaigns.AddDeckToCampaignScreen
 import com.rangerscards.ui.campaigns.AddPlayersToCampaign

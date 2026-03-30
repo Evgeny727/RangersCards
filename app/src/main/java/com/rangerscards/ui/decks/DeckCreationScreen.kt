@@ -55,9 +55,9 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import com.rangerscards.R
-import com.rangerscards.data.database.card.CardListItemProjection
-import com.rangerscards.data.objects.DeckMetaMaps
-import com.rangerscards.data.objects.StarterDecks
+import com.rangerscards.data.local.card.CardListItemProjection
+import com.rangerscards.objects.DeckMetaMaps
+import com.rangerscards.objects.StarterDecks
 import com.rangerscards.ui.components.CustomTab
 import com.rangerscards.ui.components.DataPicker
 import com.rangerscards.ui.components.RangersRadioButton
@@ -68,8 +68,6 @@ import com.rangerscards.ui.settings.components.SettingsBaseCard
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 
 enum class ActiveField {
     FieldOne,
@@ -385,7 +383,7 @@ fun DeckCreationScreen(
                                 )
                                 StarterDecks.starterDecks().forEachIndexed { index, starterDeck ->
                                     val starterRole by decksViewModel.getCard(
-                                        starterDeck.meta.jsonObject["role"]?.jsonPrimitive?.content.toString()
+                                        starterDeck.meta.role
                                     ).collectAsState(null)
                                     if (starterRole != null) key("starterDeck - $index") {
                                         StarterDeck(

@@ -1,7 +1,6 @@
 package com.rangerscards
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -16,16 +15,14 @@ import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.UpdateAvailability
-import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.auth
 import com.rangerscards.ui.AppViewModelProvider
 import com.rangerscards.ui.settings.SettingsViewModel
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.RangersCardsTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-    private lateinit var auth: FirebaseAuth
     private lateinit var viewModel: SettingsViewModel
     private lateinit var appUpdateManager: AppUpdateManager
 
@@ -34,7 +31,6 @@ class MainActivity : AppCompatActivity() {
         var isDataLoaded = false
         splashScreen.setKeepOnScreenCondition { !isDataLoaded }
         super.onCreate(savedInstanceState)
-        auth = Firebase.auth
         appUpdateManager = AppUpdateManagerFactory.create(this)
         // Returns an intent object that you use to check for an update.
         val appUpdateInfoTask = appUpdateManager.appUpdateInfo
@@ -100,45 +96,5 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
             }
-    }
-
-    fun createAccount(email: String, password: String) {
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    // Sign in success, update UI with the signed-in user's information
-                    viewModel.setUser(auth.currentUser)
-                } else {
-                    // If sign in fails, display a message to the user.
-                    authenticationFailedToast()
-                    viewModel.setUser(null)
-                }
-            }
-    }
-
-    fun signIn(email: String, password: String) {
-        auth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    // Sign in success, update UI with the signed-in user's information
-                    viewModel.setUser(auth.currentUser)
-                } else {
-                    // If sign in fails, display a message to the user.
-                    authenticationFailedToast()
-                    viewModel.setUser(null)
-                }
-            }
-    }
-
-    fun signOut() {
-        auth.signOut()
-    }
-
-    private fun authenticationFailedToast() {
-        Toast.makeText(
-            baseContext,
-            getString(R.string.authentication_failed_toast),
-            Toast.LENGTH_SHORT,
-        ).show()
     }
 }

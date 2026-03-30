@@ -18,11 +18,11 @@ import com.rangerscards.R
 import com.rangerscards.SaveDeckMutation
 import com.rangerscards.SaveDeckTabooSetMutation
 import com.rangerscards.UpgradeDeckMutation
-import com.rangerscards.data.database.card.CardDeckListItemProjection
-import com.rangerscards.data.database.deck.Deck
-import com.rangerscards.data.database.deck.RoleCardProjection
-import com.rangerscards.data.database.repository.CampaignRepository
-import com.rangerscards.data.database.repository.DeckRepository
+import com.rangerscards.data.local.card.CardDeckListItemProjection
+import com.rangerscards.data.local.deck.Deck
+import com.rangerscards.data.local.deck.RoleCardProjection
+import com.rangerscards.domain.repository.CampaignRepository
+import com.rangerscards.domain.repository.DeckRepository
 import com.rangerscards.ui.decks.CURRENT_TABOO_SET
 import com.rangerscards.ui.decks.getCurrentDateTime
 import com.rangerscards.ui.decks.toDeck
@@ -55,44 +55,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
-
-data class FullDeckState(
-    val id: String,
-    val uploaded: Boolean,
-    val userId: String,
-    val tabooSetId: String?,
-    val userHandle: String?,
-    val version: Int,
-    val name: String,
-    val description: String?,
-    val createdAt: String?,
-    val updatedAt: String?,
-    val roleId: String,
-    val background: String,
-    val specialty: String,
-    val problems: List<String>?,
-    val campaignId: String?,
-    val campaignName: String?,
-    val campaignRewards: List<String>?,
-    val previousId: String?,
-    val previousSlots: Map<String, Int>?,
-    val previousSideSlots: Map<String, Int>?,
-    val nextId: String?,
-    val addedCards: Map<String, Int> = persistentMapOf(),
-    val removedCards: Map<String, Int> = persistentMapOf(),
-    val addedCollectionCards: Map<String, Int> = persistentMapOf(),
-    val returnedCollectionCards: Map<String, Int> = persistentMapOf(),
-)
-
-data class OftenUpdatableDeckValues(
-    val slots: PersistentMap<String, Int>,
-    val sideSlots: PersistentMap<String, Int>,
-    val extraSlots: PersistentMap<String, Int>,
-    val awa: Int,
-    val spi: Int,
-    val fit: Int,
-    val foc: Int,
-)
 
 class DeckViewModel(
     private val apolloClient: ApolloClient,

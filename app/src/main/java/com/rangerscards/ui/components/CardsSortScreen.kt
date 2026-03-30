@@ -37,8 +37,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rangerscards.R
-import com.rangerscards.data.CardFilters
-import com.rangerscards.data.SortOption
+import com.rangerscards.objects.CardFilters
+import com.rangerscards.objects.SortOption
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 import sh.calvin.reorderable.ReorderableItem

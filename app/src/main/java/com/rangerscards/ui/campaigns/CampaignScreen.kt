@@ -61,8 +61,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavHostController
 import com.rangerscards.R
-import com.rangerscards.data.database.campaign.Campaign
-import com.rangerscards.data.objects.CampaignMaps
+import com.rangerscards.data.local.campaign.Campaign
+import com.rangerscards.objects.CampaignMaps
 import com.rangerscards.ui.campaigns.components.CampaignCurrentPositionCard
 import com.rangerscards.ui.campaigns.components.CampaignDialog
 import com.rangerscards.ui.campaigns.components.CampaignEvents

@@ -36,17 +36,17 @@ import com.rangerscards.UpdateCampaignExpansionsMutation
 import com.rangerscards.UpdateCampaignRemovedMutation
 import com.rangerscards.UpdateCampaignRewardsMutation
 import com.rangerscards.UpdateUploadedMutation
-import com.rangerscards.data.CurrentChallengeDeck
-import com.rangerscards.data.database.campaign.Campaign
-import com.rangerscards.data.database.card.CardListItemProjection
-import com.rangerscards.data.database.card.FullCardProjection
-import com.rangerscards.data.database.deck.Deck
-import com.rangerscards.data.database.deck.RoleCardProjection
-import com.rangerscards.data.database.repository.CampaignRepository
-import com.rangerscards.data.database.repository.DeckRepository
-import com.rangerscards.data.objects.CampaignMaps
-import com.rangerscards.data.objects.Path
-import com.rangerscards.data.objects.Weather
+import com.rangerscards.CurrentChallengeDeck
+import com.rangerscards.data.local.campaign.Campaign
+import com.rangerscards.data.local.card.CardListItemProjection
+import com.rangerscards.data.local.card.FullCardProjection
+import com.rangerscards.data.local.deck.Deck
+import com.rangerscards.data.local.deck.RoleCardProjection
+import com.rangerscards.domain.repository.CampaignRepository
+import com.rangerscards.domain.repository.DeckRepository
+import com.rangerscards.objects.CampaignMaps
+import com.rangerscards.objects.Path
+import com.rangerscards.objects.Weather
 import com.rangerscards.ui.decks.getCurrentDateTime
 import com.rangerscards.ui.decks.toDeck
 import com.rangerscards.ui.decks.toDecks
@@ -67,71 +67,6 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
-
-data class CampaignState(
-    val id: String,
-    val uploaded: Boolean,
-    val userId: String,
-    val name: String,
-    val currentDay: Int,
-    val extendedCalendar: Boolean,
-    val cycleId: String,
-    val currentLocation: String,
-    val currentPathTerrain: String?,
-    val createdAt: String?,
-    val updatedAt: String?,
-    val missions: List<CampaignMission>,
-    val events: List<CampaignEvent>,
-    val rewards: List<String>,
-    val removed: List<CampaignRemoved>,
-    val history: List<CampaignHistory>,
-    val calendar: Map<Int, List<String>>,
-    val expansions: List<String>,
-    val decks: List<CampaignDeck>,
-    val access: Map<String, String>,
-    val previousCampaignId: String?,
-    val nextCampaignId: String?
-)
-
-data class CampaignMission(
-    val day: Int,
-    val name: String,
-    val checks: List<Boolean>,
-    val completed: Boolean,
-)
-
-data class CampaignEvent(
-    val name: String,
-    val crossedOut: Boolean,
-    val marks: Int = 0,
-)
-
-data class CampaignRemoved(
-    val name: String,
-    val setId: String,
-)
-
-data class CampaignHistory(
-    val day: Int,
-    val camped: Boolean,
-    val location: String,
-    val pathTerrain: String,
-)
-
-data class CampaignTravelDay(
-    val day: Int,
-    val startingLocation: String?,
-    val travel: List<CampaignHistory>
-)
-
-data class CampaignDeck(
-    val id: String,
-    val name: String,
-    val role: String,
-    val meta: JsonElement,
-    val userId: String,
-    val userName: String,
-)
 
 data class DayInfo(
     val guides: List<String>,

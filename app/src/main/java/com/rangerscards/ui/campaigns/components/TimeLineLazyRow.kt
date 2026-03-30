@@ -49,7 +49,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rangerscards.R
-import com.rangerscards.data.objects.Weather
+import com.rangerscards.objects.Weather
 import com.rangerscards.ui.campaigns.DayInfo
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost

@@ -14,12 +14,11 @@ import com.rangerscards.CreateCampaignMutation
 import com.rangerscards.GetCampaignQuery
 import com.rangerscards.GetMyCampaignsQuery
 import com.rangerscards.TransferCampaignMutation
-import com.rangerscards.data.database.campaign.Campaign
-import com.rangerscards.data.database.campaign.CampaignListItemProjection
-import com.rangerscards.data.database.deck.Deck
-import com.rangerscards.data.database.repository.CampaignsRepository
-import com.rangerscards.data.database.repository.DeckRepository
-import com.rangerscards.data.objects.TimestampNormilizer
+import com.rangerscards.data.local.campaign.Campaign
+import com.rangerscards.data.local.campaign.CampaignListItemProjection
+import com.rangerscards.data.local.deck.Deck
+import com.rangerscards.domain.repository.DeckRepository
+import com.rangerscards.domain.TimestampNormilizer
 import com.rangerscards.ui.decks.getCurrentDateTime
 import com.rangerscards.ui.decks.toDeck
 import com.rangerscards.ui.settings.UserUIState
@@ -36,7 +35,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray

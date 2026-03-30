@@ -4,10 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import com.rangerscards.data.CardFilterOptions
-import com.rangerscards.data.UserPreferencesRepository
-import com.rangerscards.data.database.card.CardDeckListItemProjection
-import com.rangerscards.data.database.repository.DeckRepository
+import com.rangerscards.objects.CardFilterOptions
+import com.rangerscards.data.repository.UserPreferencesRepository
+import com.rangerscards.data.local.card.CardDeckListItemProjection
+import com.rangerscards.domain.repository.DeckRepository
 import com.rangerscards.ui.cards.Quintuple
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
