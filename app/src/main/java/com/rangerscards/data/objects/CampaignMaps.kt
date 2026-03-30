@@ -15,10 +15,16 @@ object CampaignMaps {
 
     val campaignExpansionsMap by lazy {
         mapOf(
-            "core" to listOf(CampaignExpansion(
-                id = "sib",
-                name = R.string.spire_in_bloom
-            )),
+            "core" to listOf(
+                CampaignExpansion(
+                    id = "sib",
+                    name = R.string.spire_in_bloom
+                ),
+                CampaignExpansion(
+                    id = "sos",
+                    name = R.string.shadow_of_the_storm
+                )
+            ),
         )
     }
 
@@ -139,6 +145,14 @@ object CampaignMaps {
                 Connection("spire", "brookside", Path.THOROUGHFARE, expansionConditions = mapOf("sib" to ExpansionMapCondition.ADD)),
                 Connection("silverfin_docks", "brookside", Path.THOROUGHFARE, expansionConditions = mapOf("sib" to ExpansionMapCondition.ADD)),
                 Connection("spire", "silverfin_docks", Path.THOROUGHFARE, expansionConditions = mapOf("sib" to ExpansionMapCondition.ADD)),
+                Connection("northern_outpost", "terra_lodge", Path.OLD_GROWTH, expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)),
+                Connection("the_otherwoods", "terra_lodge", Path.OLD_GROWTH, expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)),
+                Connection("crystal_basin", "the_otherwoods", Path.WOODS, expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)),
+                Connection("crystal_basin", "atrox_mountains", Path.RAVINE, expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)),
+                Connection("crystal_basin", "sentinal_peak", Path.MOUNTAIN_PASS, expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)),
+                Connection("terra_lodge", "sentinal_peak", Path.MOUNTAIN_PASS, expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)),
+                Connection("nimbus_facility", "arbor_mists", Path.NIMBUS, expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)),
+                Connection("arbor_mists", "the_undergrove", Path.NIMBUS, expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)),
             )
             "loa" -> listOf(
                 Connection("greenbriar_knoll", "the_concordant_ziggurats", Path.GRASSLAND),
@@ -286,7 +300,28 @@ object CampaignMaps {
                 ),
                 MapLocation("silverfin_docks",R.string.silverfin_docks,R.drawable.silverfin_docks,
                     expansionConditions = mapOf("sib" to ExpansionMapCondition.ADD)
-                )
+                ),
+                MapLocation("terra_lodge",R.string.terra_lodge,R.drawable.terra_lodge,
+                    expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)
+                ),
+                MapLocation("the_otherwoods",R.string.the_otherwoods,R.drawable.the_otherwoods,
+                    expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)
+                ),
+                MapLocation("crystal_basin",          R.string.crystal_basin,            R.drawable.crystal_basin,
+                    expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)
+                ),
+                MapLocation("sentinel_peak",R.string.sentinel_peak,R.drawable.sentinel_peak,
+                    expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)
+                ),
+                MapLocation("nimbus_facility",R.string.nimbus_facility,R.drawable.nimbus_facility,
+                    expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)
+                ),
+                MapLocation("arbor_mists",          R.string.arbor_mists,            R.drawable.arbor_mists,
+                    expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)
+                ),
+                MapLocation("the_undergrove",          R.string.the_undergrove,            R.drawable.the_undergrove,
+                    expansionConditions = mapOf("sib" to ExpansionMapCondition.ADD)
+                ),
             )
         }
         return when {
@@ -441,6 +476,7 @@ enum class Path(
     SWAMP("swamp", R.string.swamp, R.drawable.swamp, listOf("core")),
     RIVER("river", R.string.river, R.drawable.river, listOf("core", "loa")),
     THOROUGHFARE("thoroughfare", R.string.thoroughfare, R.drawable.thoroughfare, listOf("core"), listOf("sib")),
+    NIMBUS("nimbus", R.string.nimbus, R.drawable.nimbus, listOf("core"), listOf("sos")),
     ANCIENT_RUINS("ancient_ruins", R.string.ancient_ruins, R.drawable.ancient_ruins, listOf("loa")),
     FLOODED_RUINS("flooded_ruins", R.string.flooded_ruins, R.drawable.flooded_ruins, listOf("loa")),
     DEEP_ROOTS("deep_roots", R.string.deep_roots, R.drawable.deep_roots, listOf("loa")),

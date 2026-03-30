@@ -538,4 +538,15 @@
     <string name="cards_update_available_header">Cards update</string>
     <string name="cards_update_available_text">Cards update available.</string>
 
+    //Shadow of the Storm
+    <string name="shadow_of_the_storm">Shadow of the Storm</string>
+    <string name="nimbus">Nimbus</string>
+    <string name="terra_lodge">Terra Lodge</string>
+    <string name="the_otherwoods">The Otherwoods</string>
+    <string name="crystal_basin">Crystal Basin</string>
+    <string name="sentinel_peak">Sentinel Peak</string>
+    <string name="nimbus_facility">Nimbus Facility</string>
+    <string name="arbor_mists">Arbor Mists</string>
+    <string name="the_undergrove">The Undergrove</string>
+
 </resources>

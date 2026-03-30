@@ -188,6 +188,40 @@ fun SettingsCollectionScreen(
                     HorizontalDivider(color = CustomTheme.colors.l10)
                 }
             }
+            item("sos") {
+                val selected = user.settings.collection.contains("sos")
+                Column {
+                    Row(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                            .clickable { coroutine.launch { showLoadingDialog = true
+                                if (selected) settingsViewModel.setCollection(user.settings.collection.filterNot { it == "sos" }, context)
+                                else settingsViewModel.setCollection(user.settings.collection + "sos", context)
+                            }.invokeOnCompletion { showLoadingDialog = false } },
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.shadow_of_the_storm),
+                            color = CustomTheme.colors.d30,
+                            fontFamily = Jost,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 18.sp,
+                            lineHeight = 20.sp,
+                            modifier = Modifier.weight(1f)
+                        )
+                        RangersRadioButton(
+                            selected = selected,
+                            onClick = { coroutine.launch { showLoadingDialog = true
+                                if (selected) settingsViewModel.setCollection(user.settings.collection.filterNot { it == "sos" }, context)
+                                else settingsViewModel.setCollection(user.settings.collection + "sos", context)
+                            }.invokeOnCompletion { showLoadingDialog = false } },
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                    HorizontalDivider(color = CustomTheme.colors.l10)
+                }
+            }
         }
     }
 }
