@@ -320,7 +320,7 @@ object CampaignMaps {
                     expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)
                 ),
                 MapLocation("the_undergrove",          R.string.the_undergrove,            R.drawable.the_undergrove,
-                    expansionConditions = mapOf("sib" to ExpansionMapCondition.ADD)
+                    expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)
                 ),
             )
         }
