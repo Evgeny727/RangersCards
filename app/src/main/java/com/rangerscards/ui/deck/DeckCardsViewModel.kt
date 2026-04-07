@@ -7,7 +7,7 @@ import androidx.paging.cachedIn
 import com.rangerscards.objects.CardFilterOptions
 import com.rangerscards.data.repository.UserPreferencesRepository
 import com.rangerscards.data.local.card.CardDeckListItemProjection
-import com.rangerscards.domain.repository.DeckRepository
+import com.rangerscards.domain.model.Deck
 import com.rangerscards.ui.cards.Quintuple
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -22,15 +22,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import java.util.Locale
-
-data class DeckInfo(
-    val isUpgrade: Boolean,
-    val background: String,
-    val specialty: String,
-    val rewards: List<String>,
-    val extraSlots: List<String>,
-    val taboo: String?,
-)
 
 class DeckCardsViewModel(
     private val deckRepository: DeckRepository,
@@ -135,7 +126,7 @@ class DeckCardsViewModel(
         ) }
     }
 
-    fun updateDeckInfo(deck: FullDeckState, extraSlots: List<String>) {
+    fun updateDeckInfo(deck: Deck, extraSlots: List<String>) {
         _deckInfo.update {
             DeckInfo(
                 isUpgrade = deck.previousId != null,

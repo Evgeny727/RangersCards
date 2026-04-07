@@ -26,7 +26,6 @@ import com.rangerscards.SetAdhereTaboosMutation
 import com.rangerscards.SetPackCollectionMutation
 import com.rangerscards.UpdateHandleMutation
 import com.rangerscards.domain.repository.CardsRepository
-import com.rangerscards.domain.repository.SettingsRepository
 import com.rangerscards.data.local.card.Card
 import com.rangerscards.data.remote.NetworkConnectivityObserver
 import com.rangerscards.domain.TimestampNormilizer

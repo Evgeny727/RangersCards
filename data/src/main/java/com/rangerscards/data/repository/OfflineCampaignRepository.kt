@@ -10,13 +10,13 @@ import com.rangerscards.data.local.card.FullCardProjection
 import com.rangerscards.data.local.dao.CampaignDao
 import com.rangerscards.data.local.deck.DeckListItemProjection
 import com.rangerscards.data.local.deck.RoleCardProjection
-import com.rangerscards.domain.repository.CampaignRepository
+import com.rangerscards.domain.repository.CampaignsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.JsonElement
 
 class OfflineCampaignRepository(
     private val campaignDao: CampaignDao,
-) : CampaignRepository {
+) : CampaignsRepository {
 
     override suspend fun updateCampaign(campaign: Campaign) = campaignDao.updateCampaign(campaign)
 

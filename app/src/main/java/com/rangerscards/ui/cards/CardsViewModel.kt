@@ -169,5 +169,5 @@ class CardsViewModel(
     }
 
     fun getCardById(cardCode: String): Flow<FullCardProjection?> =
-        cardsRepository.getCardById(cardCode, _taboo.value)
+        cardsRepository.getCardByCode(cardCode, _taboo.value)
 }

@@ -11,7 +11,6 @@ import com.rangerscards.data.local.dao.DeckDao
 import com.rangerscards.data.local.deck.Deck
 import com.rangerscards.data.local.deck.RoleCardProjection
 import com.rangerscards.data.objects.PorterStem
-import com.rangerscards.domain.repository.DeckRepository
 import com.rangerscards.ui.deck.DeckInfo
 import kotlinx.coroutines.flow.Flow
 import java.util.Locale

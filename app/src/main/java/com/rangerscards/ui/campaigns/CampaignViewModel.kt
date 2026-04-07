@@ -42,8 +42,7 @@ import com.rangerscards.data.local.card.CardListItemProjection
 import com.rangerscards.data.local.card.FullCardProjection
 import com.rangerscards.data.local.deck.Deck
 import com.rangerscards.data.local.deck.RoleCardProjection
-import com.rangerscards.domain.repository.CampaignRepository
-import com.rangerscards.domain.repository.DeckRepository
+import com.rangerscards.domain.repository.CampaignsRepository
 import com.rangerscards.objects.CampaignMaps
 import com.rangerscards.objects.Path
 import com.rangerscards.objects.Weather
@@ -75,14 +74,14 @@ data class DayInfo(
 
 class CampaignViewModel(
     private val apolloClient: ApolloClient,
-    private val campaignRepository: CampaignRepository,
+    private val campaignsRepository: CampaignsRepository,
     private val deckRepository: DeckRepository,
 ) : ViewModel() {
 
-    fun getCampaignById(id: String) = campaignRepository.getCampaignFlowById(id)
+    fun getCampaignById(id: String) = campaignsRepository.getCampaignFlowById(id)
 
     fun getCampaignChallengeDeckIds(id: String) =
-        campaignRepository.getCampaignChallengeDeckFlowById(id)
+        campaignsRepository.getCampaignChallengeDeckFlowById(id)
 
     var isSubscriptionStarted = MutableStateFlow(false)
         private set
@@ -117,7 +116,7 @@ class CampaignViewModel(
                             val data = response.data
                             if (data != null) {
                                 isSubscriptionStarted.update { true }
-                                campaignRepository.updateCampaign(data.campaign!!.campaign.toCampaign(true))
+                                campaignsRepository.updateCampaign(data.campaign!!.campaign.toCampaign(true))
                             }
                         }
                     }
@@ -151,8 +150,8 @@ class CampaignViewModel(
             )
             ).addHttpHeader("Authorization", "Bearer $token").execute()
         } else {
-            val campaign = campaignRepository.getCampaignById(campaignId)
-            campaignRepository.updateCampaign(campaign.copy(name = newName,
+            val campaign = campaignsRepository.getCampaignById(campaignId)
+            campaignsRepository.updateCampaign(campaign.copy(name = newName,
                 updatedAt = getCurrentDateTime()))
         }
     }
@@ -248,8 +247,8 @@ class CampaignViewModel(
                 )
             ).addHttpHeader("Authorization", "Bearer $token").execute()
         } else {
-            val campaignEntry = campaignRepository.getCampaignById(campaign.id)
-            campaignRepository.updateCampaign(campaignEntry.copy(calendar = newCalendar,
+            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
+            campaignsRepository.updateCampaign(campaignEntry.copy(calendar = newCalendar,
                 updatedAt = getCurrentDateTime()))
         }
     }
@@ -297,8 +296,8 @@ class CampaignViewModel(
                 ExtendCampaignMutation(campaignId = campaign.id.toInt())
             ).addHttpHeader("Authorization", "Bearer $token").execute()
         } else {
-            val campaignEntry = campaignRepository.getCampaignById(campaign.id)
-            campaignRepository.updateCampaign(campaignEntry.copy(
+            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
+            campaignsRepository.updateCampaign(campaignEntry.copy(
                 extendedCalendar = true,
                 updatedAt = getCurrentDateTime()))
         }
@@ -315,8 +314,8 @@ class CampaignViewModel(
                 )
             ).addHttpHeader("Authorization", "Bearer $token").execute()
         } else {
-            val campaignEntry = campaignRepository.getCampaignById(campaign.id)
-            campaignRepository.updateCampaign(campaignEntry.copy(
+            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
+            campaignsRepository.updateCampaign(campaignEntry.copy(
                 day = campaign.currentDay + 1,
                 updatedAt = getCurrentDateTime()))
         }
@@ -359,8 +358,8 @@ class CampaignViewModel(
                 put("location", it.location)
                 put("path_terrain", it.pathTerrain)
             }) } }
-            val campaignEntry = campaignRepository.getCampaignById(campaign.id)
-            campaignRepository.updateCampaign(campaignEntry.copy(
+            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
+            campaignsRepository.updateCampaign(campaignEntry.copy(
                 day = campaign.currentDay + if (isCamping) 1 else 0,
                 currentLocation = selectedLocation,
                 currentPathTerrain = selectedPathTerrain,
@@ -373,7 +372,7 @@ class CampaignViewModel(
 
     suspend fun drawChallengeCard(): Int? {
         val drawCardId = currentChallengeDeck?.draw()
-        campaignRepository.upsertChallengeDeck(
+        campaignsRepository.upsertChallengeDeck(
             campaign.value!!.id,
             buildJsonArray { currentChallengeDeck?.getDeckAsList()?.forEach { add(it) } }
             )
@@ -389,7 +388,7 @@ class CampaignViewModel(
         val exclude = (topList + bottomList).toSet()
         val middleList = deck.filter { it !in exclude }
         val newList = topList + middleList + bottomList
-        campaignRepository.upsertChallengeDeck(
+        campaignsRepository.upsertChallengeDeck(
             campaign.value!!.id,
             buildJsonArray { newList.forEach { add(it) } }
         )
@@ -399,7 +398,7 @@ class CampaignViewModel(
     fun discardScoutedCards() = currentChallengeDeck?.resetScoutPosition()
 
     suspend fun reshuffleChallengeDeck() {
-        campaignRepository.upsertChallengeDeck(
+        campaignsRepository.upsertChallengeDeck(
             campaign.value!!.id,
             buildJsonArray { currentChallengeDeck?.reshuffle()?.forEach { add(it) } }
         )
@@ -412,7 +411,7 @@ class CampaignViewModel(
 
     private val _collection = MutableStateFlow(listOf("core"))
 
-    fun getRole(id: String): Flow<RoleCardProjection?> = campaignRepository.getRole(id, _taboo.value)
+    fun getRole(id: String): Flow<RoleCardProjection?> = campaignsRepository.getRole(id, _taboo.value)
 
     fun setTaboo(taboo: Boolean?) {
         _taboo.update { taboo ?: false }
@@ -465,8 +464,8 @@ class CampaignViewModel(
             }
             deckRepository.upsertDecks(decks)
             if (updateCampaign) {
-                val campaignEntry = campaignRepository.getCampaignById(campaign.id)
-                campaignRepository.updateCampaign(campaignEntry.copy(
+                val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
+                campaignsRepository.updateCampaign(campaignEntry.copy(
                     latestDecks = JsonObject(campaignEntry.latestDecks.jsonObject.filterKeys { it != deckId }),
                     updatedAt = getCurrentDateTime()
                 ))
@@ -495,7 +494,7 @@ class CampaignViewModel(
                 campaignName = campaign.name,
                 campaignRewards = buildJsonArray { campaign.rewards.forEach { add(it) } }
             ))
-            val campaignEntry = campaignRepository.getCampaignById(campaign.id)
+            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
             val newDeckJson = buildJsonArray {
                 add(deck.name)
                 add(deck.meta)
@@ -503,7 +502,7 @@ class CampaignViewModel(
                     put(deck.userId, deck.userHandle)
                 })
             }
-            campaignRepository.updateCampaign(campaignEntry.copy(
+            campaignsRepository.updateCampaign(campaignEntry.copy(
                 latestDecks = JsonObject(campaignEntry.latestDecks.jsonObject + (deckId to newDeckJson)),
                 updatedAt = getCurrentDateTime()
             ))
@@ -600,9 +599,9 @@ class CampaignViewModel(
                 .addHttpHeader("Authorization", "Bearer $token").execute()
             if (newCampaign.data != null) {
                 val uploadedData = newCampaign.data!!.campaign!!.campaign
-                campaignRepository.insertCampaign(uploadedData.toCampaign(true))
+                campaignsRepository.insertCampaign(uploadedData.toCampaign(true))
                 uploadedCampaignIdToOpen.update { uploadedData.id.toString() }
-                campaignRepository.deleteCampaign(campaign.id)
+                campaignsRepository.deleteCampaign(campaign.id)
             }
         }
     }
@@ -625,14 +624,14 @@ class CampaignViewModel(
                     GetCampaignQuery(campaignId = campaign.previousCampaignId.toInt())
                 ).addHttpHeader("Authorization", "Bearer $token")
                     .fetchPolicy(FetchPolicy.NetworkOnly).execute()
-                campaignRepository.updateCampaign(oldCampaign.data!!.campaign!!.campaign.toCampaign(true))
+                campaignsRepository.updateCampaign(oldCampaign.data!!.campaign!!.campaign.toCampaign(true))
             }
-            campaignRepository.deleteCampaign(campaign.id)
+            campaignsRepository.deleteCampaign(campaign.id)
         } else {
             if (campaign.previousCampaignId != null) {
-                val previousCampaign = campaignRepository.getCampaignById(campaign.previousCampaignId)
-                val currentCampaign = campaignRepository.getCampaignById(campaign.id)
-                campaignRepository.updateCampaign(
+                val previousCampaign = campaignsRepository.getCampaignById(campaign.previousCampaignId)
+                val currentCampaign = campaignsRepository.getCampaignById(campaign.id)
+                campaignsRepository.updateCampaign(
                     previousCampaign.copy(
                         latestDecks = currentCampaign.latestDecks,
                         updatedAt = getCurrentDateTime(),
@@ -662,7 +661,7 @@ class CampaignViewModel(
                     removeDeckCampaign(it, user, false)
                 }
             }
-            campaignRepository.deleteCampaign(campaign.id)
+            campaignsRepository.deleteCampaign(campaign.id)
         }
     }
 
@@ -679,7 +678,7 @@ class CampaignViewModel(
         deckIds.forEach {
             removeDeckCampaign(it, user, false)
         }
-        campaignRepository.deleteCampaign(campaign.id)
+        campaignsRepository.deleteCampaign(campaign.id)
     }
 
     fun checkIfCanUndo(): Boolean {
@@ -713,8 +712,8 @@ class CampaignViewModel(
                     )
                 ).addHttpHeader("Authorization", "Bearer $token").execute()
             } else {
-                val campaignEntry = campaignRepository.getCampaignById(campaign.id)
-                campaignRepository.updateCampaign(campaignEntry.copy(
+                val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
+                campaignsRepository.updateCampaign(campaignEntry.copy(
                     day = campaign.currentDay - 1,
                     updatedAt = getCurrentDateTime()
                 ))
@@ -752,8 +751,8 @@ class CampaignViewModel(
                     )
                 ).addHttpHeader("Authorization", "Bearer $token").execute()
             } else {
-                val campaignEntry = campaignRepository.getCampaignById(campaign.id)
-                campaignRepository.updateCampaign(campaignEntry.copy(
+                val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
+                campaignsRepository.updateCampaign(campaignEntry.copy(
                     day = previousDay,
                     history = newHistoryJson,
                     currentLocation = previousLocation,
@@ -771,11 +770,11 @@ class CampaignViewModel(
         val packIds = if (showAllRewards.value) filteredCollection + _packId.value
             else setOf(_packId.value)
         campaign.value?.id
-        return campaignRepository.getRewards(_taboo.value, packIds.toList())
+        return campaignsRepository.getRewards(_taboo.value, packIds.toList())
     }
 
     fun getRewardById(cardCode: String): Flow<FullCardProjection> =
-        campaignRepository.getCardById(cardCode, _taboo.value)
+        campaignsRepository.getCardById(cardCode, _taboo.value)
 
     suspend fun addCampaignReward(id: String, user: FirebaseUser?) {
         val campaign = campaign.value!!
@@ -790,8 +789,8 @@ class CampaignViewModel(
                 )
             ).addHttpHeader("Authorization", "Bearer $token").execute()
         } else {
-            val campaignEntry = campaignRepository.getCampaignById(campaign.id)
-            campaignRepository.updateCampaign(campaignEntry.copy(
+            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
+            campaignsRepository.updateCampaign(campaignEntry.copy(
                 rewards = newJsonRewards,
                 updatedAt = getCurrentDateTime()
             ))
@@ -811,8 +810,8 @@ class CampaignViewModel(
                 )
             ).addHttpHeader("Authorization", "Bearer $token").execute()
         } else {
-            val campaignEntry = campaignRepository.getCampaignById(campaign.id)
-            campaignRepository.updateCampaign(campaignEntry.copy(
+            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
+            campaignsRepository.updateCampaign(campaignEntry.copy(
                 rewards = newJsonRewards,
                 updatedAt = getCurrentDateTime()
             ))
@@ -848,8 +847,8 @@ class CampaignViewModel(
                 )
             ).addHttpHeader("Authorization", "Bearer $token").execute()
         } else {
-            val campaignEntry = campaignRepository.getCampaignById(campaign.id)
-            campaignRepository.updateCampaign(campaignEntry.copy(
+            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
+            campaignsRepository.updateCampaign(campaignEntry.copy(
                 removed = newJsonRemoved,
                 updatedAt = getCurrentDateTime()
             ))
@@ -885,8 +884,8 @@ class CampaignViewModel(
                 )
             ).addHttpHeader("Authorization", "Bearer $token").execute()
         } else {
-            val campaignEntry = campaignRepository.getCampaignById(campaign.id)
-            campaignRepository.updateCampaign(campaignEntry.copy(
+            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
+            campaignsRepository.updateCampaign(campaignEntry.copy(
                 removed = JsonArray(campaignEntry.removed.jsonArray + newJsonRemoved),
                 updatedAt = getCurrentDateTime()
             ))
@@ -907,8 +906,8 @@ class CampaignViewModel(
                 )
             ).addHttpHeader("Authorization", "Bearer $token").execute()
         } else {
-            val campaignEntry = campaignRepository.getCampaignById(campaign.id)
-            campaignRepository.updateCampaign(campaignEntry.copy(
+            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
+            campaignsRepository.updateCampaign(campaignEntry.copy(
                 events = JsonArray(campaignEntry.events.jsonArray + newJsonEvent),
                 updatedAt = getCurrentDateTime()
             ))
@@ -932,8 +931,8 @@ class CampaignViewModel(
                 )
             ).addHttpHeader("Authorization", "Bearer $token").execute()
         } else {
-            val campaignEntry = campaignRepository.getCampaignById(campaign.id)
-            campaignRepository.updateCampaign(campaignEntry.copy(
+            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
+            campaignsRepository.updateCampaign(campaignEntry.copy(
                 events = newJsonList,
                 updatedAt = getCurrentDateTime()
             ))
@@ -955,8 +954,8 @@ class CampaignViewModel(
                 )
             ).addHttpHeader("Authorization", "Bearer $token").execute()
         } else {
-            val campaignEntry = campaignRepository.getCampaignById(campaign.id)
-            campaignRepository.updateCampaign(campaignEntry.copy(
+            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
+            campaignsRepository.updateCampaign(campaignEntry.copy(
                 missions = JsonArray(campaignEntry.missions.jsonArray + newJsonMission),
                 updatedAt = getCurrentDateTime()
             ))
@@ -994,8 +993,8 @@ class CampaignViewModel(
                 )
             ).addHttpHeader("Authorization", "Bearer $token").execute()
         } else {
-            val campaignEntry = campaignRepository.getCampaignById(campaign.id)
-            campaignRepository.updateCampaign(campaignEntry.copy(
+            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
+            campaignsRepository.updateCampaign(campaignEntry.copy(
                 missions = newJsonList,
                 updatedAt = getCurrentDateTime()
             ))
@@ -1020,8 +1019,8 @@ class CampaignViewModel(
                 )
             ).addHttpHeader("Authorization", "Bearer $token").execute()
         } else {
-            val campaignEntry = campaignRepository.getCampaignById(campaign.id)
-            campaignRepository.updateCampaign(campaignEntry.copy(
+            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
+            campaignsRepository.updateCampaign(campaignEntry.copy(
                 missions = newJsonList,
                 updatedAt = getCurrentDateTime()
             ))
@@ -1041,8 +1040,8 @@ class CampaignViewModel(
                 )
             ).addHttpHeader("Authorization", "Bearer $token").execute()
         } else {
-            val campaignEntry = campaignRepository.getCampaignById(campaign.id)
-            campaignRepository.updateCampaign(campaignEntry.copy(
+            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
+            campaignsRepository.updateCampaign(campaignEntry.copy(
                 expansions = newJsonExpansions,
                 updatedAt = getCurrentDateTime()
             ))

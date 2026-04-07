@@ -83,7 +83,7 @@ class OfflineCardsRepository(private val cardDao: CardDao) : CardsRepository {
         else "real_composite:($searchQuery)"
     }
 
-    override fun getCardById(cardCode: String, taboo: Boolean): Flow<FullCardProjection?> =
+    override fun getCardByCode(cardCode: String, taboo: Boolean): Flow<FullCardProjection?> =
         cardDao.getCardById(cardCode, taboo)
 
     private fun buildSearchCardsQuery(

@@ -7,7 +7,7 @@ import androidx.paging.cachedIn
 import com.google.firebase.auth.auth
 import com.google.firebase.Firebase
 import com.rangerscards.data.local.deck.DeckListItemProjection
-import com.rangerscards.domain.repository.CampaignRepository
+import com.rangerscards.domain.repository.CampaignsRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 
 class CampaignDecksViewModel(
-    private val campaignRepository: CampaignRepository
+    private val campaignRepository: CampaignsRepository
 ) : ViewModel() {
 
     // Holds the current search term entered by the user.

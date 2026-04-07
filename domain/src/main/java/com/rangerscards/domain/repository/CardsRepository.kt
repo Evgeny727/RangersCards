@@ -1,35 +1,42 @@
 package com.rangerscards.domain.repository
 
 import androidx.paging.PagingData
-import com.rangerscards.objects.CardFilterOptions
-import com.rangerscards.data.local.card.Card
-import com.rangerscards.data.local.card.CardListItemProjection
-import com.rangerscards.data.local.card.FullCardProjection
+import com.rangerscards.domain.model.CardFilterOptions
+import com.rangerscards.domain.model.CardListItem
+import com.rangerscards.domain.model.FullCard
+import com.rangerscards.domain.model.RoleCard
 import kotlinx.coroutines.flow.Flow
 
 interface CardsRepository {
 
-    suspend fun insertAllCards(cards: List<Card>)
+    suspend fun downloadAllCards(locale: String)
 
-    suspend fun upsertAllCards(cards: List<Card>)
+    suspend fun isCardsTableExists(): Boolean
 
-    suspend fun isExists(): Boolean
+    suspend fun isCardsUpdateAvailable(locale: String, savedTimestamp: String): Boolean
 
-    fun getAllCards(
+    fun getAllPaginatedCardsFlow(
         spoiler: Boolean,
         taboo: Boolean,
         packIds: List<String>,
         filterOptions: CardFilterOptions
-    ): Flow<PagingData<CardListItemProjection>>
+    ): Flow<PagingData<CardListItem>>
 
-    fun searchCards(
+    fun searchPaginatedCardsFlow(
         filterOptions: CardFilterOptions,
         includeEnglish: Boolean,
         spoiler: Boolean,
-        language: String,
         taboo: Boolean,
         packIds: List<String>
-    ): Flow<PagingData<CardListItemProjection>>
+    ): Flow<PagingData<CardListItem>>
 
-    fun getCardById(cardCode: String, taboo: Boolean): Flow<FullCardProjection?>
+    fun getCardByCodeFlow(cardCode: String, taboo: Boolean): Flow<FullCard?>
+
+    fun getRoleCardByIdFlow(id: String): Flow<RoleCard?>
+
+    fun getAllPaginatedRoleCardsFlow(specialty: String, taboo: Boolean, packIds: List<String>): Flow<PagingData<RoleCard>>
+
+    fun getRoleCardsByIdFlow(ids: List<String>): Flow<List<RoleCard>>
+
+    fun getRewards(taboo: Boolean, packIds: List<String>): Flow<List<CardListItem>>
 }

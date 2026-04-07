@@ -17,7 +17,6 @@ import com.rangerscards.TransferCampaignMutation
 import com.rangerscards.data.local.campaign.Campaign
 import com.rangerscards.data.local.campaign.CampaignListItemProjection
 import com.rangerscards.data.local.deck.Deck
-import com.rangerscards.domain.repository.DeckRepository
 import com.rangerscards.domain.TimestampNormilizer
 import com.rangerscards.ui.decks.getCurrentDateTime
 import com.rangerscards.ui.decks.toDeck

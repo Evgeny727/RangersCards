@@ -1,5 +1,6 @@
 package com.rangerscards.domain.model
 
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentMapOf
 
@@ -65,4 +66,13 @@ data class OftenUpdatableDeckValues(
     val spi: Int,
     val fit: Int,
     val foc: Int,
+)
+
+data class DeckInfo(
+    val isUpgrade: Boolean,
+    val background: String,
+    val specialty: String,
+    val rewards: ImmutableList<String>,
+    val extraSlots: ImmutableList<String>,
+    val taboo: String?,
 )
