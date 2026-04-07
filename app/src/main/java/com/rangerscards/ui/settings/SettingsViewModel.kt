@@ -25,11 +25,13 @@ import com.rangerscards.SendFriendRequestMutation
 import com.rangerscards.SetAdhereTaboosMutation
 import com.rangerscards.SetPackCollectionMutation
 import com.rangerscards.UpdateHandleMutation
-import com.rangerscards.domain.repository.CardsRepository
 import com.rangerscards.data.local.card.Card
 import com.rangerscards.data.remote.NetworkConnectivityObserver
 import com.rangerscards.domain.TimestampNormilizer
+import com.rangerscards.domain.model.User
+import com.rangerscards.domain.model.UserSettings
 import com.rangerscards.domain.repository.AuthRepository
+import com.rangerscards.domain.repository.CardsRepository
 import com.rangerscards.domain.repository.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,14 +55,9 @@ import javax.inject.Inject
  */
 data class UserUIState(
     val currentUser: String? = null,
-    val userInfo: GetProfileQuery.Data? = null,
+    val userInfo: User? = null,
     val language: String = Locale.getDefault().language.substring(0..1),
     val settings: UserSettings = UserSettings()
-)
-
-data class UserSettings(
-    val taboo: Boolean = false,
-    val collection: List<String> = emptyList()
 )
 
 data class UserAuthState(
