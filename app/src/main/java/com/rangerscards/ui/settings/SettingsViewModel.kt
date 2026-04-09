@@ -216,18 +216,6 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    private fun normalizeHandle(handle: String): String {
-        return handle.replace("[\\.\\$\\[\\]#/]".toRegex(),"_")
-            .lowercase(Locale.ENGLISH).trim()
-    }
-
-    private fun validateEmail(email: String): Boolean {
-        return email.isNotEmpty() && Patterns.EMAIL_ADDRESS.matcher(email).matches()
-    }
-    private fun validatePassword(password: String): Boolean {
-        return password.length in 6..4096
-    }
-
     fun getUserInfo(context: Context, id: String) {
         viewModelScope.launch {
             val result = authRepository.getToken(isNetworkConnected.value ?: false)
@@ -251,7 +239,7 @@ class SettingsViewModel @Inject constructor(
     }
 
     suspend fun updateHandle(context: Context, handle: String) {
-        if (handle == (userUiState.value.userInfo?.profile?.userProfile?.handle ?: "")) return
+        if (handle == (userUiState.value.userInfo?.userInfo?.handle ?: "")) return
         var isTaken: Boolean
         viewModelScope.launch {
             if (handle.length !in 3..22) {

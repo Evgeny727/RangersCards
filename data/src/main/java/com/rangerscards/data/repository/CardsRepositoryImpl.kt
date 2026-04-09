@@ -4,18 +4,23 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.sqlite.db.SimpleSQLiteQuery
-import com.rangerscards.objects.CardFilterOptions
-import com.rangerscards.objects.CardFilters
 import com.rangerscards.data.local.card.Card
 import com.rangerscards.data.local.card.CardListItemProjection
 import com.rangerscards.data.local.card.FullCardProjection
 import com.rangerscards.data.local.dao.CardDao
 import com.rangerscards.data.objects.PorterStem
+import com.rangerscards.data.remote.CardsRemoteDataSource
 import com.rangerscards.domain.repository.CardsRepository
+import com.rangerscards.objects.CardFilterOptions
+import com.rangerscards.objects.CardFilters
 import kotlinx.coroutines.flow.Flow
 import java.util.Locale
+import javax.inject.Inject
 
-class OfflineCardsRepository(private val cardDao: CardDao) : CardsRepository {
+class CardsRepositoryImpl @Inject constructor(
+    private val cardsRemoteDataSource: CardsRemoteDataSource,
+    private val cardDao: CardDao,
+) : CardsRepository {
 
     override suspend fun insertAllCards(cards: List<Card>) = cardDao.insertAll(cards)
 

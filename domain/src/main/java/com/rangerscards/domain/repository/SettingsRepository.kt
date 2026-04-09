@@ -1,22 +1,22 @@
 package com.rangerscards.domain.repository
 
+import com.rangerscards.domain.model.User
 import com.rangerscards.domain.model.UserInfo
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.Flow
 
 interface SettingsRepository {
 
-    suspend fun getUserProfile(userId: String)
+    fun getUserProfile(userId: String): Flow<Result<User>>
 
-    suspend fun updateHandle(userId: String, handle: String)
+    suspend fun updateHandle(userId: String, handle: String): Result<Unit>
 
-    suspend fun setCollection(userId: String, collection: List<String>)
+    suspend fun setCollection(userId: String, collection: List<String>): Result<Unit>
 
-    suspend fun setTaboo(userId: String, taboo: Boolean)
+    suspend fun setTaboo(userId: String, taboo: Boolean): Result<Unit>
 
-    fun searchUsersByHandle(handle: String): Flow<ImmutableList<UserInfo>>
+    suspend fun searchUsersByHandle(handle: String): Result<List<UserInfo>>
 
-    suspend fun friendRequestAction(friendAction: FriendAction, friendUserId: String)
+    suspend fun friendRequestAction(friendAction: FriendAction, friendUserId: String): Result<Unit>
 
 }
 

@@ -1,11 +1,10 @@
 package com.rangerscards.data.repository
 
-import android.util.Log
+import android.util.Patterns
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.rangerscards.domain.repository.AuthRepository
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.map
@@ -31,52 +30,46 @@ class FirebaseAuthRepository @Inject constructor(private val auth: FirebaseAuth)
     override val isLoggedIn: Flow<Boolean> =
         currentUserId.map { it != null }
 
-    override suspend fun getToken(forceRefresh: Boolean): Result<String?> =
-        runCatching {
-            performFirebaseOperationWithRetry {
-                auth.currentUser?.getIdToken(forceRefresh)?.await()?.token
-            }
-        }
-
     override suspend fun signIn(email: String, password: String): Result<Unit> =
         runCatching {
-            auth.signInWithEmailAndPassword(email, password).await()
-            Unit
+            if (validateEmail(email)) {
+                if (validatePassword(password)) {
+                    auth.signInWithEmailAndPassword(email, password).await()
+                    Unit
+                } else throw IllegalArgumentException("invalid_password")
+            } else throw IllegalArgumentException("invalid_email")
         }
 
     override suspend fun createAccount(email: String, password: String): Result<Unit> =
         runCatching {
-            auth.createUserWithEmailAndPassword(email, password).await()
-            Unit
+            if (validateEmail(email)) {
+                if (validatePassword(password)) {
+                    auth.createUserWithEmailAndPassword(email, password).await()
+                    Unit
+                } else throw IllegalArgumentException("invalid_password")
+            } else throw IllegalArgumentException("invalid_email")
         }
 
     override suspend fun deleteAccount(email: String, password: String): Result<Unit> =
         runCatching {
-            auth.currentUser?.reauthenticate(EmailAuthProvider.getCredential(email, password))?.await()
-            auth.currentUser?.delete()?.await()
-            Unit
+            if (validateEmail(email)) {
+                if (validatePassword(password)) {
+                    auth.currentUser?.reauthenticate(EmailAuthProvider.getCredential(email, password))?.await()
+                    auth.currentUser?.delete()?.await()
+                    Unit
+                } else throw IllegalArgumentException("invalid_password")
+            } else throw IllegalArgumentException("invalid_email")
         }
 
     override suspend fun signOut() {
         auth.signOut()
     }
 
-    private suspend fun <T> performFirebaseOperationWithRetry(
-        maxRetries: Int = 3,
-        initialDelay: Long = 1000L,
-        factor: Double = 2.0,
-        block: suspend () -> T
-    ): T? {
-        var currentDelay = initialDelay
-        repeat(maxRetries) { attempt ->
-            try {
-                return block()
-            } catch (e: Exception) {
-                Log.w("FirebaseOperation", "Attempt ${attempt + 1} failed: ${e.localizedMessage}")
-            }
-            delay(currentDelay)
-            currentDelay = (currentDelay * factor).toLong()
-        }
-        return null
+    private fun validateEmail(email: String): Boolean {
+        return email.isNotEmpty() && Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
+
+    private fun validatePassword(password: String): Boolean {
+        return password.length in 6..4096
     }
 }

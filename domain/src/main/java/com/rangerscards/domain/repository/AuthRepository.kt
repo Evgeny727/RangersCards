@@ -5,8 +5,6 @@ import kotlinx.coroutines.flow.Flow
 interface AuthRepository {
     val currentUserId: Flow<String?>
     val isLoggedIn: Flow<Boolean>
-
-    suspend fun getToken(forceRefresh: Boolean = false): Result<String?>
     suspend fun signIn(email: String, password: String): Result<Unit>
     suspend fun createAccount(email: String, password: String): Result<Unit>
     suspend fun deleteAccount(email: String, password: String): Result<Unit>

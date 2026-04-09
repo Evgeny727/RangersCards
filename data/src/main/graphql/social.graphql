@@ -1,6 +1,5 @@
 fragment UserProfile on rangers_users {
-  id
-  handle
+  ...UserInfo
   friends {
     user {
       ...UserInfo
@@ -52,7 +51,7 @@ mutation setAdhereTaboos($userId: String!, $adhereTaboos: Boolean!) {
   }
 }
 
-query getUserInfoByHandle($handle: String!) {
+query getUsersInfoByHandle($handle: String!) {
   profile: rangers_users(
     where: {
       handle: {
@@ -60,6 +59,19 @@ query getUserInfoByHandle($handle: String!) {
       }
     }
 	) {
+    ...UserInfo
+  }
+}
+
+query getUserInfoByHandle($handle: String!) {
+  profile: rangers_users(
+    where: {
+      handle: {
+        _ilike: $handle
+      }
+    }
+    limit: 1
+  ) {
     ...UserInfo
   }
 }

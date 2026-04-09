@@ -10,7 +10,9 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.rangerscards.domain.repository.UserPreferencesRepository
-import kotlin.text.split
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -55,7 +57,7 @@ class UserPreferencesRepositoryImpl @Inject constructor(
             preferences[TABOO] ?: false
         }
 
-    override val collection: Flow<List<String>> = dataStore.data
+    override val collection: Flow<ImmutableList<String>> = dataStore.data
         .catch {
             if (it is IOException) {
                 Log.e(TAG, "Error reading preferences.", it)
@@ -64,7 +66,7 @@ class UserPreferencesRepositoryImpl @Inject constructor(
                 throw it
             }
         }.map { preferences ->
-            preferences[COLLECTION]?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
+            preferences[COLLECTION]?.split(",")?.filter { it.isNotBlank() }?.toImmutableList() ?: persistentListOf()
         }
 
     override val cardsUpdatedAt: Flow<String> = dataStore.data.catch {
@@ -78,7 +80,7 @@ class UserPreferencesRepositoryImpl @Inject constructor(
         preferences[CARDS_UPDATED_AT] ?: ""
     }
 
-    override val sortOrder: Flow<List<String>> = dataStore.data
+    override val sortOrder: Flow<ImmutableList<String>> = dataStore.data
         .catch {
             if (it is IOException) {
                 Log.e(TAG, "Error reading preferences.", it)
@@ -87,7 +89,7 @@ class UserPreferencesRepositoryImpl @Inject constructor(
                 throw it
             }
         }.map { preferences ->
-            preferences[CARDS_SORT_ORDER]?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
+            preferences[CARDS_SORT_ORDER]?.split(",")?.filter { it.isNotBlank() }?.toImmutableList() ?: persistentListOf()
         }
 
     private companion object {
