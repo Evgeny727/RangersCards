@@ -4,13 +4,21 @@ import com.rangerscards.domain.model.User
 import com.rangerscards.domain.model.UserInfo
 import com.rangerscards.fragment.UserProfile
 import kotlinx.collections.immutable.toImmutableList
+import com.rangerscards.fragment.UserInfo as RemoteUserInfo
 
-fun com.rangerscards.fragment.UserInfo.toDomain(): UserInfo =
+
+/**
+ * Extension function to convert [RemoteUserInfo] to [UserInfo]
+ */
+fun RemoteUserInfo.toDomain(): UserInfo =
     UserInfo(
         this.id,
         this.handle
     )
 
+/**
+ * Extension function to convert [UserProfile] to [User]
+ */
 fun UserProfile.toDomain(): User =
     User(
         userInfo.toDomain(),

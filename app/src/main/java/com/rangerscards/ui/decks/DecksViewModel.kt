@@ -285,22 +285,6 @@ class DecksViewModel(
     }
 }
 
-fun getCurrentDateTime(): String {
-    // Get the current time
-    val now = Date()
-    // Create a formatter using the pattern "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
-    // The "XXX" pattern is supported in API 24 and formats the timezone as +00:00
-    val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.US)
-    sdf.timeZone = TimeZone.getTimeZone("UTC")
-    val formatted = sdf.format(now)
-    // Replace trailing "Z" with "+00:00" if necessary
-    return if (formatted.endsWith("Z")) {
-        formatted.substring(0, formatted.length - 1) + "+00:00"
-    } else {
-        formatted
-    }
-}
-
 /**
  * Extension function to convert [com.rangerscards.fragment.Deck] to [Deck]
  */

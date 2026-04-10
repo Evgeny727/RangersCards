@@ -33,6 +33,7 @@ fun FullCardScreen(
     val pagerState = rememberPagerState(initialPage = cardIndex) { cardsLazyItems.itemCount }
     HorizontalPager(
         state = pagerState,
+        key = { page -> cardsLazyItems[page]!!.id },
         modifier = modifier
             .background(CustomTheme.colors.l30)
             .fillMaxSize(),

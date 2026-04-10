@@ -41,26 +41,5 @@ interface DecksRepository {
 
     suspend fun deleteDecksById(ids: List<String>, uploaded: Boolean)
 
-    fun getDeckCardsByIdFlow(ids: List<String>, tabooId: String?): Flow<List<CardDeckListItem>>
-
-    suspend fun getChangedDeckCardsById(ids: List<String>, tabooId: String?): ImmutableList<CardDeckListItem>
-
-    fun getAllPaginatedDeckCardsFlow(
-        deckInfo: DeckInfo,
-        typeIndex: Int,
-        showAllSpoilers: Boolean,
-        packIds: List<String>,
-        filterOptions: CardFilterOptions
-    ): Flow<PagingData<CardDeckListItem>>
-
-    fun searchPaginatedDeckCardsFlow(
-        filterOptions: CardFilterOptions,
-        deckInfo: DeckInfo,
-        includeEnglish: Boolean,
-        typeIndex: Int,
-        showAllSpoilers: Boolean,
-        packIds: List<String>
-    ): Flow<PagingData<CardDeckListItem>>
-
     suspend fun getAllDeckVersionIds(startId: String): ImmutableList<String>
 }
