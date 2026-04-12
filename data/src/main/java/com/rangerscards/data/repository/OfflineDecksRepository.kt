@@ -3,30 +3,62 @@ package com.rangerscards.data.repository
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
-import androidx.sqlite.db.SimpleSQLiteQuery
-import com.rangerscards.data.local.card.CardDeckListItemProjection
-import com.rangerscards.data.local.card.CardListItemProjection
+import com.rangerscards.data.local.dao.CampaignDao
 import com.rangerscards.data.local.dao.DeckDao
-import com.rangerscards.data.local.deck.Deck
-import com.rangerscards.data.local.deck.DeckListItemProjection
-import com.rangerscards.data.local.deck.RoleCardProjection
-import com.rangerscards.data.objects.PorterStem
+import com.rangerscards.data.mapper.toDbDeck
+import com.rangerscards.data.mapper.toDbDecks
+import com.rangerscards.data.mapper.toDomain
+import com.rangerscards.data.mapper.toJsonDeckMeta
+import com.rangerscards.data.mapper.toJsonDeckSlots
 import com.rangerscards.data.remote.DecksRemoteDataSource
+import com.rangerscards.domain.TimestampNormilizer.getCurrentDateTime
+import com.rangerscards.domain.model.Deck
+import com.rangerscards.domain.model.DeckCampaignInfo
+import com.rangerscards.domain.model.DeckListItem
+import com.rangerscards.domain.model.DeckMeta
+import com.rangerscards.domain.model.DeckSlot
 import com.rangerscards.domain.repository.DecksRepository
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
-import java.util.Locale
+import kotlinx.coroutines.flow.map
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.put
 import javax.inject.Inject
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
+import com.rangerscards.data.local.deck.Deck as DbDeck
 
 
 class OfflineDecksRepository @Inject constructor(
     private val decksRemoteDataSource: DecksRemoteDataSource,
-    private val deckDao: DeckDao
+    private val deckDao: DeckDao,
+    private val campaignDao: CampaignDao
 ) : DecksRepository {
-    override suspend fun deleteAllUploadedDecks() = deckDao.deleteAllUploadedDecks()
 
-    override suspend fun syncDecks(networkDecks: List<Deck>) = deckDao.syncDecks(networkDecks)
+    override suspend fun deleteAllLocalDecks() = deckDao.deleteAllLocalDecks()
 
-    override fun getAllDecks(userId: String): Flow<PagingData<DeckListItemProjection>> {
+    override suspend fun syncDecks(userId: String) = runCatching {
+        val networkDecks = decksRemoteDataSource.fetchDecks(userId).dataAssertNoErrors
+        deckDao.syncDecks(networkDecks.decks.toDbDecks())
+    }
+
+    override suspend fun syncDeckById(id: Int) = runCatching {
+        val networkDeck = decksRemoteDataSource.fetchDeckById(id).dataAssertNoErrors
+        deckDao.upsertDeck(networkDeck.deck!!.deck.toDbDeck())
+    }
+
+    override fun getAllPaginatedDecksFlow(
+        userId: String,
+        uploaded: Boolean?
+    ): Flow<PagingData<DeckListItem>> {
         // Create a Pager that wraps the PagingSource from the DAO.
         return Pager(
             config = PagingConfig(
@@ -34,11 +66,17 @@ class OfflineDecksRepository @Inject constructor(
                 enablePlaceholders = false,
                 initialLoadSize = 20
             ),
-            pagingSourceFactory = { deckDao.getAllDecks(userId) }
-        ).flow
+            pagingSourceFactory = { deckDao.getAllDecks(userId, uploaded) }
+        ).flow.map { pagingData ->
+            pagingData.toDomain()
+        }
     }
 
-    override fun searchDecks(query: String, userId: String): Flow<PagingData<DeckListItemProjection>> {
+    override fun searchPaginatedDecksFlow(
+        query: String,
+        userId: String,
+        uploaded: Boolean?
+    ): Flow<PagingData<DeckListItem>> {
         val newQuery = query
             .lowercase()
             .replace("\"(\\[\"]|.*)?\"".toRegex(), " ")
@@ -52,379 +90,349 @@ class OfflineDecksRepository @Inject constructor(
                 enablePlaceholders = false,
                 initialLoadSize = 20
             ),
-            pagingSourceFactory = { deckDao.searchDecks(newQuery, userId) }
-        ).flow
+            pagingSourceFactory = { deckDao.searchDecks(newQuery, userId, uploaded) }
+        ).flow.map { pagingData ->
+            pagingData.toDomain()
+        }
     }
 
-    override fun getCard(id: String): Flow<CardListItemProjection?> = deckDao.getCard(id)
-
-    override fun getRoles(specialty: String, taboo: Boolean, packIds: List<String>): Flow<PagingData<CardListItemProjection>> {
-        // Create a Pager that wraps the PagingSource from the DAO.
-        return Pager(
-            config = PagingConfig(
-                pageSize = 5,
-                enablePlaceholders = false,
-                initialLoadSize = 5
-            ),
-            pagingSourceFactory = { deckDao.getRoles(specialty, taboo, packIds) }
-        ).flow
-    }
-
-    override suspend fun insertDeck(deck: Deck) = deckDao.insertDeck(deck)
-
-    override suspend fun getDeck(id: String): Deck? = deckDao.getDeckById(id)
-
-    override suspend fun getRole(code: String, taboo: Boolean): RoleCardProjection? =
-        deckDao.getRole(code, taboo)
-
-    override suspend fun updateDeck(deck: Deck) = deckDao.updateDeck(deck)
-
-    override suspend fun insertDeck(deck: Deck) = deckDao.insertDeck(deck)
-
-    override suspend fun upsertDeck(deck: Deck) = deckDao.upsertDeck(deck)
-
-    override suspend fun upsertDecks(decks: List<Deck>) = deckDao.upsertAllDecks(decks)
-
-    override suspend fun deleteDeckById(id: String) = deckDao.deleteDeckById(id)
-
-    override suspend fun deleteDecksById(ids: List<String>) = deckDao.deleteDecksById(ids)
-
-    override fun getCardsByIds(ids: List<String>, tabooId: String?): Flow<List<CardDeckListItemProjection>> =
-        deckDao.getCardsByIds(ids, tabooId)
-
-    override suspend fun getChangedCardsByIds(ids: List<String>, tabooId: String?): List<CardDeckListItemProjection> =
-        deckDao.getChangedCardsByIds(ids, tabooId)
-
-    override fun getAllCards(
-        deckInfo: DeckInfo,
-        typeIndex: Int,
-        showAllSpoilers: Boolean,
-        packIds: List<String>,
-        filterOptions: CardFilterOptions
-    ): Flow<PagingData<CardDeckListItemProjection>> {
-        val rawQuery = if (!deckInfo.isUpgrade) {
-            when(typeIndex) {
-                0 -> buildSearchCardsQuery(
-                    additionalClause = "set_id = 'personality'",
-                    orderByClause = "aspect_id, set_position",
-                    taboo = deckInfo.taboo,
-                    isPacksNeeded = true,
-                    packIds = packIds,
-                    filterOptions = filterOptions
-                )
-                1 -> buildSearchCardsQuery(
-                    additionalClause = "set_id = ? AND set_type_id = 'background' AND type_id != 'role'",
-                    orderByClause = "aspect_id, set_position",
-                    background = deckInfo.background,
-                    taboo = deckInfo.taboo,
-                    isPacksNeeded = true,
-                    packIds = packIds,
-                    filterOptions = filterOptions
-                )
-                2 -> buildSearchCardsQuery(
-                    additionalClause = "set_id = ? AND set_type_id = 'specialty' AND type_id != 'role'",
-                    orderByClause = "aspect_id, set_position",
-                    specialty = deckInfo.specialty,
-                    taboo = deckInfo.taboo,
-                    isPacksNeeded = true,
-                    packIds = packIds,
-                    filterOptions = filterOptions
-                )
-                else -> buildSearchCardsQuery(
-                    additionalClause = "set_id != ? AND set_id != ? AND type_id != 'role' AND set_id != 'personality' AND real_traits NOT LIKE '%expert%'",
-                    orderByClause = "(set_type_id IS NULL), set_type_id, set_id, set_position",
-                    background = deckInfo.background,
-                    specialty = deckInfo.specialty,
-                    taboo = deckInfo.taboo,
-                    isPacksNeeded = true,
-                    packIds = packIds,
-                    filterOptions = filterOptions
-                )
-            }
+    @OptIn(ExperimentalUuidApi::class)
+    override suspend fun createDeck(
+        uploaded: Boolean,
+        name: String,
+        slots: ImmutableList<DeckSlot>,
+        meta: DeckMeta,
+        tabooSetId: String?,
+        awa: Int?,
+        spi: Int?,
+        fit: Int?,
+        foc: Int?,
+    ) = runCatching {
+        if (uploaded) {
+            val newDeck = decksRemoteDataSource.createDeck(
+                name = name,
+                foc = foc ?: 3,
+                fit = fit ?: 3,
+                awa = awa ?: 3,
+                spi = spi ?: 3,
+                meta = meta.toJsonDeckMeta(),
+                slots = slots.toJsonDeckSlots(),
+                extraSlots = persistentListOf<DeckSlot>().toJsonDeckSlots(),
+                tabooSetId = tabooSetId
+            ).dataAssertNoErrors.deck!!.deck.toDbDeck()
+            deckDao.insertDeck(newDeck)
+            newDeck.id
         } else {
-            when(typeIndex) {
-                0 -> if (showAllSpoilers) buildSearchCardsQuery(
-                    additionalClause = "set_id == 'reward'",
-                    orderByClause = "(set_type_id IS NULL), set_type_id, set_id, set_position",
-                    taboo = deckInfo.taboo,
-                    isPacksNeeded = true,
-                    packIds = packIds,
-                    filterOptions = filterOptions
-                ) else buildSearchCardsQuery(
-                    additionalClause = "code IN (${deckInfo.rewards.joinToString { "?" }})",
-                    orderByClause = "(set_type_id IS NULL), set_type_id, set_id, set_position",
-                    rewards = deckInfo.rewards,
-                    taboo = deckInfo.taboo,
-                    filterOptions = filterOptions
-                )
-                1 -> buildSearchCardsQuery(
-                    additionalClause = "set_id == 'malady'",
-                    orderByClause = "(set_type_id IS NULL), set_type_id, set_id, set_position",
-                    taboo = deckInfo.taboo,
-                    isPacksNeeded = true,
-                    packIds = packIds,
-                    filterOptions = filterOptions
-                )
-                2 -> buildSearchCardsQuery(
-                    additionalClause = "spoiler = 'false' OR (spoiler IS NULL AND NOT EXISTS (SELECT 1 FROM card WHERE spoiler = 'false')) AND type_id != 'role'",
-                    orderByClause = "(set_type_id IS NULL), set_type_id, set_id, set_position",
-                    taboo = deckInfo.taboo,
-                    isPacksNeeded = true,
-                    packIds = packIds,
-                    filterOptions = filterOptions
-                )
-                else -> buildSearchCardsQuery(
-                    additionalClause = "code IN (${deckInfo.extraSlots.joinToString { "?" }})",
-                    orderByClause = "(set_type_id IS NULL), set_type_id, set_id, set_position",
-                    extraSlots = deckInfo.extraSlots,
-                    taboo = deckInfo.taboo,
-                    filterOptions = filterOptions
-                )
-            }
+            val uuid = Uuid.random().toString()
+            val localDeck = createLocalDeck(
+                id = uuid,
+                name = name,
+                slots = slots.toJsonDeckSlots(),
+                meta = meta.toJsonDeckMeta(),
+                tabooSetId = tabooSetId,
+                awa = awa,
+                spi = spi,
+                fit = fit,
+                foc = foc
+            )
+            deckDao.insertDeck(localDeck)
+            uuid
         }
-
-        // Create a Pager that wraps the PagingSource from the DAO.
-        return Pager(
-            config = PagingConfig(
-                pageSize = 20,
-                enablePlaceholders = false,
-                initialLoadSize = 40
-            ),
-            pagingSourceFactory = { deckDao.searchCardsRaw(rawQuery) }
-        ).flow
     }
 
-    override fun searchCards(
-        filterOptions: CardFilterOptions,
-        deckInfo: DeckInfo,
-        includeEnglish: Boolean,
-        typeIndex: Int,
-        showAllSpoilers: Boolean,
-        language: String,
-        packIds: List<String>
-    ): Flow<PagingData<CardDeckListItemProjection>> {
-        // Build the FTS query string
-        val ftsQuery = if (language == "ru") {
-            val stemedString = filterOptions.searchQuery
-                .replace("\"(\\[\"]|.*)?\"".toRegex(), " ")
-                .split("[^\\p{Alnum}]+".toRegex())
-                .filter { it.isNotBlank() }
-                .joinToString(separator = " ", transform = { "${PorterStem.stem(it)}*" })
-            createQueryString(stemedString, includeEnglish, language)
+    private fun createLocalDeck(
+        id: String,
+        name: String,
+        slots: JsonElement?,
+        meta: JsonElement,
+        tabooSetId: String?,
+        awa: Int?,
+        spi: Int?,
+        fit: Int?,
+        foc: Int?,
+    ): DbDeck {
+        val currentTime = getCurrentDateTime()
+        return DbDeck(
+            id = id,
+            uploaded = false,
+            userId = "",
+            tabooSetId = tabooSetId,
+            userHandle = null,
+            slots = slots ?: JsonObject(emptyMap()),
+            sideSlots = JsonObject(emptyMap()),
+            extraSlots = JsonObject(emptyMap()),
+            version = 1,
+            name = name,
+            description = null,
+            awa = awa ?: 3,
+            spi = spi ?: 3,
+            fit = fit ?: 3,
+            foc = foc ?: 3,
+            createdAt = currentTime,
+            updatedAt = currentTime,
+            meta = meta,
+            campaignId = null,
+            campaignName = null,
+            campaignRewards = null,
+            previousId = null,
+            previousSlots = null,
+            previousSideSlots = null,
+            nextId = null,
+        )
+    }
+
+    override suspend fun getDeckById(id: String): Deck? =
+        deckDao.getDeckById(id)?.toDomain()
+
+    @OptIn(ExperimentalUuidApi::class)
+    override suspend fun upgradeDeck(id: String, uploaded: Boolean) = runCatching {
+        if (uploaded) {
+            val upgradedDeck = decksRemoteDataSource.upgradeDeck(id.toInt())
+                .dataAssertNoErrors.deck!!.deck.toDbDeck()
+            deckDao.updateDeck(upgradedDeck)
+            val nextDeck = decksRemoteDataSource.fetchDeckById(upgradedDeck.nextId!!.toInt())
+                .dataAssertNoErrors.deck!!.deck.toDbDeck()
+            deckDao.insertDeck(nextDeck)
+            nextDeck.id
         } else {
-            val stemedString = filterOptions.searchQuery
-                .lowercase(Locale.forLanguageTag(language))
-                .replace("\"(\\[\"]|.*)?\"".toRegex(), " ")
-                .split("[^\\p{Alnum}]+".toRegex())
-                .filter { it.isNotBlank() }
-                .joinToString(separator = " ", transform = { "$it*" })
-            createQueryString(stemedString, includeEnglish, language)
-        }
-        val newOptions = filterOptions.copy(searchQuery = ftsQuery)
-
-        val rawQuery = if (!deckInfo.isUpgrade) {
-            when(typeIndex) {
-                0 -> buildSearchCardsQuery(
-                    additionalClause = "set_id = 'personality'",
-                    orderByClause = "aspect_id, set_position",
-                    taboo = deckInfo.taboo,
-                    isPacksNeeded = true,
-                    packIds = packIds,
-                    filterOptions = newOptions
-                )
-                1 -> buildSearchCardsQuery(
-                    additionalClause = "set_id = ? AND set_type_id = 'background' AND type_id != 'role'",
-                    orderByClause = "aspect_id, set_position",
-                    background = deckInfo.background,
-                    taboo = deckInfo.taboo,
-                    isPacksNeeded = true,
-                    packIds = packIds,
-                    filterOptions = newOptions
-                )
-                2 -> buildSearchCardsQuery(
-                    additionalClause = "set_id = ? AND set_type_id = 'specialty' AND type_id != 'role'",
-                    orderByClause = "aspect_id, set_position",
-                    specialty = deckInfo.specialty,
-                    taboo = deckInfo.taboo,
-                    isPacksNeeded = true,
-                    packIds = packIds,
-                    filterOptions = newOptions
-                )
-                else -> buildSearchCardsQuery(
-                    additionalClause = "set_id != ? AND set_id != ? AND type_id != 'role' AND set_id != 'personality' AND real_traits NOT LIKE '%expert%'",
-                    orderByClause = "(set_type_id IS NULL), set_type_id, set_id, set_position",
-                    background = deckInfo.background,
-                    specialty = deckInfo.specialty,
-                    taboo = deckInfo.taboo,
-                    isPacksNeeded = true,
-                    packIds = packIds,
-                    filterOptions = newOptions
-                )
+            val newUuid = Uuid.random().toString()
+            val localDeck = deckDao.getDeckById(id)!!
+            var newRewards = localDeck.campaignRewards
+            val currentTime = getCurrentDateTime()
+            if (localDeck.campaignId.toString() != "null") {
+                val campaign = campaignDao.getCampaignById(localDeck.campaignId.toString())!!
+                newRewards = campaign.rewards
+                val newDeck = buildJsonArray {
+                    add(localDeck.name)
+                    add(localDeck.meta)
+                    add(campaign.latestDecks.jsonObject[localDeck.id]?.jsonArray?.get(2)?.jsonObject
+                        ?: JsonObject(
+                            emptyMap()
+                        )
+                    )
+                }
+                val newDeckValues = buildJsonObject {
+                    campaign.latestDecks.jsonObject.forEach { (key, value) ->
+                        if (key == localDeck.id) {
+                            put(newUuid, newDeck)  // Replace the target key
+                        } else {
+                            put(key, value)  // Keep other keys unchanged
+                        }
+                    }
+                }
+                campaignDao.updateCampaign(campaign.copy(
+                    latestDecks = newDeckValues,
+                    updatedAt = currentTime
+                ))
             }
+            deckDao.updateDeck(localDeck.copy(
+                nextId = newUuid,
+                updatedAt = getCurrentDateTime()
+            ))
+            deckDao.insertDeck(localDeck.copy(
+                id = newUuid,
+                previousId = localDeck.id,
+                version = localDeck.version + 1,
+                previousSlots = localDeck.slots,
+                previousSideSlots = localDeck.sideSlots,
+                createdAt = currentTime,
+                updatedAt = currentTime,
+                campaignRewards = newRewards
+            ))
+            newUuid
+        }
+    }
+
+    override suspend fun saveDeck(deck: Deck) = runCatching {
+        if (deck.uploaded) {
+            val updatedDeck = decksRemoteDataSource.saveDeck(
+                deckId = deck.id.toInt(),
+                name = deck.name,
+                foc = deck.oftenUpdatableDeckValues.foc,
+                fit = deck.oftenUpdatableDeckValues.fit,
+                awa = deck.oftenUpdatableDeckValues.awa,
+                spi = deck.oftenUpdatableDeckValues.spi,
+                meta = deck.deckMeta.toJsonDeckMeta(),
+                slots = deck.oftenUpdatableDeckValues.slots.toJsonDeckSlots(),
+                sideSlots = deck.oftenUpdatableDeckValues.sideSlots.toJsonDeckSlots(),
+                extraSlots = deck.oftenUpdatableDeckValues.extraSlots.toJsonDeckSlots()
+            ).dataAssertNoErrors.update_rangers_deck_by_pk!!.deck.toDbDeck()
+            deckDao.updateDeck(updatedDeck)
         } else {
-            when(typeIndex) {
-                0 -> if (showAllSpoilers) buildSearchCardsQuery(
-                    additionalClause = "set_id == 'reward'",
-                    orderByClause = "(set_type_id IS NULL), set_type_id, set_id, set_position",
-                    taboo = deckInfo.taboo,
-                    isPacksNeeded = true,
-                    packIds = packIds,
-                    filterOptions = newOptions
-                ) else buildSearchCardsQuery(
-                    additionalClause = "code IN (${deckInfo.rewards.joinToString { "?" }})",
-                    orderByClause = "(set_type_id IS NULL), set_type_id, set_id, set_position",
-                    rewards = deckInfo.rewards,
-                    taboo = deckInfo.taboo,
-                    filterOptions = newOptions
-                )
-                1 -> buildSearchCardsQuery(
-                    additionalClause = "set_id == 'malady'",
-                    orderByClause = "(set_type_id IS NULL), set_type_id, set_id, set_position",
-                    taboo = deckInfo.taboo,
-                    isPacksNeeded = true,
-                    packIds = packIds,
-                    filterOptions = newOptions
-                )
-                2 -> buildSearchCardsQuery(
-                    additionalClause = "spoiler = 'false' OR (spoiler IS NULL AND NOT EXISTS (SELECT 1 FROM card WHERE spoiler = 'false')) AND type_id != 'role'",
-                    orderByClause = "(set_type_id IS NULL), set_type_id, set_id, set_position",
-                    taboo = deckInfo.taboo,
-                    isPacksNeeded = true,
-                    packIds = packIds,
-                    filterOptions = newOptions
-                )
-                else -> buildSearchCardsQuery(
-                    additionalClause = "code IN (${deckInfo.extraSlots.joinToString { "?" }})",
-                    orderByClause = "(set_type_id IS NULL), set_type_id, set_id, set_position",
-                    extraSlots = deckInfo.extraSlots,
-                    taboo = deckInfo.taboo,
-                    filterOptions = newOptions
-                )
+            deckDao.updateDeck(deck.toDbDeck())
+        }
+    }
+
+    override suspend fun saveDeckTabooSet(id: String, tabooId: String?, uploaded: Boolean) =
+        runCatching {
+            if (uploaded) {
+                val updatedDeck = decksRemoteDataSource.saveDeckTabooSet(
+                    id.toInt(),
+                    tabooId
+                ).dataAssertNoErrors.update_rangers_deck_by_pk!!.deck.toDbDeck()
+                deckDao.updateDeck(updatedDeck)
+            } else {
+                val localDeck = deckDao.getDeckById(id)!!
+                deckDao.updateDeck(localDeck.copy(
+                    tabooSetId = tabooId,
+                    updatedAt = getCurrentDateTime()
+                ))
             }
         }
 
-        // Create a Pager that wraps the PagingSource from the DAO.
-        return Pager(
-            config = PagingConfig(
-                pageSize = 20,
-                enablePlaceholders = false,
-                initialLoadSize = 40
-            ),
-            pagingSourceFactory = { deckDao.searchCardsRaw(rawQuery) }
-        ).flow
-    }
-
-    private fun createQueryString(searchQuery: String, includeEnglish: Boolean, language: String): String {
-        return if (!includeEnglish || language == "en") "composite:($searchQuery)"
-        else "real_composite:($searchQuery)"
-    }
-
-    private fun buildSearchCardsQuery(
-        additionalClause: String = "",
-        orderByClause: String,
-        background: String = "",
-        specialty: String = "",
-        rewards: List<String> = emptyList(),
-        extraSlots: List<String> = emptyList(),
-        taboo: String? = null,
-        isPacksNeeded: Boolean = false,
-        packIds: List<String> = emptyList(),
-        filterOptions: CardFilterOptions
-    ): SimpleSQLiteQuery {
-        val isNotEmpty = filterOptions.searchQuery.isNotEmpty()
-        val isFilteredPacks = filterOptions.packs.isNotEmpty()
-        val packsString = if (isPacksNeeded) {
-            if (isFilteredPacks) filterOptions.packs.joinToString { "?" }
-            else packIds.joinToString { "?" }
-        } else ""
-        val filtersClause = CardFilters.buildFiltersClause(filterOptions)
-        val sortClause = CardFilters.buildSortClause(filterOptions)
-        val defaultSortClause = "(set_type_id IS NULL), set_type_id, set_id, set_position"
-        val sql = StringBuilder().apply {
-            append("""
-            SELECT id, code, taboo_id, set_name, aspect_id, aspect_short_name, cost, real_image_src, 
-            name, type_name, traits, real_traits, level, set_id, set_type_id, deck_limit, equip,
-            approach_connection, approach_reason, approach_conflict, approach_exploration
-            FROM (
-        """.trimIndent())
-
-            // Case 1: taboo override cards
-            append("""
-            SELECT card.id, code, taboo_id, set_name, aspect_id, aspect_short_name, cost, equip, pack_id,
-                real_image_src, name, type_name, traits, real_traits, level, set_id, set_type_id, 
-                set_position, deck_limit, approach_connection, approach_reason, approach_conflict, approach_exploration
-            FROM card
-            ${if (isNotEmpty) "JOIN card_fts ON card.id = card_fts.id" else ""}
-            WHERE $additionalClause
-              ${if (isNotEmpty) "AND (card_fts MATCH ?)" else ""}
-              AND (? IS NOT NULL) AND (taboo_id = ?)
-              ${if (packsString.isNotEmpty()) "AND pack_id IN ($packsString)" else ""}
-              ${if (filtersClause.isNotEmpty()) "AND ($filtersClause)" else ""}
-        """.trimIndent())
-            append("\nUNION ALL\n")
-
-            // Case 2: default card when taboo override absent
-            append("""
-            SELECT card.id, code, taboo_id, set_name, aspect_id, aspect_short_name, cost, equip, pack_id,
-                real_image_src, name, type_name, traits, real_traits, level, set_id, set_type_id, 
-                set_position, deck_limit, approach_connection, approach_reason, approach_conflict, approach_exploration
-            FROM card
-            ${if (isNotEmpty) "JOIN card_fts ON card.id = card_fts.id" else ""}
-            WHERE $additionalClause
-              ${if (isNotEmpty) "AND (card_fts MATCH ?)" else ""}
-              AND (? IS NOT NULL)
-              AND NOT EXISTS (
-                  SELECT 1 FROM card t
-                  WHERE t.code = card.code
-                    AND t.taboo_id = ?
-              )
-              ${if (packsString.isNotEmpty()) "AND pack_id IN ($packsString)" else ""}
-              ${if (filtersClause.isNotEmpty()) "AND ($filtersClause)" else ""}
-        """.trimIndent())
-            append("\nUNION ALL\n")
-
-            // Case 3: no taboo
-            append("""
-            SELECT card.id, code, taboo_id, set_name, aspect_id, aspect_short_name, cost, equip, pack_id,
-                real_image_src, name, type_name, traits, real_traits, level, set_id, set_type_id, 
-                set_position, deck_limit, approach_connection, approach_reason, approach_conflict, approach_exploration
-            FROM card
-            ${if (isNotEmpty) "JOIN card_fts ON card.id = card_fts.id" else ""}
-            WHERE $additionalClause
-              ${if (isNotEmpty) "AND (card_fts MATCH ?)" else ""}
-              AND (? IS NULL AND taboo_id IS NULL)
-              ${if (packsString.isNotEmpty()) "AND pack_id IN ($packsString)" else ""}
-              ${if (filtersClause.isNotEmpty()) "AND ($filtersClause)" else ""}
-        """.trimIndent())
-
-            append("""
-            ) 
-            ORDER BY ${if (sortClause != defaultSortClause) sortClause else orderByClause}
-        """.trimIndent())
-        }
-
-        // now collect args in the exact same order as the placeholders
-        val args = mutableListOf<Any?>().apply {
-            repeat(2) {
-                if (background.isNotEmpty()) add(background)
-                if (specialty.isNotEmpty()) add(specialty)
-                if (rewards.isNotEmpty()) addAll(rewards)
-                if (extraSlots.isNotEmpty()) addAll(extraSlots)
-                if (isNotEmpty) add(filterOptions.searchQuery)
-                repeat(2) { add(taboo) }
-                if (packsString.isNotEmpty()) addAll(if (isFilteredPacks) filterOptions.packs else packIds)
+    override suspend fun setDeckCampaign(
+        id: String,
+        campaignInfo: DeckCampaignInfo,
+        uploaded: Boolean
+    ) = runCatching {
+        if (uploaded) {
+            decksRemoteDataSource.setDeckCampaign(
+                id.toInt(),
+                campaignInfo.campaignId.toInt()
+            ).dataAssertNoErrors
+            val updatedDeck = decksRemoteDataSource.fetchDeckById(id.toInt())
+                .dataAssertNoErrors.deck!!.deck.toDbDeck()
+            deckDao.updateDeck(updatedDeck)
+        } else {
+            val localDeck = deckDao.getDeckById(id)!!
+            deckDao.updateDeck(localDeck.copy(
+                campaignId = campaignInfo.campaignId,
+                campaignName = campaignInfo.campaignName,
+                campaignRewards = buildJsonArray { campaignInfo.campaignRewards.forEach { add(it) } },
+                updatedAt = getCurrentDateTime()
+            ))
+            val campaignEntry = campaignDao.getCampaignById(campaignInfo.campaignId)!!
+            val newDeckJson = buildJsonArray {
+                add(localDeck.name)
+                add(localDeck.meta)
+                add(buildJsonObject {
+                    put(localDeck.userId, localDeck.userHandle)
+                })
             }
-            if (background.isNotEmpty()) add(background)
-            if (specialty.isNotEmpty()) add(specialty)
-            if (rewards.isNotEmpty()) addAll(rewards)
-            if (extraSlots.isNotEmpty()) addAll(extraSlots)
-            if (isNotEmpty) add(filterOptions.searchQuery)
-            add(taboo)
-            if (packsString.isNotEmpty()) addAll(if (isFilteredPacks) filterOptions.packs else packIds)
+            campaignDao.updateCampaign(campaignEntry.copy(
+                latestDecks = JsonObject(campaignEntry.latestDecks.jsonObject + (id to newDeckJson)),
+                updatedAt = getCurrentDateTime()
+            ))
         }
-
-        return SimpleSQLiteQuery(sql.toString(), args.toTypedArray())
     }
 
-    override suspend fun getAllVersionDeckIds(startId: String): List<String> = deckDao.getAllVersionDeckIds(startId)
+    override suspend fun removeDeckCampaign(
+        id: String,
+        campaignInfo: DeckCampaignInfo,
+        uploaded: Boolean
+    ) = runCatching {
+        if (uploaded) {
+            decksRemoteDataSource.removeDeckCampaign(
+                id.toInt(),
+                campaignInfo.campaignId.toInt()
+            ).dataAssertNoErrors
+            val updatedDeck = decksRemoteDataSource.fetchDeckById(id.toInt())
+                .dataAssertNoErrors.deck!!.deck.toDbDeck()
+            deckDao.updateDeck(updatedDeck)
+        } else {
+            val deckIds = deckDao.getAllVersionDeckIds(id)
+            val decks = deckDao.getAllDeckVersionsById(deckIds)
+            val currentTime = getCurrentDateTime()
+            deckDao.updateAllDecks(decks.map { it.copy(
+                updatedAt = currentTime,
+                campaignId = null,
+                campaignName = null,
+                campaignRewards = null
+            ) })
+
+            val campaign = campaignDao.getCampaignById(campaignInfo.campaignId)
+            if (campaign != null) campaignDao.updateCampaign(campaign.copy(
+                latestDecks = JsonObject(
+                    campaign.latestDecks.jsonObject.filterKeys { it != id }
+                ),
+                updatedAt = currentTime
+            ))
+        }
+    }
+
+    override suspend fun deleteDeckById(id: String, uploaded: Boolean) = runCatching {
+        val localDeck = deckDao.getDeckById(id)!!
+        if (uploaded) {
+            decksRemoteDataSource.deleteDeckById(id.toInt()).dataAssertNoErrors
+            deckDao.deleteDeckById(id)
+            val previousId = localDeck.previousId
+            if (previousId != null) {
+                val previousDeck = deckDao.getDeckById(previousId)!!
+                deckDao.updateDeck(previousDeck.copy(nextId = null,
+                    updatedAt = getCurrentDateTime()))
+                previousId
+            } else null
+        } else {
+            deckDao.deleteDeckById(id)
+            val previousId = localDeck.previousId
+            if (previousId != null) {
+                val previousDeck = deckDao.getDeckById(previousId)!!
+                val currentTime = getCurrentDateTime()
+                deckDao.updateDeck(previousDeck.copy(nextId = null,
+                    updatedAt = currentTime))
+                if (localDeck.campaignId.toString() != "null") {
+                    val campaign = campaignDao.getCampaignById(localDeck.campaignId.toString())!!
+                    val oldDeckValue = campaign.latestDecks.jsonObject[localDeck.id]!!.jsonArray
+                    val newDeckValues = buildJsonObject {
+                        campaign.latestDecks.jsonObject.forEach { (key, value) ->
+                            if (key == localDeck.id) {
+                                put(previousId, oldDeckValue)  // Replace the target key
+                            } else {
+                                put(key, value)  // Keep other keys unchanged
+                            }
+                        }
+                    }
+                    campaignDao.updateCampaign(campaign.copy(
+                        latestDecks = newDeckValues,
+                        updatedAt = currentTime
+                    ))
+                }
+                previousId
+            } else if (localDeck.campaignId.toString() != "null") {
+                val campaign = campaignDao.getCampaignById(localDeck.campaignId.toString())!!
+                val newDeckValues = buildJsonObject {
+                    campaign.latestDecks.jsonObject.forEach { (key, value) ->
+                        if (key != localDeck.id) {
+                            put(key, value)  // Keep other keys unchanged
+                        }
+                    }
+                }
+                campaignDao.updateCampaign(campaign.copy(
+                    latestDecks = newDeckValues,
+                    updatedAt = getCurrentDateTime()
+                ))
+                null
+            } else null
+        }
+    }
+
+    override suspend fun deleteAllDeckVersionsById(id: String, uploaded: Boolean) = runCatching {
+        val deck = deckDao.getDeckById(id)!!
+        val deckIds = deckDao.getAllVersionDeckIds(id)
+        if (deck.campaignId.toString() != "null") {
+            val campaign = campaignDao.getCampaignById(deck.campaignId.toString())!!
+            val newDeckValues = buildJsonObject {
+                campaign.latestDecks.jsonObject.forEach { (key, value) ->
+                    if (key != deck.id) {
+                        put(key, value)  // Keep other keys unchanged
+                    }
+                }
+            }
+            campaignDao.updateCampaign(campaign.copy(
+                latestDecks = newDeckValues,
+                updatedAt = getCurrentDateTime()
+            ))
+        }
+
+        if (deck.uploaded) {
+            deckIds.forEach { deckId ->
+                decksRemoteDataSource.deleteDeckById(deckId.toInt()).dataAssertNoErrors
+            }
+        }
+
+        deckDao.deleteDecksById(deckIds)
+    }
+
+    override suspend fun getAllDeckVersionIds(startId: String): ImmutableList<String> =
+        deckDao.getAllVersionDeckIds(startId).toImmutableList()
 }

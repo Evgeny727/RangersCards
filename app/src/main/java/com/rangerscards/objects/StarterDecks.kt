@@ -1,14 +1,15 @@
 package com.rangerscards.objects
 
-import com.rangerscards.domain.model.StarterDeck
-import com.rangerscards.domain.model.StarterDeckMeta
+import com.rangerscards.domain.model.DeckMeta
 import com.rangerscards.domain.model.DeckSlot
+import com.rangerscards.domain.model.StarterDeck
+import kotlinx.collections.immutable.persistentListOf
 
 object StarterDecks {
     fun starterDecks(): List<StarterDeck> {
         return listOf(
             StarterDeck(
-                meta = StarterDeckMeta(
+                meta = DeckMeta(
                     "01037",
                     "traveler",
                     "explorer"
@@ -17,7 +18,7 @@ object StarterDecks {
                 spi = 2,
                 awa = 2,
                 fit = 3,
-                slots = listOf(
+                slots = persistentListOf(
                     DeckSlot("01001", 2),
                     DeckSlot("01039", 2),
                     DeckSlot("01056", 2),
@@ -36,7 +37,7 @@ object StarterDecks {
                 )
             ),
             StarterDeck(
-                meta = StarterDeckMeta (
+                meta = DeckMeta (
                     "01066",
                     "shepherd",
                     "conciliator"
@@ -45,7 +46,7 @@ object StarterDecks {
                 spi = 3,
                 awa = 1,
                 fit = 2,
-                slots = listOf(
+                slots = persistentListOf(
                     DeckSlot("01023", 2),
                     DeckSlot("01073", 2),
                     DeckSlot("01104", 2),
@@ -64,7 +65,7 @@ object StarterDecks {
                 )
             ),
             StarterDeck(
-                meta = StarterDeckMeta (
+                meta = DeckMeta (
                     "01079",
                     "forager",
                     "shaper"
@@ -73,7 +74,7 @@ object StarterDecks {
                 spi = 1,
                 awa = 3,
                 fit = 2,
-                slots = listOf(
+                slots = persistentListOf(
                     DeckSlot("01102", 2),
                     DeckSlot("01084", 2),
                     DeckSlot("01081", 2),
@@ -92,7 +93,7 @@ object StarterDecks {
                 )
             ),
             StarterDeck(
-                meta = StarterDeckMeta (
+                meta = DeckMeta (
                     "01051",
                     "artisan",
                     "artificer"
@@ -101,7 +102,7 @@ object StarterDecks {
                 spi = 2,
                 awa = 2,
                 fit = 1,
-                slots = listOf(
+                slots = persistentListOf(
                     DeckSlot("01062", 2),
                     DeckSlot("01061", 2),
                     DeckSlot("01012", 2),

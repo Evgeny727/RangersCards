@@ -29,6 +29,9 @@ interface DeckDao {
     @Query("DELETE FROM deck WHERE id IN (:ids)")
     suspend fun deleteDecksById(ids: List<String>)
 
+    @Update
+    suspend fun updateAllDecks(decks: List<Deck>)
+
     @Upsert
     suspend fun upsertAllDecks(decks: List<Deck>)
 
@@ -98,4 +101,7 @@ interface DeckDao {
     ORDER BY ord DESC
   """)
     suspend fun getAllVersionDeckIds(startId: String): List<String>
+
+    @Query("SELECT * FROM deck WHERE id in (:ids)")
+    suspend fun getAllDeckVersionsById(ids: List<String>): List<Deck>
 }

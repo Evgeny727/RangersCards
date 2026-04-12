@@ -3,6 +3,8 @@ package com.rangerscards.data.repository
 import android.util.Patterns
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
+import com.rangerscards.domain.exceptions.InvalidEmailException
+import com.rangerscards.domain.exceptions.InvalidPasswordException
 import com.rangerscards.domain.repository.AuthRepository
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -36,8 +38,8 @@ class FirebaseAuthRepository @Inject constructor(private val auth: FirebaseAuth)
                 if (validatePassword(password)) {
                     auth.signInWithEmailAndPassword(email, password).await()
                     Unit
-                } else throw IllegalArgumentException("invalid_password")
-            } else throw IllegalArgumentException("invalid_email")
+                } else throw InvalidPasswordException()
+            } else throw InvalidEmailException()
         }
 
     override suspend fun createAccount(email: String, password: String): Result<Unit> =
@@ -46,8 +48,8 @@ class FirebaseAuthRepository @Inject constructor(private val auth: FirebaseAuth)
                 if (validatePassword(password)) {
                     auth.createUserWithEmailAndPassword(email, password).await()
                     Unit
-                } else throw IllegalArgumentException("invalid_password")
-            } else throw IllegalArgumentException("invalid_email")
+                } else throw InvalidPasswordException()
+            } else throw InvalidEmailException()
         }
 
     override suspend fun deleteAccount(email: String, password: String): Result<Unit> =
@@ -57,8 +59,8 @@ class FirebaseAuthRepository @Inject constructor(private val auth: FirebaseAuth)
                     auth.currentUser?.reauthenticate(EmailAuthProvider.getCredential(email, password))?.await()
                     auth.currentUser?.delete()?.await()
                     Unit
-                } else throw IllegalArgumentException("invalid_password")
-            } else throw IllegalArgumentException("invalid_email")
+                } else throw InvalidPasswordException()
+            } else throw InvalidEmailException()
         }
 
     override suspend fun signOut() {

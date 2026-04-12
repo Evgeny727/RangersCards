@@ -82,7 +82,7 @@ interface CampaignDao {
     fun getCampaignChallengeDeckFlowById(id: String): Flow<JsonElement?>
 
     @Query("SELECT * FROM campaign WHERE id = :id")
-    suspend fun getCampaignById(id: String): Campaign
+    suspend fun getCampaignById(id: String): Campaign?
 
     @Query("DELETE FROM campaign WHERE id = :id")
     suspend fun deleteCampaign(id: String)

@@ -2,6 +2,8 @@ package com.rangerscards.data.repository
 
 import com.rangerscards.data.mapper.toDomain
 import com.rangerscards.data.remote.UserSettingsRemoteDataSource
+import com.rangerscards.domain.exceptions.HandleAlreadyTakenException
+import com.rangerscards.domain.exceptions.InvalidHandleSizeException
 import com.rangerscards.domain.repository.FriendAction
 import com.rangerscards.domain.repository.SettingsRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -36,11 +38,11 @@ class SettingsRepositoryImpl @Inject constructor(
 
     private suspend fun validateHandle(handle: String){
         if (handle.length !in 3..22)
-            throw IllegalArgumentException("invalid_handle_size")
+            throw InvalidHandleSizeException()
 
         val result = userSettingsRemoteDataSource.getUserByHandle(handle)
-        if (result.data?.profile?.isEmpty() == false)
-            throw IllegalArgumentException("invalid_handle_already_taken")
+        if (result.dataAssertNoErrors.profile.isNotEmpty())
+            throw HandleAlreadyTakenException()
     }
 
     private fun normalizeHandle(handle: String): String {
@@ -48,15 +50,15 @@ class SettingsRepositoryImpl @Inject constructor(
             .lowercase(Locale.ENGLISH).trim()
     }
 
-    override suspend fun setTaboo(userId: String, adhereTaboos: Boolean) = runCatching {
-        userSettingsRemoteDataSource.setTaboo(userId, adhereTaboos).dataAssertNoErrors
+    override suspend fun setTaboo(userId: String, taboo: Boolean) = runCatching {
+        userSettingsRemoteDataSource.setTaboo(userId, taboo).dataAssertNoErrors
         Unit
     }
 
-    override suspend fun setCollection(userId: String, packCollection: List<String>) = runCatching {
-        val packCollectionJson = buildJsonArray { packCollection.forEach { add(it) } }
+    override suspend fun setCollection(userId: String, collection: List<String>) = runCatching {
+        val collectionJson = buildJsonArray { collection.forEach { add(it) } }
         userSettingsRemoteDataSource
-            .setPackCollection(userId, packCollectionJson).dataAssertNoErrors
+            .setPackCollection(userId, collectionJson).dataAssertNoErrors
         Unit
     }
 

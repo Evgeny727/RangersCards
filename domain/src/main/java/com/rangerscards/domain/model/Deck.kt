@@ -1,8 +1,8 @@
 package com.rangerscards.domain.model
 
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.PersistentMap
-import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
 
 data class Deck(
     val id: String,
@@ -15,10 +15,9 @@ data class Deck(
     val deckMeta: DeckMeta,
     val createdAt: String?,
     val updatedAt: String?,
-    val campaignInfo: DeckCampaignInfo,
-    val previousDeck: PreviousDeck,
+    val campaignInfo: DeckCampaignInfo?,
+    val previousDeck: PreviousDeck?,
     val nextId: String?,
-    val deckChanges: DeckChanges = DeckChanges(),
     val oftenUpdatableDeckValues: OftenUpdatableDeckValues
 )
 
@@ -31,19 +30,19 @@ data class DeckMeta(
     val roleId: String,
     val background: String,
     val specialty: String,
-    val problems: List<String>?,
+    val problems: ImmutableList<String>? = null,
 )
 
 data class DeckCampaignInfo(
-    val campaignId: String?,
-    val campaignName: String?,
-    val campaignRewards: List<String>?,
+    val campaignId: String,
+    val campaignName: String,
+    val campaignRewards: ImmutableList<String>,
 )
 
 data class PreviousDeck(
-    val id: String?,
-    val slots: List<DeckSlot>?,
-    val sideSlots: List<DeckSlot>?,
+    val id: String,
+    val slots: ImmutableList<DeckSlot>,
+    val sideSlots: ImmutableList<DeckSlot>,
 )
 
 data class DeckSlot(
@@ -52,16 +51,16 @@ data class DeckSlot(
 )
 
 data class DeckChanges(
-    val addedCards: PersistentMap<String, Int> = persistentMapOf(),
-    val removedCards: PersistentMap<String, Int> = persistentMapOf(),
-    val addedCollectionCards: PersistentMap<String, Int> = persistentMapOf(),
-    val returnedCollectionCards: PersistentMap<String, Int> = persistentMapOf(),
+    val addedCards: ImmutableList<DeckSlot> = persistentListOf(),
+    val removedCards: ImmutableList<DeckSlot> = persistentListOf(),
+    val addedCollectionCards: ImmutableList<DeckSlot> = persistentListOf(),
+    val returnedCollectionCards: ImmutableList<DeckSlot> = persistentListOf(),
 )
 
 data class OftenUpdatableDeckValues(
-    val slots: PersistentMap<String, Int>,
-    val sideSlots: PersistentMap<String, Int>,
-    val extraSlots: PersistentMap<String, Int>,
+    val slots: PersistentList<DeckSlot>,
+    val sideSlots: PersistentList<DeckSlot>,
+    val extraSlots: PersistentList<DeckSlot>,
     val awa: Int,
     val spi: Int,
     val fit: Int,

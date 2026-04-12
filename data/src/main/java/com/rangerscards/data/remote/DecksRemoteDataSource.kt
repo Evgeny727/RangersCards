@@ -22,7 +22,7 @@ class DecksRemoteDataSource @Inject constructor(
         .query(GetMyDecksQuery(userId))
         .execute()
 
-    suspend fun fetchDeckById(userId: String, deckId: Int) = apolloClient
+    suspend fun fetchDeckById(deckId: Int) = apolloClient
         .query(GetDeckQuery(deckId))
         .execute()
 
@@ -58,7 +58,7 @@ class DecksRemoteDataSource @Inject constructor(
         meta: JsonElement,
         slots: JsonElement,
         extraSlots: JsonElement,
-        description: String?,
+        description: String? = null,
         tabooSetId: String?
     ) = apolloClient
         .mutation(CreateDeckMutation(
