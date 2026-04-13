@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.JsonElement
 import javax.inject.Inject
 
-class OfflineCampaignsRepository @Inject constructor(
+class CampaignsRepositoryImpl @Inject constructor(
     private val campaignsRemoteDataSource: CampaignsRemoteDataSource,
     private val campaignDao: CampaignDao
 ) : CampaignsRepository {

@@ -37,7 +37,7 @@ import kotlin.uuid.Uuid
 import com.rangerscards.data.local.deck.Deck as DbDeck
 
 
-class OfflineDecksRepository @Inject constructor(
+class DecksRepositoryImpl @Inject constructor(
     private val decksRemoteDataSource: DecksRemoteDataSource,
     private val deckDao: DeckDao,
     private val campaignDao: CampaignDao
@@ -199,31 +199,31 @@ class OfflineDecksRepository @Inject constructor(
             val localDeck = deckDao.getDeckById(id)!!
             var newRewards = localDeck.campaignRewards
             val currentTime = getCurrentDateTime()
-            if (localDeck.campaignId.toString() != "null") {
-                val campaign = campaignDao.getCampaignById(localDeck.campaignId.toString())!!
-                newRewards = campaign.rewards
-                val newDeck = buildJsonArray {
-                    add(localDeck.name)
-                    add(localDeck.meta)
-                    add(campaign.latestDecks.jsonObject[localDeck.id]?.jsonArray?.get(2)?.jsonObject
-                        ?: JsonObject(
-                            emptyMap()
+            localDeck.campaignId?.let {
+                val campaign = campaignDao.getCampaignById(localDeck.campaignId)
+                campaign?.let {
+                    newRewards = campaign.rewards
+                    val newDeck = buildJsonArray {
+                        add(localDeck.name)
+                        add(localDeck.meta)
+                        add(campaign.latestDecks.jsonObject[localDeck.id]?.jsonArray?.get(2)?.jsonObject
+                            ?: JsonObject(emptyMap())
                         )
-                    )
-                }
-                val newDeckValues = buildJsonObject {
-                    campaign.latestDecks.jsonObject.forEach { (key, value) ->
-                        if (key == localDeck.id) {
-                            put(newUuid, newDeck)  // Replace the target key
-                        } else {
-                            put(key, value)  // Keep other keys unchanged
+                    }
+                    val newDeckValues = buildJsonObject {
+                        campaign.latestDecks.jsonObject.forEach { (key, value) ->
+                            if (key == localDeck.id) {
+                                put(newUuid, newDeck)  // Replace the target key
+                            } else {
+                                put(key, value)  // Keep other keys unchanged
+                            }
                         }
                     }
+                    campaignDao.updateCampaign(campaign.copy(
+                        latestDecks = newDeckValues,
+                        updatedAt = currentTime
+                    ))
                 }
-                campaignDao.updateCampaign(campaign.copy(
-                    latestDecks = newDeckValues,
-                    updatedAt = currentTime
-                ))
             }
             deckDao.updateDeck(localDeck.copy(
                 nextId = newUuid,
@@ -330,15 +330,14 @@ class OfflineDecksRepository @Inject constructor(
                 .dataAssertNoErrors.deck!!.deck.toDbDeck()
             deckDao.updateDeck(updatedDeck)
         } else {
-            val deckIds = deckDao.getAllVersionDeckIds(id)
-            val decks = deckDao.getAllDeckVersionsById(deckIds)
+            val localDeck = deckDao.getDeckById(id)!!
             val currentTime = getCurrentDateTime()
-            deckDao.updateAllDecks(decks.map { it.copy(
+            deckDao.updateDeck(localDeck.copy(
                 updatedAt = currentTime,
                 campaignId = null,
                 campaignName = null,
                 campaignRewards = null
-            ) })
+            ))
 
             val campaign = campaignDao.getCampaignById(campaignInfo.campaignId)
             if (campaign != null) campaignDao.updateCampaign(campaign.copy(
@@ -368,31 +367,63 @@ class OfflineDecksRepository @Inject constructor(
             if (previousId != null) {
                 val previousDeck = deckDao.getDeckById(previousId)!!
                 val currentTime = getCurrentDateTime()
-                deckDao.updateDeck(previousDeck.copy(nextId = null,
-                    updatedAt = currentTime))
-                if (localDeck.campaignId.toString() != "null") {
-                    val campaign = campaignDao.getCampaignById(localDeck.campaignId.toString())!!
-                    val oldDeckValue = campaign.latestDecks.jsonObject[localDeck.id]!!.jsonArray
-                    val newDeckValues = buildJsonObject {
-                        campaign.latestDecks.jsonObject.forEach { (key, value) ->
-                            if (key == localDeck.id) {
-                                put(previousId, oldDeckValue)  // Replace the target key
-                            } else {
-                                put(key, value)  // Keep other keys unchanged
+                deckDao.updateDeck(previousDeck.copy(
+                    nextId = null,
+                    campaignId = localDeck.campaignId,
+                    campaignName = localDeck.campaignName,
+                    updatedAt = currentTime
+                ))
+                localDeck.campaignId?.let {
+                    val campaign = campaignDao.getCampaignById(localDeck.campaignId)
+                    campaign?.let {
+                        val oldDeckValue = campaign.latestDecks.jsonObject[localDeck.id]!!.jsonArray
+                        val newDeckValues = buildJsonObject {
+                            campaign.latestDecks.jsonObject.forEach { (key, value) ->
+                                if (key == localDeck.id) {
+                                    put(previousId, oldDeckValue)  // Replace the target key
+                                } else {
+                                    put(key, value)  // Keep other keys unchanged
+                                }
                             }
                         }
+                        campaignDao.updateCampaign(campaign.copy(
+                            latestDecks = newDeckValues,
+                            updatedAt = currentTime
+                        ))
                     }
-                    campaignDao.updateCampaign(campaign.copy(
-                        latestDecks = newDeckValues,
-                        updatedAt = currentTime
-                    ))
                 }
                 previousId
-            } else if (localDeck.campaignId.toString() != "null") {
-                val campaign = campaignDao.getCampaignById(localDeck.campaignId.toString())!!
+            } else {
+                localDeck.campaignId?.let {
+                    val campaign = campaignDao.getCampaignById(localDeck.campaignId)
+                    campaign?.let {
+                        val newDeckValues = buildJsonObject {
+                            campaign.latestDecks.jsonObject.forEach { (key, value) ->
+                                if (key != localDeck.id) {
+                                    put(key, value)  // Keep other keys unchanged
+                                }
+                            }
+                        }
+                        campaignDao.updateCampaign(campaign.copy(
+                            latestDecks = newDeckValues,
+                            updatedAt = getCurrentDateTime()
+                        ))
+                    }
+                }
+                null
+            }
+        }
+    }
+
+    override suspend fun deleteAllDeckVersionsById(id: String, uploaded: Boolean) = runCatching {
+        val deck = deckDao.getDeckById(id)!!
+        val deckIds = deckDao.getAllVersionDeckIds(id)
+        deck.campaignId?.let {
+            val campaign = campaignDao.getCampaignById(deck.campaignId)
+            campaign?.let {
                 val newDeckValues = buildJsonObject {
                     campaign.latestDecks.jsonObject.forEach { (key, value) ->
-                        if (key != localDeck.id) {
+                        if (key != deck.id) {
                             put(key, value)  // Keep other keys unchanged
                         }
                     }
@@ -401,27 +432,7 @@ class OfflineDecksRepository @Inject constructor(
                     latestDecks = newDeckValues,
                     updatedAt = getCurrentDateTime()
                 ))
-                null
-            } else null
-        }
-    }
-
-    override suspend fun deleteAllDeckVersionsById(id: String, uploaded: Boolean) = runCatching {
-        val deck = deckDao.getDeckById(id)!!
-        val deckIds = deckDao.getAllVersionDeckIds(id)
-        if (deck.campaignId.toString() != "null") {
-            val campaign = campaignDao.getCampaignById(deck.campaignId.toString())!!
-            val newDeckValues = buildJsonObject {
-                campaign.latestDecks.jsonObject.forEach { (key, value) ->
-                    if (key != deck.id) {
-                        put(key, value)  // Keep other keys unchanged
-                    }
-                }
             }
-            campaignDao.updateCampaign(campaign.copy(
-                latestDecks = newDeckValues,
-                updatedAt = getCurrentDateTime()
-            ))
         }
 
         if (deck.uploaded) {

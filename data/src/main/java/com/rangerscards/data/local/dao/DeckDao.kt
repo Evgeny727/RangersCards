@@ -101,7 +101,4 @@ interface DeckDao {
     ORDER BY ord DESC
   """)
     suspend fun getAllVersionDeckIds(startId: String): List<String>
-
-    @Query("SELECT * FROM deck WHERE id in (:ids)")
-    suspend fun getAllDeckVersionsById(ids: List<String>): List<Deck>
 }

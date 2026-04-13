@@ -1,9 +1,9 @@
 package com.rangerscards.data.di
 
-import com.rangerscards.data.repository.FirebaseAuthRepository
-import com.rangerscards.data.repository.OfflineCampaignsRepository
+import com.rangerscards.data.repository.CampaignsRepositoryImpl
 import com.rangerscards.data.repository.CardsRepositoryImpl
-import com.rangerscards.data.repository.OfflineDecksRepository
+import com.rangerscards.data.repository.DecksRepositoryImpl
+import com.rangerscards.data.repository.FirebaseAuthRepository
 import com.rangerscards.data.repository.SettingsRepositoryImpl
 import com.rangerscards.data.repository.UserPreferencesRepositoryImpl
 import com.rangerscards.domain.repository.AuthRepository
@@ -41,10 +41,10 @@ interface BindRepositoryModule {
 
     @Binds
     @Singleton
-    fun bindDecksRepository(impl: OfflineDecksRepository): DecksRepository
+    fun bindDecksRepository(impl: DecksRepositoryImpl): DecksRepository
 
     @Binds
     @Singleton
-    fun bindCampaignsRepository(impl: OfflineCampaignsRepository): CampaignsRepository
+    fun bindCampaignsRepository(impl: CampaignsRepositoryImpl): CampaignsRepository
 
 }

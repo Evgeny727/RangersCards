@@ -1,5 +1,7 @@
 package com.rangerscards.domain.model
 
+import kotlinx.collections.immutable.ImmutableList
+
 data class Campaign(
     val id: String,
     val uploaded: Boolean,
@@ -12,15 +14,15 @@ data class Campaign(
     val currentPathTerrain: String?,
     val createdAt: String?,
     val updatedAt: String?,
-    val missions: List<CampaignMission>,
-    val events: List<CampaignEvent>,
-    val rewards: List<String>,
-    val removed: List<CampaignRemoved>,
-    val history: List<CampaignHistory>,
-    val calendar: List<CampaignCalendar>,
-    val expansions: List<String>,
-    val decks: List<CampaignDeck>,
-    val access: List<PlayerInfo>,
+    val missions: ImmutableList<CampaignMission>,
+    val events: ImmutableList<CampaignEvent>,
+    val rewards: ImmutableList<String>,
+    val removed: ImmutableList<CampaignRemoved>,
+    val history: ImmutableList<CampaignHistory>,
+    val calendar: ImmutableList<CampaignCalendar>,
+    val expansions: ImmutableList<String>,
+    val decks: ImmutableList<CampaignDeck>,
+    val access: ImmutableList<PlayerInfo>,
     val previousCampaignId: String?,
     val nextCampaignId: String?
 )
@@ -53,18 +55,17 @@ data class CampaignHistory(
 data class CampaignTravelDay(
     val day: Int,
     val startingLocation: String?,
-    val travel: List<CampaignHistory>
+    val travel: ImmutableList<CampaignHistory>
 )
 
 data class CampaignCalendar(
     val day: Int,
-    val guides: List<String>,
+    val guides: ImmutableList<String>,
 )
 
 data class CampaignDeck(
     val id: String,
     val name: String,
-    val roleId: String,
     val meta: DeckMeta,
     val user: PlayerInfo,
 )
