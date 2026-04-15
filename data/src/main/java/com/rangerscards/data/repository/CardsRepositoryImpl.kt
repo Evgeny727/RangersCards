@@ -210,7 +210,7 @@ class CardsRepositoryImpl @Inject constructor(
                     filterOptions = filterOptions
                 )
                 2 -> buildSearchDeckCardsQuery(
-                    additionalClause = "spoiler = 'false' OR (spoiler IS NULL AND NOT EXISTS (SELECT 1 FROM card WHERE spoiler = 'false')) AND type_id != 'role'",
+                    additionalClause = "(spoiler = 'false' OR (spoiler IS NULL AND NOT EXISTS (SELECT 1 FROM card WHERE spoiler = 'false'))) AND type_id != 'role'",
                     orderByClause = "(set_type_id IS NULL), set_type_id, set_id, set_position",
                     taboo = deckInfo.taboo,
                     isPacksNeeded = true,
