@@ -18,8 +18,8 @@ android {
         applicationId = "com.rangerscards"
         minSdk = 24
         targetSdk = 36
-        versionCode = 82
-        versionName = "2.8.2"
+        versionCode = 83
+        versionName = "2.8.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -70,7 +70,7 @@ dependencies {
     implementation("androidx.core:core-splashscreen:1.2.0")
 
     // Import the Firebase BoM
-    implementation(platform("com.google.firebase:firebase-bom:34.10.0"))
+    implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
     implementation("com.google.firebase:firebase-auth")
 
     // Import Apollo Kotlin
@@ -93,7 +93,7 @@ dependencies {
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.4.0")
 
     //Import json serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
 
     //Import charts
     implementation ("io.github.ehsannarmani:compose-charts:0.2.5")
