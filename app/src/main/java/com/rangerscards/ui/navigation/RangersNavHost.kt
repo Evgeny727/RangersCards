@@ -1206,9 +1206,13 @@ fun RangersNavHost(
                     )
                 }
                 val cardIndexArgument = "cardIndex"
+                val cardQueryArgument = "cardQuery"
                 composable(
-                    route = "${BottomNavScreen.Campaigns.route}/campaign/reward/{$cardIndexArgument}",
-                    arguments = listOf(navArgument(cardIndexArgument) { type = NavType.IntType })
+                    route = "${BottomNavScreen.Campaigns.route}/campaign/reward/{$cardIndexArgument}?$cardQueryArgument={$cardQueryArgument}",
+                    arguments = listOf(
+                        navArgument(cardIndexArgument) { type = NavType.IntType },
+                        navArgument(cardQueryArgument) { type = NavType.StringType }
+                    )
                 ) { backStackEntry ->
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
@@ -1220,9 +1224,11 @@ fun RangersNavHost(
                     val user by settingsViewModel.userUiState.collectAsState()
                     val cardIndex = backStackEntry.arguments?.getInt(cardIndexArgument)
                         ?: error("cardIndexArgument cannot be null")
+                    val query = backStackEntry.arguments?.getString(cardQueryArgument).orEmpty()
                     CampaignRewardFullScreen(
                         campaignViewModel = campaignViewModel,
                         cardIndex = cardIndex,
+                        query = query,
                         user = user.currentUser,
                         isDarkTheme = isDarkTheme,
                         contentPadding = innerPadding,

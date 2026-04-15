@@ -53,6 +53,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -765,12 +766,15 @@ class CampaignViewModel(
 
 
 
-    fun getRewardsCards(): Flow<List<CardListItemProjection>> {
+    fun getRewardsCards(query: String): Flow<List<CardListItemProjection>> {
         val filteredCollection = _collection.value.toSet().filter { if (_packId.value == "core") it != "loa" else true }
         val packIds = if (showAllRewards.value) filteredCollection + _packId.value
             else setOf(_packId.value)
         campaign.value?.id
-        return campaignsRepository.getRewards(_taboo.value, packIds.toList())
+        return campaignRepository.getRewards(_taboo.value, packIds.toList())
+            .map { list ->
+                list.filter { it.name!!.contains(query, true)  }
+            }
     }
 
     fun getRewardById(cardCode: String): Flow<FullCardProjection> =

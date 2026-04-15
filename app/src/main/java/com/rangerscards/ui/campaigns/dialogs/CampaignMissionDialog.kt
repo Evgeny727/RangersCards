@@ -72,7 +72,7 @@ fun CampaignMissionDialog(
         val context = LocalContext.current
         Toast.makeText(
             context,
-            context.getString(R.string.something_went_wrong),
+            stringResource(R.string.something_went_wrong),
             Toast.LENGTH_SHORT,
         ).show()
         onBack.invoke()

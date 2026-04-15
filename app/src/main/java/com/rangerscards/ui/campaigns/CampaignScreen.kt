@@ -522,15 +522,14 @@ fun CampaignScreen(
                                             modifier = Modifier,
                                             isSelected = isShowAllRewards
                                         )
-                                        val rewards = campaignViewModel.getRewardsCards().collectAsState(emptyList())
+                                        val rewards by campaignViewModel.getRewardsCards(rewardsQuery).collectAsState(emptyList())
                                         LazyColumn(
                                             state = innerState,
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .nestedScroll(innerConnections[campaignLogTypeIndex])
                                         ) {
-                                            rewards.value.filter { it.name!!.contains(rewardsQuery, true) }
-                                                .forEachIndexed { index, reward ->
+                                            rewards.forEachIndexed { index, reward ->
                                                 val isAdded = campaignState!!.rewards.contains(reward.id)
                                                 item(reward.id) {
                                                     CardListItem(
@@ -559,7 +558,7 @@ fun CampaignScreen(
                                                         onAddEnabled = !isAdded,
                                                         onClick = {
                                                             navController.navigate(
-                                                                "${BottomNavScreen.Campaigns.route}/campaign/reward/$index"
+                                                                "${BottomNavScreen.Campaigns.route}/campaign/reward/$index?cardQuery=${Uri.encode(rewardsQuery)}"
                                                             ) {
                                                                 launchSingleTop = true
                                                             }

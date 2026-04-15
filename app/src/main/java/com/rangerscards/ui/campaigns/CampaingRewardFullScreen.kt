@@ -48,12 +48,13 @@ import kotlinx.coroutines.launch
 fun CampaignRewardFullScreen(
     campaignViewModel: CampaignViewModel,
     cardIndex: Int,
+    query: String,
     user: FirebaseUser?,
     isDarkTheme: Boolean,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val campaignState by campaignViewModel.campaign.collectAsState()
-    val rewards = campaignViewModel.getRewardsCards().collectAsState(emptyList())
+    val rewards = campaignViewModel.getRewardsCards(query).collectAsState(emptyList())
     val pagerState = rememberPagerState(initialPage = cardIndex) { rewards.value.size }
     val coroutine = rememberCoroutineScope()
     HorizontalPager(
