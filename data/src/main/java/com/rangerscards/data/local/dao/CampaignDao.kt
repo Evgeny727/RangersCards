@@ -11,15 +11,14 @@ import androidx.room.Upsert
 import com.rangerscards.data.local.campaign.Campaign
 import com.rangerscards.data.local.campaign.CampaignListItemProjection
 import com.rangerscards.data.local.campaign.ChallengeDeck
-import com.rangerscards.data.local.card.CardListItemProjection
-import com.rangerscards.data.local.card.FullCardProjection
-import com.rangerscards.data.local.deck.DeckListItemProjection
-import com.rangerscards.data.local.deck.RoleCardProjection
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.JsonElement
 
 @Dao
 interface CampaignDao {
+
+    @Upsert
+    suspend fun upsertCampaign(campaign: Campaign)
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
     suspend fun updateCampaign(campaign: Campaign)
@@ -58,7 +57,7 @@ interface CampaignDao {
     @Query("SELECT id, cycle_id, name, day, current_location, latest_decks, access FROM campaign " +
             "WHERE (user_id == :userId OR user_id == '') AND cycle_id != 'demo' AND cycle_id != :cycleId AND next_campaign_id IS NULL ORDER BY updated_at DESC"
     )
-    fun getAllCampaignsForTransfer(cycleId: String, userId: String): Flow<List<CampaignListItemProjection>>
+    fun getAllCampaignsForTransfer(cycleId: String, userId: String): PagingSource<Int, CampaignListItemProjection>
 
     @Transaction
     suspend fun syncCampaigns(networkData: List<Campaign>) {
@@ -76,14 +75,11 @@ interface CampaignDao {
     }
 
     @Query("SELECT * FROM campaign WHERE id = :id")
-    fun getCampaignFlowById(id: String): Flow<Campaign?>
+    fun getCampaignFlowById(id: String): Flow<Campaign>
 
     @Query("SELECT challenge_deck_ids FROM challenge_deck WHERE id = :id")
     fun getCampaignChallengeDeckFlowById(id: String): Flow<JsonElement?>
 
     @Query("SELECT * FROM campaign WHERE id = :id")
     suspend fun getCampaignById(id: String): Campaign?
-
-    @Query("DELETE FROM campaign WHERE id = :id")
-    suspend fun deleteCampaign(id: String)
 }

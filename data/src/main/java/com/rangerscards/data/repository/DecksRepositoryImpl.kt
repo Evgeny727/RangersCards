@@ -227,7 +227,7 @@ class DecksRepositoryImpl @Inject constructor(
             }
             deckDao.updateDeck(localDeck.copy(
                 nextId = newUuid,
-                updatedAt = getCurrentDateTime()
+                updatedAt = currentTime
             ))
             deckDao.insertDeck(localDeck.copy(
                 id = newUuid,
@@ -295,11 +295,12 @@ class DecksRepositoryImpl @Inject constructor(
             deckDao.updateDeck(updatedDeck)
         } else {
             val localDeck = deckDao.getDeckById(id)!!
+            val currentTime = getCurrentDateTime()
             deckDao.updateDeck(localDeck.copy(
                 campaignId = campaignInfo.campaignId,
                 campaignName = campaignInfo.campaignName,
                 campaignRewards = buildJsonArray { campaignInfo.campaignRewards.forEach { add(it) } },
-                updatedAt = getCurrentDateTime()
+                updatedAt = currentTime
             ))
             val campaignEntry = campaignDao.getCampaignById(campaignInfo.campaignId)!!
             val newDeckJson = buildJsonArray {
@@ -310,8 +311,10 @@ class DecksRepositoryImpl @Inject constructor(
                 })
             }
             campaignDao.updateCampaign(campaignEntry.copy(
-                latestDecks = JsonObject(campaignEntry.latestDecks.jsonObject + (id to newDeckJson)),
-                updatedAt = getCurrentDateTime()
+                latestDecks = JsonObject(
+                    campaignEntry.latestDecks.jsonObject + (id to newDeckJson)
+                ),
+                updatedAt = currentTime
             ))
         }
     }

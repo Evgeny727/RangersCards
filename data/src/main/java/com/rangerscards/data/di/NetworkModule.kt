@@ -15,10 +15,8 @@ import com.apollographql.apollo.network.ws.WebSocketNetworkTransport
 import com.google.firebase.auth.FirebaseAuth
 import com.rangerscards.data.objects.JsonElementAdapter
 import com.rangerscards.data.remote.AuthTokenProvider
-import com.rangerscards.data.remote.FirebaseAuthTokenProvider
 import com.rangerscards.data.remote.NetworkConnectivityObserver
 import com.rangerscards.type.Jsonb
-import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -31,7 +29,7 @@ const val SERVER_URL = "gapi.rangersdb.com/v1/graphql"
 
 @Module
 @InstallIn(SingletonComponent::class)
-interface NetworkModule {
+object NetworkModule {
 
     @Provides
     @Singleton
@@ -80,9 +78,5 @@ interface NetworkModule {
         .normalizedCache(SqlNormalizedCacheFactory("apollo.db"))
         .fetchPolicy(FetchPolicy.NetworkOnly)
         .build()
-
-    @Binds
-    @Singleton
-    fun bindAuthTokenProvider(impl: FirebaseAuthTokenProvider): AuthTokenProvider
 
 }

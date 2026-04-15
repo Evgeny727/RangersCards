@@ -14,6 +14,7 @@ data class Campaign(
     val currentPathTerrain: String?,
     val createdAt: String?,
     val updatedAt: String?,
+    val notes: ImmutableList<CampaignNote>,
     val missions: ImmutableList<CampaignMission>,
     val events: ImmutableList<CampaignEvent>,
     val rewards: ImmutableList<String>,
@@ -25,6 +26,12 @@ data class Campaign(
     val access: ImmutableList<PlayerInfo>,
     val previousCampaignId: String?,
     val nextCampaignId: String?
+)
+
+data class CampaignNote(
+    val day: Int,
+    val note: String,
+    val crossedOut: Boolean,
 )
 
 data class CampaignMission(

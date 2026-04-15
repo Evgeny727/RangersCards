@@ -93,7 +93,7 @@ fun PagingData<DeckListItemProjection>.toDomain(): PagingData<DeckListItem> =
         item.toDomain()
     }
 
-private fun JsonElement.toDeckMeta(): DeckMeta =
+internal fun JsonElement.toDeckMeta(): DeckMeta =
     DeckMeta(
         roleId = jsonObject["role"]?.jsonPrimitive?.content.toString(),
         background = jsonObject["background"]?.jsonPrimitive?.content ?: "",
@@ -101,7 +101,7 @@ private fun JsonElement.toDeckMeta(): DeckMeta =
         problems = jsonObject["problem"]?.jsonArray?.map { it.jsonPrimitive.content }?.toImmutableList()
     )
 
-private fun JsonElement.toDeckSlots(): PersistentList<DeckSlot> =
+internal fun JsonElement.toDeckSlots(): PersistentList<DeckSlot> =
     jsonObject.map {
         DeckSlot(
             id = it.key,

@@ -24,10 +24,12 @@ fragment Campaign on rangers_campaign {
   expansions
   latest_decks {
     deck {
-      ...Deck
-    }
-    user {
-      ...UserInfo
+      id
+      name
+      meta
+      user {
+        ...UserInfo
+      }
     }
   }
   access {

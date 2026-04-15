@@ -2,12 +2,8 @@ package com.rangerscards.data.remote
 
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.Optional
-import com.rangerscards.AddCampaignEventMutation
-import com.rangerscards.AddCampaignMissionMutation
 import com.rangerscards.AddFriendToCampaignMutation
 import com.rangerscards.CampaignSubscription
-import com.rangerscards.CampaignTravelMutation
-import com.rangerscards.CampaignUndoTravelMutation
 import com.rangerscards.CreateCampaignMutation
 import com.rangerscards.DeleteCampaignMutation
 import com.rangerscards.ExtendCampaignMutation
@@ -18,7 +14,9 @@ import com.rangerscards.RemoveFriendFromCampaignMutation
 import com.rangerscards.SetCampaignCalendarMutation
 import com.rangerscards.SetCampaignDayMutation
 import com.rangerscards.SetCampaignMissionsMutation
+import com.rangerscards.SetCampaignNotesMutation
 import com.rangerscards.SetCampaignTitleMutation
+import com.rangerscards.SetCampaignTravelMutation
 import com.rangerscards.TransferCampaignMutation
 import com.rangerscards.UpdateCampaignEventsMutation
 import com.rangerscards.UpdateCampaignExpansionsMutation
@@ -64,8 +62,7 @@ class CampaignsRemoteDataSource @Inject constructor(
         events: JsonElement,
         rewards: JsonElement,
         removed: JsonElement,
-        history: JsonElement,
-        calendar: JsonElement
+        history: JsonElement
     ) = apolloClient.mutation(UpdateUploadedMutation(
             campaignId = campaignId,
             currentPathTerrain = Optional.present(currentPathTerrain),
@@ -75,8 +72,7 @@ class CampaignsRemoteDataSource @Inject constructor(
             events = events,
             rewards = rewards,
             removed = removed,
-            history = history,
-            calendar = calendar
+            history = history
         ))
         .execute()
 
@@ -104,12 +100,12 @@ class CampaignsRemoteDataSource @Inject constructor(
         .mutation(RemoveFriendFromCampaignMutation(campaignId, userId))
         .execute()
 
-    suspend fun updateCampaignRewards(campaignId: Int, rewards: JsonElement) = apolloClient
-        .mutation(UpdateCampaignRewardsMutation(campaignId, rewards))
+    suspend fun setCampaignNotes(campaignId: Int, notes: JsonElement) = apolloClient
+        .mutation(SetCampaignNotesMutation(campaignId, notes))
         .execute()
 
-    suspend fun addCampaignEvent(campaignId: Int, event: JsonElement) = apolloClient
-        .mutation(AddCampaignEventMutation(campaignId, event))
+    suspend fun updateCampaignRewards(campaignId: Int, rewards: JsonElement) = apolloClient
+        .mutation(UpdateCampaignRewardsMutation(campaignId, rewards))
         .execute()
 
     suspend fun updateCampaignEvents(campaignId: Int, events: JsonElement) = apolloClient
@@ -122,10 +118,6 @@ class CampaignsRemoteDataSource @Inject constructor(
 
     suspend fun extendCampaign(campaignId: Int) = apolloClient
         .mutation(ExtendCampaignMutation(campaignId))
-        .execute()
-
-    suspend fun addCampaignMission(campaignId: Int, mission: JsonElement) = apolloClient
-        .mutation(AddCampaignMissionMutation(campaignId, mission))
         .execute()
 
     suspend fun setCampaignMissions(campaignId: Int, missions: JsonElement) = apolloClient
@@ -143,30 +135,16 @@ class CampaignsRemoteDataSource @Inject constructor(
     suspend fun campaignTravel(
         campaignId: Int,
         day: Int,
-        currentLocation: String,
-        currentPathTerrain: String,
+        location: String,
+        pathTerrain: String?,
         history: JsonElement
-    ) = apolloClient.mutation(CampaignTravelMutation(
-            campaignId,
-            day,
-            currentLocation,
-            currentPathTerrain,
-            history
-        ))
-        .execute()
-
-    suspend fun campaignUndoTravel(
-        campaignId: Int,
-        history: JsonElement,
-        previousDay: Int,
-        previousLocation: String,
-        previousPathTerrain: String
-    ) = apolloClient.mutation(CampaignUndoTravelMutation(
+    ) = apolloClient.mutation(SetCampaignTravelMutation(
             campaignId,
             history,
-            previousDay,
-            previousLocation,
-        Optional.present(previousPathTerrain)
+            day,
+            location,
+            if (pathTerrain != null) Optional.present(pathTerrain)
+                            else Optional.absent(),
         ))
         .execute()
 

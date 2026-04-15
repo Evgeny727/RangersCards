@@ -73,6 +73,9 @@ interface DeckDao {
     @Query("SELECT * FROM deck WHERE id = :id")
     suspend fun getDeckById(id: String): Deck?
 
+    @Query("SELECT * FROM deck WHERE id in (:ids)")
+    suspend fun getDecksById(ids: List<String>): List<Deck>
+
     @Query("""
     WITH RECURSIVE
       prevs(id, depth) AS (

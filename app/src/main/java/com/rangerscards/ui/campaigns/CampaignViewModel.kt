@@ -15,7 +15,7 @@ import com.rangerscards.AddCampaignRemovedMutation
 import com.rangerscards.AddFriendToCampaignMutation
 import com.rangerscards.CampaignSubscription
 import com.rangerscards.CampaignTravelMutation
-import com.rangerscards.CampaignUndoTravelMutation
+import com.rangerscards.SetCampaignTravelMutation
 import com.rangerscards.CreateCampaignMutation
 import com.rangerscards.DeleteCampaignMutation
 import com.rangerscards.ExtendCampaignMutation
@@ -742,7 +742,7 @@ class CampaignViewModel(
             if (campaign.uploaded) {
                 val token = user!!.getIdToken(true).await().token
                 apolloClient.mutation(
-                    CampaignUndoTravelMutation(
+                    SetCampaignTravelMutation(
                         campaignId = campaign.id.toInt(),
                         history = newHistoryJson,
                         previousDay = previousDay,
@@ -1047,76 +1047,4 @@ class CampaignViewModel(
             ))
         }
     }
-}
-
-fun Campaign.toCampaignState(): CampaignState {
-    return CampaignState(
-        id = this.id,
-        uploaded = this.uploaded,
-        userId = this.userId,
-        name = this.name,
-        currentDay = this.day,
-        extendedCalendar = this.extendedCalendar ?: false,
-        cycleId = this.cycleId,
-        currentLocation = this.currentLocation,
-        currentPathTerrain = this.currentPathTerrain,
-        createdAt = this.createdAt,
-        updatedAt = this.updatedAt,
-        missions = this.missions.jsonArray.map { element ->
-            val value = element.jsonObject
-            CampaignMission(
-                value["day"]!!.jsonPrimitive.content.toInt(),
-                value["name"]!!.jsonPrimitive.content,
-                value["checks"]?.jsonArray?.map { it.jsonPrimitive.content.toBoolean() }
-                    ?: listOf(false, false, false),
-                value["completed"]?.jsonPrimitive?.content.toBoolean()
-            )
-        },
-        events = this.events.jsonArray.map { element ->
-            val value = element.jsonObject
-            CampaignEvent(
-                value["event"]!!.jsonPrimitive.content,
-                value["crossed_out"]?.jsonPrimitive?.content.toBoolean(),
-                value["marks"]?.jsonPrimitive?.content?.toInt() ?: 0
-            )
-        },
-        rewards = this.rewards.jsonArray.map { it.jsonPrimitive.content },
-        removed = this.removed.jsonArray.map { element ->
-            val value = element.jsonObject
-            CampaignRemoved(
-                value["name"]!!.jsonPrimitive.content,
-                value["set_id"]?.jsonPrimitive?.content ?: ""
-            )
-        },
-        history = this.history.jsonArray.map { element ->
-            val value = element.jsonObject
-            CampaignHistory(
-                value["day"]!!.jsonPrimitive.content.toInt(),
-                value["camped"]!!.jsonPrimitive.content.toBoolean(),
-                value["location"]!!.jsonPrimitive.content,
-                value["path_terrain"]!!.jsonPrimitive.content
-            )
-        },
-        calendar = this.calendar.jsonArray.associate { element ->
-            val value = element.jsonObject
-            value["day"]!!.jsonPrimitive.content.toInt() to value["guides"]!!.jsonArray.map { it.jsonPrimitive.content }
-        },
-        expansions = this.expansions.jsonArray.map { it.jsonPrimitive.content },
-        decks = this.latestDecks.jsonObject.map {
-            val value = it.value.jsonArray
-            val meta = value[1].jsonObject
-            val user = value[2].jsonObject
-            CampaignDeck(
-                it.key,
-                value[0].jsonPrimitive.content,
-                meta["role"]?.jsonPrimitive?.content ?: "",
-                meta,
-                user.keys.first(),
-                user.values.first().jsonPrimitive.content
-            )
-        },
-        access = this.access.jsonObject.mapValues { it.value.jsonPrimitive.content },
-        previousCampaignId = this.previousCampaignId,
-        nextCampaignId = this.nextCampaignId
-    )
 }

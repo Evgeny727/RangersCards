@@ -1,5 +1,7 @@
 package com.rangerscards.data.di
 
+import com.rangerscards.data.remote.AuthTokenProvider
+import com.rangerscards.data.remote.FirebaseAuthTokenProvider
 import com.rangerscards.data.repository.CampaignsRepositoryImpl
 import com.rangerscards.data.repository.CardsRepositoryImpl
 import com.rangerscards.data.repository.DecksRepositoryImpl
@@ -21,7 +23,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-interface BindRepositoryModule {
+interface BindModule {
 
     @Binds
     @Singleton
@@ -30,6 +32,10 @@ interface BindRepositoryModule {
     @Binds
     @Singleton
     fun bindAuthRepository(impl: FirebaseAuthRepository): AuthRepository
+
+    @Binds
+    @Singleton
+    fun bindAuthTokenProvider(impl: FirebaseAuthTokenProvider): AuthTokenProvider
 
     @Binds
     @Singleton
