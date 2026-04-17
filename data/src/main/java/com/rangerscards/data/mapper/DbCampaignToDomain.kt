@@ -1,7 +1,5 @@
 package com.rangerscards.data.mapper
 
-import androidx.paging.PagingData
-import androidx.paging.map
 import com.rangerscards.data.local.campaign.CampaignListItemProjection
 import com.rangerscards.domain.model.Campaign
 import com.rangerscards.domain.model.CampaignCalendar
@@ -70,14 +68,6 @@ fun CampaignListItemProjection.toDomain(): CampaignListItem =
             it.value.jsonPrimitive.content
         }.values.toImmutableList()
     )
-
-/**
- * Extension function to convert [PagingData] of [CampaignListItemProjection] to [PagingData] of [CampaignListItem]
- */
-fun PagingData<CampaignListItemProjection>.toDomain(): PagingData<CampaignListItem> =
-    map { item ->
-        item.toDomain()
-    }
 
 internal fun JsonElement.toNotes(): ImmutableList<CampaignNote> =
     jsonArray.map { note ->

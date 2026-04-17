@@ -8,6 +8,8 @@ import com.rangerscards.R
 import com.rangerscards.ui.components.SquareButton
 import com.rangerscards.ui.settings.SettingsViewModel
 import com.rangerscards.ui.settings.email
+import com.rangerscards.ui.settings.openEmail
+import com.rangerscards.ui.settings.openLink
 import com.rangerscards.ui.theme.CustomTheme
 
 const val boostyLink = "https://boosty.to/rangerscards/"
@@ -31,7 +33,7 @@ fun SupportCard(
         SquareButton(
             stringId = if (language == "ru") R.string.support_text_ru else R.string.support_text,
             leadingIcon = if (language == "ru") R.drawable.boosty else R.drawable.patreon_logo,
-            onClick = { settingsViewModel.openLink(if (language == "ru") boostyLink else patreonLink, context) }
+            onClick = { context.openLink(if (language == "ru") boostyLink else patreonLink) }
         )
         SquareButton(
             stringId = R.string.about_button,
@@ -56,7 +58,7 @@ fun SupportCard(
             buttonColor = ButtonDefaults.buttonColors().copy(CustomTheme.colors.gold),
             iconColor = if (isDarkTheme) CustomTheme.colors.l20 else CustomTheme.colors.d20,
             textColor = if (isDarkTheme) CustomTheme.colors.l30 else CustomTheme.colors.d30,
-            onClick = { settingsViewModel.openEmail(email, context) }
+            onClick = { context.openEmail(email) }
         )
     }
 }

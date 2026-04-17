@@ -1,7 +1,5 @@
 package com.rangerscards.data.mapper
 
-import androidx.paging.PagingData
-import androidx.paging.map
 import com.rangerscards.data.local.card.CardDeckListItemProjection
 import com.rangerscards.data.local.card.CardListItemProjection
 import com.rangerscards.data.local.card.FullCardProjection
@@ -174,51 +172,3 @@ fun CardDeckListItemProjection.toDomain(): CardDeckListItem =
         setTypeId = setTypeId,
         deckLimit = deckLimit
     )
-
-/**
- * Extension function to convert [PagingData] of [CardListItemProjection] to [PagingData] of [CardListItem]
- */
-fun PagingData<CardListItemProjection>.toDomain(): PagingData<CardListItem> =
-    map { item ->
-        item.toDomain()
-    }
-
-/**
- * Extension function to convert [PagingData] of [RoleCardProjection] to [PagingData] of [RoleCard]
- */
-fun PagingData<RoleCardProjection>.toDomain(): PagingData<RoleCard> =
-    map { item ->
-        item.toDomain()
-    }
-
-/**
- * Extension function to convert [PagingData] of [CardDeckListItemProjection] to [PagingData] of [CardDeckListItem]
- */
-fun PagingData<CardDeckListItemProjection>.toDomain(): PagingData<CardDeckListItem> =
-    map { item ->
-        item.toDomain()
-    }
-
-/**
- * Extension function to convert [List] of [CardListItemProjection] to [List] of [CardListItem]
- */
-fun List<CardListItemProjection>.toDomain(): List<CardListItem> =
-    map { item ->
-        item.toDomain()
-    }
-
-/**
- * Extension function to convert [List] of [RoleCardProjection] to [List] of [RoleCard]
- */
-fun List<RoleCardProjection>.toDomain(): List<RoleCard> =
-    map { item ->
-        item.toDomain()
-    }
-
-/**
- * Extension function to convert [List] of [CardDeckListItemProjection] to [List] of [CardDeckListItem]
- */
-fun List<CardDeckListItemProjection>.toDomain(): List<CardDeckListItem> =
-    map { item ->
-        item.toDomain()
-    }

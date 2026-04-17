@@ -3,6 +3,9 @@ package com.rangerscards.data.repository
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import androidx.paging.map
+import androidx.room.withTransaction
+import com.rangerscards.data.local.RangersDatabase
 import com.rangerscards.data.local.campaign.ChallengeDeck
 import com.rangerscards.data.local.dao.CampaignDao
 import com.rangerscards.data.local.dao.DeckDao
@@ -22,26 +25,28 @@ import com.rangerscards.domain.model.CampaignListItem
 import com.rangerscards.domain.repository.CampaignsRepository
 import com.rangerscards.domain.repository.RemoteUpdateAction
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import javax.inject.Inject
-import kotlin.collections.forEach
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import com.rangerscards.data.local.campaign.Campaign as DbCampaign
 
 class CampaignsRepositoryImpl @Inject constructor(
     private val campaignsRemoteDataSource: CampaignsRemoteDataSource,
+    private val  db: RangersDatabase,
     private val campaignDao: CampaignDao,
     private val deckDao: DeckDao
 ) : CampaignsRepository {
+
     override suspend fun deleteAllLocalCampaigns() = campaignDao.deleteAllLocalCampaigns()
 
     override suspend fun syncCampaigns(userId: String) = runCatching {
@@ -50,13 +55,7 @@ class CampaignsRepositoryImpl @Inject constructor(
         campaignDao.syncCampaigns(networkCampaigns.campaigns.toDbCampaigns())
     }
 
-    override suspend fun syncCampaignById(id: String) = runCatching {
-        val networkCampaign = campaignsRemoteDataSource
-            .fetchCampaignById(id.toInt()).dataAssertNoErrors
-        campaignDao.upsertCampaign(networkCampaign.campaign!!.campaign.toDbCampaign())
-    }
-
-    override fun getAllPaginatedCampaignsFlow(): Flow<PagingData<CampaignListItem>> {
+    override fun getAllPaginatedCampaignsFlow(userId: String): Flow<PagingData<CampaignListItem>> {
         // Create a Pager that wraps the PagingSource from the DAO.
         return Pager(
             config = PagingConfig(
@@ -64,13 +63,13 @@ class CampaignsRepositoryImpl @Inject constructor(
                 enablePlaceholders = false,
                 initialLoadSize = 10
             ),
-            pagingSourceFactory = { campaignDao.getAllCampaigns() }
+            pagingSourceFactory = { campaignDao.getAllCampaigns(userId) }
         ).flow.map { pagingData ->
-            pagingData.toDomain()
+            pagingData.map { it.toDomain() }
         }
     }
 
-    override fun searchPaginatedCampaignsFlow(query: String): Flow<PagingData<CampaignListItem>> {
+    override fun searchPaginatedCampaignsFlow(query: String, userId: String): Flow<PagingData<CampaignListItem>> {
         val newQuery = query
             .lowercase()
             .replace("\"(\\[\"]|.*)?\"".toRegex(), " ")
@@ -84,9 +83,9 @@ class CampaignsRepositoryImpl @Inject constructor(
                 enablePlaceholders = false,
                 initialLoadSize = 10
             ),
-            pagingSourceFactory = { campaignDao.searchCampaigns(newQuery) }
+            pagingSourceFactory = { campaignDao.searchCampaigns(newQuery, userId) }
         ).flow.map { pagingData ->
-            pagingData.toDomain()
+            pagingData.map { it.toDomain() }
         }
     }
 
@@ -99,15 +98,11 @@ class CampaignsRepositoryImpl @Inject constructor(
             ),
             pagingSourceFactory = { campaignDao.getAllCampaignsForTransfer(cycleId, userId) }
         ).flow.map { pagingData ->
-            pagingData.toDomain()
+            pagingData.map { it.toDomain() }
         }
 
     override fun getCampaignFlowById(id: String) =
         campaignDao.getCampaignFlowById(id).map { it.toDomain() }
-
-    override suspend fun getCampaignById(id: String) = runCatching {
-        campaignDao.getCampaignById(id)?.toDomain()
-    }
 
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun createCampaign(
@@ -158,38 +153,42 @@ class CampaignsRepositoryImpl @Inject constructor(
                 val uuid = Uuid.random().toString()
                 val previousCampaign = campaignDao.getCampaignById(transferCampaignId)!!
                 val currentDateTime = getCurrentDateTime()
-                campaignDao.upsertAllCampaigns(
-                    listOf(
-                        previousCampaign.copy(
-                            latestDecks = JsonObject(emptyMap()),
-                            updatedAt = currentDateTime,
-                            nextCampaignId = uuid
-                        ),
-                        previousCampaign.copy(
-                            id = uuid,
-                            day = 1,
-                            extendedCalendar = null,
-                            cycleId = cycleId,
-                            currentLocation = currentLocation,
-                            currentPathTerrain = null,
-                            history = JsonArray(emptyList()),
-                            calendar = JsonArray(emptyList()),
-                            expansions = JsonArray(emptyList()),
-                            createdAt = currentDateTime,
-                            updatedAt = currentDateTime,
-                            previousCampaignId = previousCampaign.id
+
+                db.withTransaction {
+                    campaignDao.upsertAllCampaigns(
+                        listOf(
+                            previousCampaign.copy(
+                                latestDecks = JsonObject(emptyMap()),
+                                updatedAt = currentDateTime,
+                                nextCampaignId = uuid
+                            ),
+                            previousCampaign.copy(
+                                id = uuid,
+                                day = 1,
+                                extendedCalendar = null,
+                                cycleId = cycleId,
+                                currentLocation = currentLocation,
+                                currentPathTerrain = null,
+                                history = JsonArray(emptyList()),
+                                calendar = JsonArray(emptyList()),
+                                expansions = JsonArray(emptyList()),
+                                createdAt = currentDateTime,
+                                updatedAt = currentDateTime,
+                                previousCampaignId = previousCampaign.id
+                            )
                         )
                     )
-                )
-                val decks = deckDao.getDecksById(
-                    previousCampaign.latestDecks.jsonObject.keys.toList()
-                )
-                deckDao.upsertAllDecks(decks.map {
-                    it.copy(
-                        updatedAt = currentDateTime,
-                        campaignId = uuid,
+                    val decks = deckDao.getDecksById(
+                        previousCampaign.latestDecks.jsonObject.keys.toList()
                     )
-                })
+                    deckDao.upsertAllDecks(decks.map {
+                        it.copy(
+                            updatedAt = currentDateTime,
+                            campaignId = uuid,
+                        )
+                    })
+                }
+
                 uuid
             }
         }
@@ -238,6 +237,7 @@ class CampaignsRepositoryImpl @Inject constructor(
             expansions = buildJsonArray { campaign.expansions.forEach { add(it) } },
             calendar = campaign.calendar.toJsonCalendar()
         ).dataAssertNoErrors.campaign!!.campaign
+
         val uploadedCampaign = campaignsRemoteDataSource.updateUploadedCampaign(
             campaignId = createdCampaign.id,
             currentPathTerrain = campaign.currentPathTerrain,
@@ -248,9 +248,13 @@ class CampaignsRepositoryImpl @Inject constructor(
             rewards = buildJsonArray { campaign.rewards.forEach { add(it) } },
             removed = campaign.removed.toJsonRemoved(),
             history = campaign.history.toJsonHistory()
-        ).dataAssertNoErrors.update_rangers_campaign_by_pk!!.campaign.toDbCampaign()
-        campaignDao.insertCampaign(uploadedCampaign)
-        campaignDao.deleteCampaignById(campaign.id)
+        ).dataAssertNoErrors.campaign!!.campaign.toDbCampaign()
+
+        db.withTransaction {
+            campaignDao.insertCampaign(uploadedCampaign)
+            campaignDao.deleteCampaignById(campaign.id)
+        }
+
         uploadedCampaign.id
     }
 
@@ -264,41 +268,41 @@ class CampaignsRepositoryImpl @Inject constructor(
                     campaignsRemoteDataSource.updateCampaignExpansions(
                         campaignId = campaign.id.toInt(),
                         expansions = buildJsonArray { campaign.expansions.forEach { add(it) } }
-                    ).dataAssertNoErrors.update_rangers_campaign_by_pk!!.campaign
+                    ).dataAssertNoErrors.campaign!!.campaign
                 RemoteUpdateAction.SET_TITLE ->
                     campaignsRemoteDataSource.setCampaignTitle(
                     campaignId = campaign.id.toInt(),
                     title = campaign.name
-                ).dataAssertNoErrors.update_rangers_campaign_by_pk!!.campaign
+                ).dataAssertNoErrors.campaign!!.campaign
                 RemoteUpdateAction.SET_NOTES ->
                     campaignsRemoteDataSource.setCampaignNotes(
                         campaignId = campaign.id.toInt(),
                         notes = campaign.notes.toJsonNotes()
-                    ).dataAssertNoErrors.update_rangers_campaign_by_pk!!.campaign
+                    ).dataAssertNoErrors.campaign!!.campaign
                 RemoteUpdateAction.SET_REWARDS ->
                     campaignsRemoteDataSource.updateCampaignRewards(
                         campaignId = campaign.id.toInt(),
                         rewards = buildJsonArray { campaign.rewards.forEach { add(it) } }
-                    ).dataAssertNoErrors.update_rangers_campaign_by_pk!!.campaign
+                    ).dataAssertNoErrors.campaign!!.campaign
                 RemoteUpdateAction.SET_EVENTS ->
                     campaignsRemoteDataSource.updateCampaignEvents(
                         campaignId = campaign.id.toInt(),
                         events = campaign.events.toJsonEvents()
-                    ).dataAssertNoErrors.update_rangers_campaign_by_pk!!.campaign
+                    ).dataAssertNoErrors.campaign!!.campaign
                 RemoteUpdateAction.SET_REMOVED ->
                     campaignsRemoteDataSource.updateCampaignRemoved(
                         campaignId = campaign.id.toInt(),
                         removed = campaign.removed.toJsonRemoved()
-                    ).dataAssertNoErrors.update_rangers_campaign_by_pk!!.campaign
+                    ).dataAssertNoErrors.campaign!!.campaign
                 RemoteUpdateAction.EXTEND ->
                     campaignsRemoteDataSource.extendCampaign(
                         campaignId = campaign.id.toInt()
-                    ).dataAssertNoErrors.update_rangers_campaign_by_pk!!.campaign
+                    ).dataAssertNoErrors.campaign!!.campaign
                 RemoteUpdateAction.SET_MISSION ->
                     campaignsRemoteDataSource.setCampaignMissions(
                         campaignId = campaign.id.toInt(),
                         missions = campaign.missions.toJsonMissions()
-                    ).dataAssertNoErrors.update_rangers_campaign_by_pk!!.campaign
+                    ).dataAssertNoErrors.campaign!!.campaign
                 RemoteUpdateAction.SET_CALENDAR ->
                     campaignsRemoteDataSource.setCampaignCalendar(
                         campaignId = campaign.id.toInt(),
@@ -324,29 +328,24 @@ class CampaignsRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun startCampaignSubscription(campaignId: String) =
-        campaignsRemoteDataSource.subscribeOnCampaignById(campaignId.toInt())
-        .map { response ->
-            response.dataAssertNoErrors.campaign?.campaign?.let { remoteCampaign ->
-                campaignDao.updateCampaign(remoteCampaign.toDbCampaign())
-            }
-            Result.success(Unit)
-        }.catch { throwable ->
-            emit(Result.failure(throwable))
-        }
-
     override suspend fun addFriendToCampaign(campaignId: String, friendUserId: String) = runCatching {
-        campaignsRemoteDataSource
+        val newAccess = campaignsRemoteDataSource
             .addFriendToCampaign(campaignId.toInt(), friendUserId)
-            .dataAssertNoErrors
-        Unit
+            .dataAssertNoErrors.access!!.campaign.access.mapNotNull { it.user?.userInfo?.toDomain() }
+        val localCampaign = campaignDao.getCampaignById(campaignId)!!
+        campaignDao.updateCampaign(localCampaign.copy(
+            access = buildJsonObject { newAccess.forEach { put(it.id, it.handle) } }
+        ))
     }
 
     override suspend fun removeFriendToCampaign(campaignId: String, friendUserId: String) = runCatching {
-        campaignsRemoteDataSource
+        val newAccess = campaignsRemoteDataSource
             .removeFriendFromCampaign(campaignId.toInt(), friendUserId)
-            .dataAssertNoErrors
-        Unit
+            .dataAssertNoErrors.access!!.campaign.access.mapNotNull { it.user?.userInfo?.toDomain() }
+        val localCampaign = campaignDao.getCampaignById(campaignId)!!
+        campaignDao.updateCampaign(localCampaign.copy(
+            access = buildJsonObject { newAccess.forEach { put(it.id, it.handle) } }
+        ))
     }
 
     override suspend fun leaveCampaign(campaignId: String, userId: String) = runCatching {
@@ -361,37 +360,44 @@ class CampaignsRepositoryImpl @Inject constructor(
                 .dataAssertNoErrors.rangers_remove_campaign
                 .map { it.campaign.toDbCampaign() }
                 .filter { it.id != id }
-            campaignDao.upsertAllCampaigns(updatedData)
+
+            db.withTransaction {
+                campaignDao.upsertAllCampaigns(updatedData)
+                campaignDao.deleteCampaignById(id)
+            }
         } else {
             val campaign = campaignDao.getCampaignById(id)!!
             val currentTime = getCurrentDateTime()
             val decks = deckDao.getDecksById(campaign.latestDecks.jsonObject.keys.toList())
-            if (campaign.previousCampaignId != null) {
-                val previousCampaign = campaignDao.getCampaignById(campaign.previousCampaignId)!!
-                campaignDao.updateCampaign(
-                    previousCampaign.copy(
-                        latestDecks = campaign.latestDecks,
-                        updatedAt = currentTime,
-                        nextCampaignId = null
+
+            db.withTransaction {
+                if (campaign.previousCampaignId != null) {
+                    val previousCampaign = campaignDao.getCampaignById(campaign.previousCampaignId)!!
+                    campaignDao.updateCampaign(
+                        previousCampaign.copy(
+                            latestDecks = campaign.latestDecks,
+                            updatedAt = currentTime,
+                            nextCampaignId = null
+                        )
                     )
-                )
-                deckDao.upsertAllDecks(decks.map {
-                    it.copy(
-                        updatedAt = currentTime,
-                        campaignId = campaign.previousCampaignId,
-                    )
-                })
-            } else {
-                deckDao.upsertAllDecks(decks.map {
-                    it.copy(
-                        updatedAt = currentTime,
-                        campaignId = null,
-                        campaignName = null
-                    )
-                })
+                    deckDao.upsertAllDecks(decks.map {
+                        it.copy(
+                            updatedAt = currentTime,
+                            campaignId = campaign.previousCampaignId,
+                        )
+                    })
+                } else {
+                    deckDao.upsertAllDecks(decks.map {
+                        it.copy(
+                            updatedAt = currentTime,
+                            campaignId = null,
+                            campaignName = null
+                        )
+                    })
+                }
+                campaignDao.deleteCampaignById(id)
             }
         }
-        campaignDao.deleteCampaignById(id)
     }
 
     override suspend fun upsertChallengeDeck(campaignId: String, challengeDeckIds: List<String>) =

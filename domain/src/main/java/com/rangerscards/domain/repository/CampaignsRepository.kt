@@ -11,17 +11,13 @@ interface CampaignsRepository {
 
     suspend fun syncCampaigns(userId: String): Result<Unit>
 
-    suspend fun syncCampaignById(id: String): Result<Unit>
+    fun getAllPaginatedCampaignsFlow(userId: String): Flow<PagingData<CampaignListItem>>
 
-    fun getAllPaginatedCampaignsFlow(): Flow<PagingData<CampaignListItem>>
-
-    fun searchPaginatedCampaignsFlow(query: String): Flow<PagingData<CampaignListItem>>
+    fun searchPaginatedCampaignsFlow(query: String, userId: String): Flow<PagingData<CampaignListItem>>
 
     fun getAllPaginatedCampaignsForTransferFlow(cycleId: String, userId: String): Flow<PagingData<CampaignListItem>>
 
     fun getCampaignFlowById(id: String): Flow<Campaign>
-
-    suspend fun getCampaignById(id: String): Result<Campaign?>
 
     suspend fun createCampaign(
         uploaded: Boolean,
@@ -35,8 +31,6 @@ interface CampaignsRepository {
     suspend fun uploadCampaign(campaign: Campaign): Result<String>
 
     suspend fun updateCampaign(campaign: Campaign, remoteUpdateAction: RemoteUpdateAction): Result<Unit>
-
-    fun startCampaignSubscription(campaignId: String): Flow<Result<Unit>>
 
     suspend fun addFriendToCampaign(campaignId: String, friendUserId: String): Result<Unit>
 

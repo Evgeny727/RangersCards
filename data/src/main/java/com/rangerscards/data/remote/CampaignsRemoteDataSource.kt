@@ -3,11 +3,9 @@ package com.rangerscards.data.remote
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.Optional
 import com.rangerscards.AddFriendToCampaignMutation
-import com.rangerscards.CampaignSubscription
 import com.rangerscards.CreateCampaignMutation
 import com.rangerscards.DeleteCampaignMutation
 import com.rangerscards.ExtendCampaignMutation
-import com.rangerscards.GetCampaignQuery
 import com.rangerscards.GetMyCampaignsQuery
 import com.rangerscards.LeaveCampaignMutation
 import com.rangerscards.RemoveFriendFromCampaignMutation
@@ -32,10 +30,6 @@ class CampaignsRemoteDataSource @Inject constructor(
 
     suspend fun fetchAllCampaigns(userId: String) = apolloClient
         .query(GetMyCampaignsQuery(userId))
-        .execute()
-
-    suspend fun fetchCampaignById(campaignId: Int) = apolloClient
-        .query(GetCampaignQuery(campaignId))
         .execute()
 
     suspend fun createCampaign(
@@ -83,10 +77,6 @@ class CampaignsRemoteDataSource @Inject constructor(
     suspend fun updateCampaignExpansions(campaignId: Int, expansions: JsonElement) = apolloClient
         .mutation(UpdateCampaignExpansionsMutation(campaignId, expansions))
         .execute()
-
-    fun subscribeOnCampaignById(campaignId: Int) = apolloClient
-        .subscription(CampaignSubscription(campaignId))
-        .toFlow()
 
     suspend fun setCampaignTitle(campaignId: Int, title: String) = apolloClient
         .mutation(SetCampaignTitleMutation(title, campaignId))

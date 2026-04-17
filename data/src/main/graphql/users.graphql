@@ -7,7 +7,5 @@ mutation updateHandle($userId:String!, $handle: String!, $normalizedHandle: Stri
     }
   ) {
     id
-    handle
-    normalized_handle
   }
 }

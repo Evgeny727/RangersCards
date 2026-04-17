@@ -1,7 +1,5 @@
 package com.rangerscards.data.mapper
 
-import androidx.paging.PagingData
-import androidx.paging.map
 import com.rangerscards.data.local.deck.DeckListItemProjection
 import com.rangerscards.domain.model.Deck
 import com.rangerscards.domain.model.DeckCampaignInfo
@@ -84,14 +82,6 @@ fun DeckListItemProjection.toDomain(): DeckListItem =
         meta = meta.toDeckMeta(),
         campaignName = campaignName
     )
-
-/**
- * Extension function to convert [PagingData] of [DeckListItemProjection] to [PagingData] of [DeckListItem]
- */
-fun PagingData<DeckListItemProjection>.toDomain(): PagingData<DeckListItem> =
-    map { item ->
-        item.toDomain()
-    }
 
 internal fun JsonElement.toDeckMeta(): DeckMeta =
     DeckMeta(

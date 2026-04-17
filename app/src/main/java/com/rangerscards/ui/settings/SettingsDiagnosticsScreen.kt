@@ -101,7 +101,7 @@ fun SettingsDiagnosticsScreen(
             }
         }
         item {
-            Column(modifier = Modifier.fillMaxWidth().clickable { settingsViewModel.clearCoilCache(context)
+            Column(modifier = Modifier.fillMaxWidth().clickable { context.clearCoilCache()
                 Toast.makeText(
                     context,
                     context.getString(R.string.diagnostics_clear_coil_cache_cleared),

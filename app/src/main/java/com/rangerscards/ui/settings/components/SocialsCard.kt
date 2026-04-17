@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.sp
 import com.rangerscards.R
 import com.rangerscards.ui.components.SquareButton
 import com.rangerscards.ui.settings.SettingsViewModel
+import com.rangerscards.ui.settings.openLink
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 
@@ -42,12 +43,12 @@ fun SocialsCard(
             "ru" -> SquareButton(
                 stringId = R.string.telegram_button,
                 leadingIcon = R.drawable.telegram,
-                onClick = { settingsViewModel.openLink("https://t.me/rangersgameru", context) }
+                onClick = { context.openLink("https://t.me/rangersgameru") }
             )
             else -> SquareButton(
                 stringId = R.string.discord_button,
                 leadingIcon = R.drawable.discord,
-                onClick = { settingsViewModel.openLink("https://discord.gg/pw3Cye8NQR", context) }
+                onClick = { context.openLink("https://discord.gg/pw3Cye8NQR") }
             )
         }
     }

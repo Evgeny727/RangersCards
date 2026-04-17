@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface SettingsRepository {
 
-    fun getUserProfile(userId: String): Flow<Result<User>>
+    fun startProfileSubscription(userId: String): Flow<Result<User>>
 
     suspend fun updateHandle(userId: String, handle: String): Result<Unit>
 
@@ -17,6 +17,8 @@ interface SettingsRepository {
     suspend fun searchUsersByHandle(handle: String): Result<List<UserInfo>>
 
     suspend fun friendRequestAction(friendAction: FriendAction, friendUserId: String): Result<Unit>
+
+    fun clearNetworkCache(): Boolean
 
 }
 

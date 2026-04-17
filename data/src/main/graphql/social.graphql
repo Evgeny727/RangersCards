@@ -17,7 +17,7 @@ fragment UserProfile on rangers_users {
   }
 }
 
-query getProfile($id: String!) {
+subscription profile($id: String!) {
   profile: rangers_users_by_pk(id: $id) {
     ...UserProfile
   }
@@ -28,25 +28,23 @@ query getProfile($id: String!) {
 }
 
 mutation setPackCollection($userId: String!, $pack_collection: jsonb!) {
-  update_rangers_user_settings_by_pk(
+  collection: update_rangers_user_settings_by_pk(
     pk_columns: { user_id: $userId }
     _set: {
       pack_collection: $pack_collection
     }
   ) {
-    user_id
     pack_collection
   }
 }
 
 mutation setAdhereTaboos($userId: String!, $adhereTaboos: Boolean!) {
-  update_rangers_user_settings_by_pk(
+  taboos: update_rangers_user_settings_by_pk(
     pk_columns: { user_id: $userId }
     _set: {
       adhere_taboos: $adhereTaboos
     }
   ) {
-    user_id
     adhere_taboos
   }
 }

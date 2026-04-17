@@ -3,6 +3,7 @@ package com.rangerscards.data.repository
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import androidx.paging.map
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.rangerscards.data.local.dao.CardDao
 import com.rangerscards.data.mapper.toDbCards
@@ -20,7 +21,6 @@ import com.rangerscards.domain.model.RoleCard
 import com.rangerscards.domain.repository.CardsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
 import java.util.Locale
 import javax.inject.Inject
 
@@ -52,16 +52,16 @@ class CardsRepositoryImpl @Inject constructor(
         cardDao.getRoleByCode(code, taboo)?.toDomain()
 
     override fun getRoleCardsByIdFlow(ids: List<String>): Flow<List<RoleCard>> =
-        cardDao.getRolesImages(ids).mapNotNull { it.toDomain() }
+        cardDao.getRolesImages(ids).map { list -> list.map { it.toDomain() } }
 
     override fun getRewards(taboo: Boolean, packIds: List<String>): Flow<List<CardListItem>> =
-        cardDao.getAllRewards(taboo, packIds).mapNotNull { it.toDomain() }
+        cardDao.getAllRewards(taboo, packIds).map { list -> list.map { it.toDomain() } }
 
     override fun getDeckCardsByIdFlow(ids: List<String>, tabooId: String?) =
-        cardDao.getCardsByCodes(ids, tabooId).mapNotNull { it.toDomain() }
+        cardDao.getCardsByCodes(ids, tabooId).map { list -> list.map { it.toDomain() } }
 
     override suspend fun getChangedDeckCardsById(ids: List<String>, tabooId: String?) =
-        cardDao.getChangedCardsByCodes(ids, tabooId).toDomain()
+        cardDao.getChangedCardsByCodes(ids, tabooId).map { it.toDomain() }
 
     override fun getAllPaginatedRoleCardsFlow(
         specialty: String,
@@ -76,7 +76,7 @@ class CardsRepositoryImpl @Inject constructor(
             ),
             pagingSourceFactory = { cardDao.getPaginatedRoles(specialty, taboo, packIds) }
         ).flow.map { rolePagingData ->
-            rolePagingData.toDomain()
+            rolePagingData.map { it.toDomain() }
         }
     }
 
@@ -96,7 +96,7 @@ class CardsRepositoryImpl @Inject constructor(
             ),
             pagingSourceFactory = { cardDao.searchCardsRaw(rawQuery) }
         ).flow.map { pagingData ->
-            pagingData.toDomain()
+            pagingData.map { it.toDomain() }
         }
     }
 
@@ -135,7 +135,7 @@ class CardsRepositoryImpl @Inject constructor(
             ),
             pagingSourceFactory = { cardDao.searchCardsRaw(rawQuery) }
         ).flow.map { pagingData ->
-            pagingData.toDomain()
+            pagingData.map { it.toDomain() }
         }
     }
 
@@ -236,7 +236,7 @@ class CardsRepositoryImpl @Inject constructor(
             ),
             pagingSourceFactory = { cardDao.searchDeckCardsRaw(rawQuery) }
         ).flow.map { pagingData ->
-            pagingData.toDomain()
+            pagingData.map { it.toDomain() }
         }
     }
 
@@ -331,7 +331,7 @@ class CardsRepositoryImpl @Inject constructor(
                     packIds = packIds,
                     filterOptions = newOptions
                 )
-                2 -> buildSearchCardsQuery(
+                2 -> buildSearchDeckCardsQuery(
                     additionalClause = "(spoiler = 'false' OR (spoiler IS NULL AND NOT EXISTS (SELECT 1 FROM card WHERE spoiler = 'false'))) AND type_id != 'role'",
                     orderByClause = "(set_type_id IS NULL), set_type_id, set_id, set_position",
                     taboo = deckInfo.taboo,
@@ -358,7 +358,7 @@ class CardsRepositoryImpl @Inject constructor(
             ),
             pagingSourceFactory = { cardDao.searchDeckCardsRaw(rawQuery) }
         ).flow.map { pagingData ->
-            pagingData.toDomain()
+            pagingData.map { it.toDomain() }
         }
     }
 

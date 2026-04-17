@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
+import kotlin.collections.joinToString
 
 class UserPreferencesRepositoryImpl @Inject constructor(
     private val dataStore: DataStore<Preferences>
@@ -128,6 +129,13 @@ class UserPreferencesRepositoryImpl @Inject constructor(
 
     override suspend fun saveCollectionPreference(collection: List<String>) {
         dataStore.edit { preferences ->
+            preferences[COLLECTION] = collection.joinToString(",")
+        }
+    }
+
+    override suspend fun saveTabooAndCollectionPreference(taboo: Boolean, collection: List<String>) {
+        dataStore.edit { preferences ->
+            preferences[TABOO] = taboo
             preferences[COLLECTION] = collection.joinToString(",")
         }
     }

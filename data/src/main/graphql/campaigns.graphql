@@ -12,14 +12,6 @@ query getMyCampaigns(
   }
 }
 
-query getCampaign(
-  $campaignId: Int!
-) {
-  campaign:rangers_campaign_by_pk(id: $campaignId) {
-    ...Campaign
-  }
-}
-
 mutation createCampaign(
   $name: String!,
   $cycleId: String!,
@@ -51,7 +43,7 @@ mutation updateUploaded(
   $removed: jsonb!,
   $history: jsonb!,
 ) {
-  update_rangers_campaign_by_pk(
+  campaign: update_rangers_campaign_by_pk(
     pk_columns: { id: $campaignId }
     _set: {
       day: $day
@@ -88,7 +80,7 @@ mutation updateCampaignExpansions(
   $campaignId: Int!,
   $expansions: jsonb!
 ) {
-  update_rangers_campaign_by_pk(
+  campaign: update_rangers_campaign_by_pk(
     pk_columns: {
       id: $campaignId
     }
@@ -100,19 +92,11 @@ mutation updateCampaignExpansions(
   }
 }
 
-subscription campaign(
-  $campaignId: Int!
-) {
-  campaign:rangers_campaign_by_pk(id: $campaignId) {
-    ...Campaign
-  }
-}
-
 mutation setCampaignTitle(
   $name: String!,
   $campaignId: Int!
 ) {
-  update_rangers_campaign_by_pk(
+  campaign: update_rangers_campaign_by_pk(
     pk_columns: { id: $campaignId }
     _set: {
       name: $name
@@ -126,7 +110,7 @@ mutation addFriendToCampaign(
   $campaignId: Int!,
   $userId: String!
 ) {
-  insert_rangers_campaign_access_one(
+  access: insert_rangers_campaign_access_one(
     object: {
       campaign_id: $campaignId,
       user_id: $userId
@@ -135,7 +119,13 @@ mutation addFriendToCampaign(
       constraint: campaign_access_pkey
     }
   ) {
-    user_id
+    campaign {
+      access {
+        user {
+          ...UserInfo
+        }
+      }
+    }
   }
 }
 
@@ -143,9 +133,8 @@ mutation removeFriendFromCampaign(
   $campaignId: Int!,
   $userId: String!
 ) {
-  delete_rangers_campaign_access_by_pk(campaign_id: $campaignId, user_id: $userId) {
+  access: delete_rangers_campaign_access_by_pk(campaign_id: $campaignId, user_id: $userId) {
     campaign {
-      id
       access {
         user {
           ...UserInfo
@@ -159,7 +148,7 @@ mutation updateCampaignRewards(
   $campaignId: Int!,
   $rewards: jsonb!
 ) {
-  update_rangers_campaign_by_pk(
+  campaign: update_rangers_campaign_by_pk(
     pk_columns: {
 	    id: $campaignId
     }
@@ -176,7 +165,7 @@ mutation updateCampaignRemoved(
   $campaignId: Int!,
   $removed: jsonb!
 ) {
-  update_rangers_campaign_by_pk(
+  campaign: update_rangers_campaign_by_pk(
     pk_columns: {
 	    id: $campaignId
     }
@@ -191,7 +180,7 @@ mutation updateCampaignRemoved(
 mutation extendCampaign(
   $campaignId: Int!,
 ) {
-  update_rangers_campaign_by_pk(
+  campaign: update_rangers_campaign_by_pk(
     pk_columns: {
 	    id: $campaignId
     }
@@ -207,7 +196,7 @@ mutation updateCampaignEvents(
   $campaignId: Int!,
   $events: jsonb!
 ) {
-  update_rangers_campaign_by_pk(
+  campaign: update_rangers_campaign_by_pk(
     pk_columns: {
 	    id: $campaignId
     }
@@ -223,7 +212,7 @@ mutation setCampaignMissions(
   $campaignId: Int!,
   $missions: jsonb!
 ) {
-  update_rangers_campaign_by_pk(
+  campaign: update_rangers_campaign_by_pk(
     pk_columns: {
 	    id: $campaignId
     }
@@ -239,7 +228,7 @@ mutation setCampaignNotes(
   $campaignId: Int!,
   $notes: jsonb!
 ) {
-  update_rangers_campaign_by_pk(
+  campaign: update_rangers_campaign_by_pk(
     pk_columns: {
       id: $campaignId
     }

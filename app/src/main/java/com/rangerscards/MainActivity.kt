@@ -9,13 +9,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.UpdateAvailability
-import com.rangerscards.ui.AppViewModelProvider
+import com.rangerscards.ui.navigation.RangersNavHost
 import com.rangerscards.ui.settings.SettingsViewModel
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.RangersCardsTheme
@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         setContent {
-            viewModel = viewModel(factory = AppViewModelProvider.Factory)
+            viewModel = hiltViewModel<SettingsViewModel>(this)
             // Collecting user's theme from shared preferences via viewmodel - false = light, true = dark
             val currentTheme = when(viewModel.themeState.collectAsState().value) {
                 0 -> false
@@ -71,7 +71,11 @@ class MainActivity : AppCompatActivity() {
                         modifier = Modifier.fillMaxSize(),
                         color = CustomTheme.colors.l30
                     ) {
-                        RangersApp(this, currentTheme, viewModel)
+                        RangersNavHost(
+                            mainActivity = this,
+                            isDarkTheme = currentTheme,
+                            settingsViewModel = viewModel
+                        )
                     }
                 }
             }

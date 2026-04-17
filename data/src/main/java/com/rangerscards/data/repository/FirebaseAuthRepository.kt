@@ -9,7 +9,6 @@ import com.rangerscards.domain.repository.AuthRepository
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -28,9 +27,6 @@ class FirebaseAuthRepository @Inject constructor(private val auth: FirebaseAuth)
                 auth.removeAuthStateListener(listener)
             }
         }
-
-    override val isLoggedIn: Flow<Boolean> =
-        currentUserId.map { it != null }
 
     override suspend fun signIn(email: String, password: String): Result<Unit> =
         runCatching {

@@ -6,7 +6,6 @@ import com.rangerscards.domain.exceptions.HandleAlreadyTakenException
 import com.rangerscards.domain.exceptions.InvalidHandleSizeException
 import com.rangerscards.domain.repository.FriendAction
 import com.rangerscards.domain.repository.SettingsRepository
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
@@ -17,13 +16,13 @@ class SettingsRepositoryImpl @Inject constructor(
     private val userSettingsRemoteDataSource: UserSettingsRemoteDataSource
 ) : SettingsRepository {
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override fun getUserProfile(userId: String) = userSettingsRemoteDataSource.getProfile(userId)
-        .map { response ->
-            runCatching {
-                response.dataAssertNoErrors.profile!!.userProfile.toDomain()
+    override fun startProfileSubscription(userId: String) =
+        userSettingsRemoteDataSource.startProfileSubscription(userId)
+            .map { response ->
+                runCatching {
+                    response.dataAssertNoErrors.toDomain()
+                }
             }
-        }
 
     override suspend fun updateHandle(userId: String, handle: String) = runCatching {
         validateHandle(handle)
@@ -63,7 +62,7 @@ class SettingsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun searchUsersByHandle(handle: String) = runCatching {
-        val usersData = userSettingsRemoteDataSource.getUsersByHandle(handle)
+        val usersData = userSettingsRemoteDataSource.getUsersByHandle("%${normalizeHandle(handle)}%")
         usersData.dataAssertNoErrors.profile.map { it.userInfo.toDomain() }
     }
 
@@ -75,4 +74,7 @@ class SettingsRepositoryImpl @Inject constructor(
         }.dataAssertNoErrors
         Unit
     }
+
+    override fun clearNetworkCache() = userSettingsRemoteDataSource.clearCache()
+
 }

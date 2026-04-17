@@ -15,5 +15,6 @@ interface UserPreferencesRepository {
     suspend fun saveIncludeEnglishSearchResults(isIncludeEnglishSearchResults: Boolean)
     suspend fun saveTabooPreference(taboo: Boolean)
     suspend fun saveCollectionPreference(collection: List<String>)
+    suspend fun saveTabooAndCollectionPreference(taboo: Boolean, collection: List<String>)
     suspend fun saveSortOrderPreference(sortOrder: List<String>)
 }

@@ -114,7 +114,7 @@ fun SettingsAboutScreen(
                                 end = tappedOffset
                             ).firstOrNull()?.let { annotation ->
                                 // When the email is tapped, open the email client.
-                                settingsViewModel.openEmail(annotation.item, context)
+                                context.openEmail(annotation.item)
                             }
                         }
                     }
