@@ -72,15 +72,14 @@ class SettingsViewModel @Inject constructor(
     )
     val events: SharedFlow<UiErrorState> = _events
 
-    fun emitError(throwable: Throwable?) {
-        if (throwable == null) return
+    fun emitError(throwable: Throwable) {
         _events.tryEmit(UiErrorState(throwable))
     }
 
     init {
         viewModelScope.launch {
             userFlow.collect { result ->
-                if (result.isSuccess) {
+                result.onSuccess { user ->
                     val data = result.getOrNull()
                     if (data == null) _userUiState.update { user ->
                         user.copy(
@@ -101,7 +100,9 @@ class SettingsViewModel @Inject constructor(
                         val settings = data.settings
                         userPreferencesRepository.saveTabooAndCollectionPreference(settings.taboo, settings.collection)
                     }
-                } else emitError(result.exceptionOrNull())
+                }.onFailure { exception ->
+                    emitError(exception)
+                }
             }
         }
     }
@@ -161,15 +162,13 @@ class SettingsViewModel @Inject constructor(
 
     fun signIn(email: String, password: String) {
         viewModelScope.launch {
-            val result = authRepository.signIn(email, password)
-            emitError(result.exceptionOrNull())
+            authRepository.signIn(email, password).onFailure { emitError(it) }
         }
     }
 
     fun createAccount(email: String, password: String) {
         viewModelScope.launch {
-            val result = authRepository.createAccount(email, password)
-            emitError(result.exceptionOrNull())
+            authRepository.createAccount(email, password).onFailure { emitError(it) }
         }
     }
 
@@ -181,16 +180,14 @@ class SettingsViewModel @Inject constructor(
 
     fun deleteUser(email: String, password: String) {
         viewModelScope.launch {
-            val result = authRepository.deleteAccount(email, password)
-            emitError(result.exceptionOrNull())
+            authRepository.deleteAccount(email, password).onFailure { emitError(it) }
         }
     }
 
     fun updateHandle(userId: String, handle: String) {
         if (handle == (userUiState.value.userInfo?.handle ?: "")) return
         viewModelScope.launch {
-            val result = settingsRepository.updateHandle(userId, handle)
-            emitError(result.exceptionOrNull())
+            settingsRepository.updateHandle(userId, handle).onFailure { emitError(it) }
         }
     }
 
@@ -203,8 +200,7 @@ class SettingsViewModel @Inject constructor(
     suspend fun setTaboo(taboo: Boolean) {
         val userId = _userUiState.value.userInfo?.id
         if (userId != null) {
-            val result = settingsRepository.setTaboo(userId, taboo)
-            emitError(result.exceptionOrNull())
+            settingsRepository.setTaboo(userId, taboo).onFailure { emitError(it) }
         } else {
             userPreferencesRepository.saveTabooPreference(taboo)
         }
@@ -213,8 +209,7 @@ class SettingsViewModel @Inject constructor(
     suspend fun setCollection(collection: List<String>) {
         val userId = _userUiState.value.userInfo?.id
         if (userId != null) {
-            val result = settingsRepository.setCollection(userId, collection)
-            emitError(result.exceptionOrNull())
+            settingsRepository.setCollection(userId, collection).onFailure { emitError(it) }
         } else {
             userPreferencesRepository.saveCollectionPreference(collection)
         }
@@ -232,11 +227,9 @@ class SettingsViewModel @Inject constructor(
         _isCardsLoading.update { true }
         viewModelScope.launch {
             val language = coerceLanguage(_userUiState.value.language)
-            val result = cardsRepository.downloadAllCards(language)
-            emitError(result.exceptionOrNull())
-            result.getOrNull()?.let {
-                userPreferencesRepository.saveCardsUpdatedTimestamp(it)
-            }
+            cardsRepository.downloadAllCards(language)
+                .onSuccess { userPreferencesRepository.saveCardsUpdatedTimestamp(it) }
+                .onFailure { emitError(it) }
         }.invokeOnCompletion {
             _isCardsUpdateAvailable.update { false }
             _isCardsLoading.update { false }
@@ -247,22 +240,23 @@ class SettingsViewModel @Inject constructor(
         _isCardsLoading.update { true }
         viewModelScope.launch {
             val language = coerceLanguage(_userUiState.value.language)
-            val result = cardsRepository.isCardsUpdateAvailable(
+            cardsRepository.isCardsUpdateAvailable(
                 language,
                 _cardsUpdatedAt.value
             )
-            emitError(result.exceptionOrNull())
-            val data = result.getOrNull()
-            if (data == true) {
-                val cardsResult = cardsRepository.downloadAllCards(language)
-                emitError(cardsResult.exceptionOrNull())
-                cardsResult.getOrNull()?.let {
-                    userPreferencesRepository.saveCardsUpdatedTimestamp(it)
+                .onSuccess { data ->
+                    if (data) {
+                        cardsRepository.downloadAllCards(language)
+                            .onSuccess {
+                                userPreferencesRepository.saveCardsUpdatedTimestamp(it)
+                            }
+                            .onFailure { emitError(it) }
+                    } else {
+                        _isCardsUpdateAvailable.update { false }
+                        _isCardsLoading.update { false }
+                    }
                 }
-            } else {
-                _isCardsUpdateAvailable.update { false }
-                _isCardsLoading.update { false }
-            }
+                .onFailure { emitError(it) }
         }
     }
 
@@ -272,13 +266,14 @@ class SettingsViewModel @Inject constructor(
 
     suspend fun checkCardsUpdateAvailable() {
         val language = coerceLanguage(_userUiState.value.language)
-        val result = cardsRepository.isCardsUpdateAvailable(
+        cardsRepository.isCardsUpdateAvailable(
             language,
             _cardsUpdatedAt.value
         )
-        emitError(result.exceptionOrNull())
-        val data = result.getOrNull()
-        _isCardsUpdateAvailable.update { data == true }
+            .onSuccess {
+                _isCardsUpdateAvailable.update { it }
+            }
+            .onFailure { emitError(it) }
     }
 
     private fun coerceLanguage(locale: String): String {
@@ -318,26 +313,27 @@ class SettingsViewModel @Inject constructor(
             if (handle == "") _searchResults.update {
                 emptyList()
             } else {
-                val result = settingsRepository.searchUsersByHandle(handle)
-                emitError(result.exceptionOrNull())
-                _searchResults.update {
-                    result.getOrNull() ?: emptyList()
-                }
+                settingsRepository.searchUsersByHandle(handle)
+                    .onSuccess { _searchResults.update { it } }
+                    .onFailure {
+                        emitError(it)
+                        _searchResults.update { emptyList() }
+                    }
             }
         }
     }
 
     suspend fun sendFriendRequest(toUserId: String) {
-        val result = settingsRepository.friendRequestAction(FriendAction.SENT, toUserId)
-        emitError(result.exceptionOrNull())
+        settingsRepository.friendRequestAction(FriendAction.SENT, toUserId)
+            .onFailure { emitError(it) }
     }
     suspend fun acceptFriendRequest(toUserId: String) {
-        val result = settingsRepository.friendRequestAction(FriendAction.ACCEPT, toUserId)
-        emitError(result.exceptionOrNull())
+        settingsRepository.friendRequestAction(FriendAction.ACCEPT, toUserId)
+            .onFailure { emitError(it) }
     }
     suspend fun rejectFriendRequest(toUserId: String) {
-        val result = settingsRepository.friendRequestAction(FriendAction.REVOKE, toUserId)
-        emitError(result.exceptionOrNull())
+        settingsRepository.friendRequestAction(FriendAction.REVOKE, toUserId)
+            .onFailure { emitError(it) }
     }
 
     suspend fun clearLocalData() {
