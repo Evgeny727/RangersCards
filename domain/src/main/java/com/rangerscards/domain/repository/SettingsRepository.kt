@@ -18,8 +18,6 @@ interface SettingsRepository {
 
     suspend fun friendRequestAction(friendAction: FriendAction, friendUserId: String): Result<Unit>
 
-    fun clearNetworkCache(): Boolean
-
 }
 
 enum class FriendAction {

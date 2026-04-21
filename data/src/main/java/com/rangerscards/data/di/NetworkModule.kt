@@ -75,7 +75,6 @@ object NetworkModule {
             }
         })
         .addCustomScalarAdapter(Jsonb.type, JsonElementAdapter)
-        .normalizedCache(SqlNormalizedCacheFactory("apollo.db"))
         .fetchPolicy(FetchPolicy.NetworkOnly)
         .build()
 

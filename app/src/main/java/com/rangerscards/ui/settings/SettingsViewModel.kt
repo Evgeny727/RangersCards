@@ -8,7 +8,6 @@ import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil3.imageLoader
-import com.rangerscards.domain.exceptions.FailedToClearNetworkCacheException
 import com.rangerscards.domain.model.User
 import com.rangerscards.domain.model.UserInfo
 import com.rangerscards.domain.repository.AuthRepository
@@ -339,11 +338,6 @@ class SettingsViewModel @Inject constructor(
     suspend fun clearLocalData() {
         decksRepository.deleteAllLocalDecks()
         campaignsRepository.deleteAllLocalCampaigns()
-    }
-
-    fun clearApolloCache() {
-        val result = settingsRepository.clearNetworkCache()
-        if (!result) emitError(FailedToClearNetworkCacheException())
     }
 }
 

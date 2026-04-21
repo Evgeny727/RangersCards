@@ -120,25 +120,5 @@ fun SettingsDiagnosticsScreen(
                 HorizontalDivider(color = CustomTheme.colors.l10)
             }
         }
-        item {
-            Column(modifier = Modifier.fillMaxWidth().clickable { settingsViewModel.clearApolloCache()
-                Toast.makeText(
-                    context,
-                    context.getString(R.string.diagnostics_clear_apollo_cache_cleared),
-                    Toast.LENGTH_SHORT
-                ).show()
-            }) {
-                Text(
-                    text = stringResource(R.string.diagnostics_clear_apollo_cache),
-                    color = CustomTheme.colors.d30,
-                    fontFamily = Jost,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 20.sp,
-                    lineHeight = 22.sp,
-                    modifier = Modifier.padding(8.dp)
-                )
-                HorizontalDivider(color = CustomTheme.colors.l10)
-            }
-        }
     }
 }

@@ -390,8 +390,6 @@
     <string name="diagnostics_clear_local_data_cleared">Local data is cleared.</string>
     <string name="diagnostics_clear_coil_cache">Clear image cache</string>
     <string name="diagnostics_clear_coil_cache_cleared">Image cache is cleared.</string>
-    <string name="diagnostics_clear_apollo_cache">Clear network cache</string>
-    <string name="diagnostics_clear_apollo_cache_cleared">Network cache is cleared.</string>
 
     //loa campaign
     <string name="general_set_the_arcology">The Arcology</string>

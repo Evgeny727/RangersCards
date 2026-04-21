@@ -75,6 +75,4 @@ class SettingsRepositoryImpl @Inject constructor(
         Unit
     }
 
-    override fun clearNetworkCache() = userSettingsRemoteDataSource.clearCache()
-
 }

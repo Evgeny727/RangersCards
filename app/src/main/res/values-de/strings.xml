@@ -366,11 +366,9 @@
     <string name="diagnostics_clear_local_data_cleared">Lokal gespeicherte Daten wurden gelöscht.</string>
     <string name="diagnostics_clear_coil_cache">Bild-Cache leeren</string>
     <string name="diagnostics_clear_coil_cache_cleared">Bild-Cache ist geleert.</string>
-    <string name="diagnostics_clear_apollo_cache">Netzwerk-Cache leeren</string>
-    <string name="diagnostics_clear_apollo_cache_cleared">Netzwerk-Cache ist geleert.</string>
 
-   //loa campaign
-   <string name="general_set_the_arcology">Die Arkologie</string>
+    //loa campaign
+    <string name="general_set_the_arcology">Die Arkologie</string>
     <string name="loa_expansion">Das Vermächtnis der Ahnen</string>
     <string name="ancient_ruins">Uralte Ruinen</string>
     <string name="flooded_ruins">Überschwemmte Ruinen</string>

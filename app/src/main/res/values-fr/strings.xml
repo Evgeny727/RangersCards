@@ -370,8 +370,6 @@
   <string name="diagnostics_clear_local_data_cleared">Les données locales ont été supprimées.</string>
   <string name="diagnostics_clear_coil_cache">Vider le cache d’images</string>
   <string name="diagnostics_clear_coil_cache_cleared">Le cache d’images a été vidé.</string>
-  <string name="diagnostics_clear_apollo_cache">Vider le cache réseau</string>
-  <string name="diagnostics_clear_apollo_cache_cleared">Le cache réseau a été vidé.</string>
 
   //loa campaign
   <string name="general_set_the_arcology">L\'Arcologie</string>

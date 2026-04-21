@@ -369,8 +369,6 @@
     <string name="diagnostics_clear_local_data_cleared">Datos locales eliminados.</string>
     <string name="diagnostics_clear_coil_cache">Eliminar caché de imágenes</string>
     <string name="diagnostics_clear_coil_cache_cleared">Caché de imágenes eliminada.</string>
-    <string name="diagnostics_clear_apollo_cache">Eliminar caché de red</string>
-    <string name="diagnostics_clear_apollo_cache_cleared">Caché de red eliminada.</string>
 
     //loa campaign
     <string name="general_set_the_arcology">The Arcology</string>

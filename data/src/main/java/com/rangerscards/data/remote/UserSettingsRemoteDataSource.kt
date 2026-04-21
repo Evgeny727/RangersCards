@@ -1,7 +1,6 @@
 package com.rangerscards.data.remote
 
 import com.apollographql.apollo.ApolloClient
-import com.apollographql.apollo.cache.normalized.apolloStore
 import com.rangerscards.AcceptFriendRequestMutation
 import com.rangerscards.GetUserInfoByHandleQuery
 import com.rangerscards.GetUsersInfoByHandleQuery
@@ -53,7 +52,5 @@ class UserSettingsRemoteDataSource @Inject constructor(
     suspend fun rejectFriendRequest(toUserId: String) = apolloClient
         .mutation(RejectFriendRequestMutation(toUserId))
         .execute()
-
-    fun clearCache() = apolloClient.apolloStore.clearAll()
 
 }
