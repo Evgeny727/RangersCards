@@ -23,6 +23,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,10 +54,12 @@ import androidx.navigation.compose.dialog
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.rangerscards.AppViewModel
 import com.rangerscards.MainActivity
 import com.rangerscards.R
+import com.rangerscards.domain.exceptions.InvalidEmailException
 import com.rangerscards.objects.CampaignMaps
-import com.rangerscards.ui.AppViewModelProvider
+import com.rangerscards.ui.CardsSyncState
 import com.rangerscards.ui.campaigns.AddDeckToCampaignScreen
 import com.rangerscards.ui.campaigns.AddPlayersToCampaign
 import com.rangerscards.ui.campaigns.CampaignChallengeDeckScreen
@@ -101,16 +106,13 @@ import com.rangerscards.ui.settings.SettingsCollectionScreen
 import com.rangerscards.ui.settings.SettingsDiagnosticsScreen
 import com.rangerscards.ui.settings.SettingsFriendsScreen
 import com.rangerscards.ui.settings.SettingsScreen
-import com.rangerscards.ui.settings.SettingsViewModel
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
-import kotlinx.serialization.json.JsonArray
 
 @Composable
 fun RangersNavHost(
-    mainActivity: MainActivity,
     isDarkTheme: Boolean,
-    settingsViewModel: SettingsViewModel
+    appViewModel: AppViewModel
 ) {
     val navController = rememberNavController()
     val bottomNavItems = listOf(BottomNavScreen.Cards, BottomNavScreen.Decks,
@@ -125,8 +127,8 @@ fun RangersNavHost(
     var title by rememberSaveable { mutableStateOf(context.getString(BottomNavScreen.Settings.label)) }
     var actions: @Composable (RowScope.() -> Unit)? by remember { mutableStateOf(null) }
     var switch: @Composable (RowScope.() -> Unit)? = null
-    val isCardsLoading by settingsViewModel.isCardsLoading.collectAsState()
-    val isCardsUpdateAvailable by settingsViewModel.isCardsUpdateAvailable.collectAsState()
+    val cardsState by appViewModel.cardsSyncState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
     Scaffold(
         modifier = Modifier.safeDrawingPadding(),
         topBar = {
@@ -145,16 +147,32 @@ fun RangersNavHost(
                 RangersNavigationBar(navController, bottomNavItems, currentRoute)
             }
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) { data ->
+            Snackbar(
+                data,
+                containerColor = CustomTheme.colors.l30,
+                contentColor = CustomTheme.colors.d30
+            )
+        } },
         containerColor = CustomTheme.colors.l30
     ) { innerPadding ->
         LaunchedEffect(Unit) {
-            settingsViewModel.downloadCardsIfDatabaseNotExists(context)
-            settingsViewModel.checkCardsUpdateAvailable(context)
+            appViewModel.checkIfCardsReady()
+            appViewModel.events.collect { error ->
+                val message = when (error.exception) {
+                    is InvalidEmailException -> {
+                        TODO()
+                    }
+                    else -> error.exception.localizedMessage ?:
+                        context.getString(R.string.something_went_wrong)
+                }
+                snackbarHostState.showSnackbar(message)
+            }
         }
-        if (isCardsUpdateAvailable) CampaignDialog(
+        if (cardsState is CardsSyncState.UpdateAvailable) CampaignDialog(
             header = stringResource(id = R.string.cards_update_available_header),
             isDarkTheme = isDarkTheme,
-            onBack = settingsViewModel::cancelUpdateDialog
+            onBack = appViewModel::cancelCardsUpdate
         ) {
             Column(
                 modifier = Modifier.padding(8.dp),
@@ -172,7 +190,7 @@ fun RangersNavHost(
                 SquareButton(
                     stringId = R.string.cancel_button,
                     leadingIcon = R.drawable.close_32dp,
-                    onClick = settingsViewModel::cancelUpdateDialog,
+                    onClick = appViewModel::cancelCardsUpdate,
                     buttonColor = ButtonDefaults.buttonColors()
                         .copy(CustomTheme.colors.d30),
                     iconColor = CustomTheme.colors.warn,
@@ -181,10 +199,7 @@ fun RangersNavHost(
                 SquareButton(
                     stringId = R.string.update_cards_button,
                     leadingIcon = R.drawable.done_32dp,
-                    onClick = {
-                        settingsViewModel.cancelUpdateDialog()
-                        settingsViewModel.updateCardsIfNotUpdated(context)
-                    }
+                    onClick = appViewModel::confirmCardsUpdate
                 )
             }
         }
@@ -223,9 +238,8 @@ fun RangersNavHost(
                 composable(BottomNavScreen.Settings.startDestination,
                     enterTransition = { EnterTransition.None },
                     exitTransition = { ExitTransition.None }) {
-                    if (!isCardsLoading) {
+                    if (cardsState !is CardsSyncState.Loading) {
                         SettingsScreen(
-                            mainActivity = mainActivity,
                             isDarkTheme = isDarkTheme,
                             navigateToAbout = {
                                 navController.navigate(
@@ -255,7 +269,7 @@ fun RangersNavHost(
                                     launchSingleTop = true
                                 }
                             },
-                            settingsViewModel = settingsViewModel,
+                            appViewModel = appViewModel,
                             contentPadding = innerPadding
                         )
                     } else {
@@ -267,7 +281,7 @@ fun RangersNavHost(
                 }
                 composable(BottomNavScreen.Settings.route + "/about") {
                     SettingsAboutScreen(
-                        settingsViewModel = settingsViewModel,
+                        settingsViewModel = appViewModel,
                         contentPadding = innerPadding
                     )
                     title = stringResource(R.string.about_button)
@@ -276,7 +290,7 @@ fun RangersNavHost(
                 }
                 composable(BottomNavScreen.Settings.route + "/friends") {
                     SettingsFriendsScreen(
-                        settingsViewModel = settingsViewModel,
+                        settingsViewModel = appViewModel,
                         contentPadding = innerPadding
                     )
                     title = stringResource(R.string.your_friends)
@@ -284,8 +298,8 @@ fun RangersNavHost(
                     switch = null
                 }
                 composable(BottomNavScreen.Settings.route + "/diagnostics") {
-                    if (!isCardsLoading) SettingsDiagnosticsScreen(
-                        settingsViewModel = settingsViewModel,
+                    if (cardsState !is CardsSyncState.Loading) SettingsDiagnosticsScreen(
+                        settingsViewModel = appViewModel,
                         isDarkTheme = isDarkTheme,
                         contentPadding = innerPadding
                     )
@@ -296,7 +310,7 @@ fun RangersNavHost(
                 }
                 composable(BottomNavScreen.Settings.route + "/collection") {
                     SettingsCollectionScreen(
-                        settingsViewModel = settingsViewModel,
+                        settingsViewModel = appViewModel,
                         isDarkTheme = isDarkTheme,
                         contentPadding = innerPadding
                     )
@@ -316,8 +330,8 @@ fun RangersNavHost(
                         factory = AppViewModelProvider.Factory,
                         viewModelStoreOwner = backStackEntry
                     )
-                    val user by settingsViewModel.userUiState.collectAsState()
-                    if (!isCardsLoading) {
+                    val user by appViewModel.userUiState.collectAsState()
+                    if (cardsState !is CardsSyncState.Loading) {
                         CardsScreen(
                             isDarkTheme = isDarkTheme,
                             cardsViewModel = cardsViewModel,
@@ -346,7 +360,7 @@ fun RangersNavHost(
                             },
                             colors = IconButtonDefaults.iconButtonColors().copy(containerColor = Color.Transparent),
                             modifier = Modifier.size(32.dp),
-                            enabled = !isCardsLoading
+                            enabled = !cardsState
                         ) {
                             Icon(
                                 painterResource(id = R.drawable.sort_32dp),
@@ -365,7 +379,7 @@ fun RangersNavHost(
                             },
                             colors = IconButtonDefaults.iconButtonColors().copy(containerColor = Color.Transparent),
                             modifier = Modifier.size(32.dp),
-                            enabled = !isCardsLoading
+                            enabled = !cardsState
                         ) {
                             Icon(
                                 painterResource(id = R.drawable.filter_32dp),
@@ -458,7 +472,7 @@ fun RangersNavHost(
                         factory = AppViewModelProvider.Factory,
                         viewModelStoreOwner = backStackEntry
                     )
-                    if (!isCardsLoading) {
+                    if (cardsState !is CardsSyncState.Loading) {
                         DecksScreen(
                             navigateToDeck = { deckId ->
                                 navController.navigate(
@@ -468,7 +482,7 @@ fun RangersNavHost(
                                 }
                             },
                             decksViewModel = decksViewModel,
-                            settingsViewModel = settingsViewModel,
+                            settingsViewModel = appViewModel,
                             contentPadding = innerPadding
                         )
                     } else {
@@ -486,7 +500,7 @@ fun RangersNavHost(
                             },
                             colors = IconButtonDefaults.iconButtonColors().copy(containerColor = Color.Transparent),
                             modifier = Modifier.size(32.dp),
-                            enabled = !isCardsLoading
+                            enabled = !cardsState
                         ) {
                             Icon(
                                 painterResource(id = R.drawable.add_32dp),
@@ -506,7 +520,7 @@ fun RangersNavHost(
                         factory = AppViewModelProvider.Factory,
                         viewModelStoreOwner = parentEntry
                     )
-                    val user by settingsViewModel.userUiState.collectAsState()
+                    val user by appViewModel.userUiState.collectAsState()
                     DeckCreationScreen(
                         onCancel = {
                             navController.navigateUp()
@@ -570,7 +584,7 @@ fun RangersNavHost(
                     )
                     val deckId = backStackEntry.arguments?.getString(deckIdArgument)
                         ?: error("deckIdArgument cannot be null")
-                    val user by settingsViewModel.userUiState.collectAsState()
+                    val user by appViewModel.userUiState.collectAsState()
                     DeckScreen(
                         navController = navController,
                         deckViewModel = deckViewModel,
@@ -595,7 +609,7 @@ fun RangersNavHost(
                         factory = AppViewModelProvider.Factory,
                         viewModelStoreOwner = backStackEntry
                     )
-                    val user by settingsViewModel.userUiState.collectAsState()
+                    val user by appViewModel.userUiState.collectAsState()
                     DeckChangingRole(
                         onCancel = {
                             navController.navigateUp()
@@ -681,7 +695,7 @@ fun RangersNavHost(
                     )
                     val typeIndex = backStackEntry.arguments?.getInt(typeIndexArgument)
                         ?: error("typeIndexArgument cannot be null")
-                    val user by settingsViewModel.userUiState.collectAsState()
+                    val user by appViewModel.userUiState.collectAsState()
                     deckCardsViewModel.setPackIds(user.settings.collection)
                     DeckCardsSearchingListScreen(
                         navigateUp = { navController.navigateUp() },
@@ -797,7 +811,7 @@ fun RangersNavHost(
                         factory = AppViewModelProvider.Factory,
                         viewModelStoreOwner = backStackEntry
                     )
-                    if (!isCardsLoading) {
+                    if (cardsState !is CardsSyncState.Loading) {
                         CampaignsScreen(
                             navigateToCampaign = { campaignId ->
                                 navController.navigate(
@@ -807,7 +821,7 @@ fun RangersNavHost(
                                 }
                             },
                             campaignsViewModel = campaignsViewModel,
-                            settingsViewModel = settingsViewModel,
+                            settingsViewModel = appViewModel,
                             isDarkTheme = isDarkTheme,
                             contentPadding = innerPadding
                         )
@@ -826,7 +840,7 @@ fun RangersNavHost(
                             },
                             colors = IconButtonDefaults.iconButtonColors().copy(containerColor = Color.Transparent),
                             modifier = Modifier.size(32.dp),
-                            enabled = !isCardsLoading
+                            enabled = !cardsState
                         ) {
                             Icon(
                                 painterResource(id = R.drawable.add_32dp),
@@ -846,7 +860,7 @@ fun RangersNavHost(
                         factory = AppViewModelProvider.Factory,
                         viewModelStoreOwner = parentEntry
                     )
-                    val user by settingsViewModel.userUiState.collectAsState()
+                    val user by appViewModel.userUiState.collectAsState()
                     CampaignCreationScreen(
                         onCancel = {
                             navController.navigateUp()
@@ -905,11 +919,11 @@ fun RangersNavHost(
                         )
                         val campaignId = backStackEntry.arguments?.getString(campaignIdArgument)
                             ?: error("campaignIdArgument cannot be null")
-                        val user by settingsViewModel.userUiState.collectAsState()
+                        val user by appViewModel.userUiState.collectAsState()
                         val campaign = campaignViewModel.getCampaignById(campaignId).collectAsState(null)
                         val challengeDeck = campaignViewModel.getCampaignChallengeDeckIds(campaignId)
                             .collectAsState(JsonArray(emptyList()))
-                        if (!isCardsLoading) {
+                        if (!cardsState) {
                             CampaignScreen(
                                 campaignViewModel = campaignViewModel,
                                 campaign = campaign.value,
@@ -935,7 +949,7 @@ fun RangersNavHost(
                                 },
                                 colors = IconButtonDefaults.iconButtonColors().copy(containerColor = Color.Transparent),
                                 modifier = Modifier.size(32.dp),
-                                enabled = !isCardsLoading
+                                enabled = !cardsState
                             ) {
                                 Icon(
                                     painterResource(id = R.drawable.undo_32dp),
@@ -956,7 +970,7 @@ fun RangersNavHost(
                         factory = AppViewModelProvider.Factory,
                         viewModelStoreOwner = parentEntry
                     )
-                    val user by settingsViewModel.userUiState.collectAsState()
+                    val user by appViewModel.userUiState.collectAsState()
                     CampaignExpansionsDialog(
                         campaignViewModel = campaignViewModel,
                         isDarkTheme = isDarkTheme,
@@ -977,7 +991,7 @@ fun RangersNavHost(
                     )
                     val dayInfoId = backStackEntry.arguments?.getInt(dayInfoIdArgument)
                         ?: error("dayInfoId cannot be null")
-                    val user by settingsViewModel.userUiState.collectAsState()
+                    val user by appViewModel.userUiState.collectAsState()
                     DayInfoDialog(
                         campaignViewModel = campaignViewModel,
                         dayId = dayInfoId,
@@ -1010,7 +1024,7 @@ fun RangersNavHost(
                         factory = AppViewModelProvider.Factory,
                         viewModelStoreOwner = parentEntry
                     )
-                    val user by settingsViewModel.userUiState.collectAsState()
+                    val user by appViewModel.userUiState.collectAsState()
                     EndTheDayDialog(
                         campaignViewModel = campaignViewModel,
                         isDarkTheme = isDarkTheme,
@@ -1026,7 +1040,7 @@ fun RangersNavHost(
                         factory = AppViewModelProvider.Factory,
                         viewModelStoreOwner = parentEntry
                     )
-                    val user by settingsViewModel.userUiState.collectAsState()
+                    val user by appViewModel.userUiState.collectAsState()
                     TravelDialog(
                         campaignViewModel = campaignViewModel,
                         isDarkTheme = isDarkTheme,
@@ -1064,7 +1078,7 @@ fun RangersNavHost(
                         factory = AppViewModelProvider.Factory,
                         viewModelStoreOwner = backStackEntry
                     )
-                    val user by settingsViewModel.userUiState.collectAsState()
+                    val user by appViewModel.userUiState.collectAsState()
                     AddDeckToCampaignScreen(
                         navController = navController,
                         campaignViewModel = campaignViewModel,
@@ -1085,7 +1099,7 @@ fun RangersNavHost(
                         factory = AppViewModelProvider.Factory,
                         viewModelStoreOwner = parentEntry
                     )
-                    val user by settingsViewModel.userUiState.collectAsState()
+                    val user by appViewModel.userUiState.collectAsState()
                     AddPlayersToCampaign(
                         navigateBack = { navController.navigateUp() },
                         campaignViewModel = campaignViewModel,
@@ -1105,7 +1119,7 @@ fun RangersNavHost(
                         factory = AppViewModelProvider.Factory,
                         viewModelStoreOwner = parentEntry
                     )
-                    val user by settingsViewModel.userUiState.collectAsState()
+                    val user by appViewModel.userUiState.collectAsState()
                     UndoTravelDialog(
                         campaignViewModel = campaignViewModel,
                         isDarkTheme = isDarkTheme,
@@ -1121,7 +1135,7 @@ fun RangersNavHost(
                         factory = AppViewModelProvider.Factory,
                         viewModelStoreOwner = parentEntry
                     )
-                    val user by settingsViewModel.userUiState.collectAsState()
+                    val user by appViewModel.userUiState.collectAsState()
                     AddRemovedDialog(
                         campaignViewModel = campaignViewModel,
                         isDarkTheme = isDarkTheme,
@@ -1137,7 +1151,7 @@ fun RangersNavHost(
                         factory = AppViewModelProvider.Factory,
                         viewModelStoreOwner = parentEntry
                     )
-                    val user by settingsViewModel.userUiState.collectAsState()
+                    val user by appViewModel.userUiState.collectAsState()
                     RecordEventDialog(
                         campaignViewModel = campaignViewModel,
                         isDarkTheme = isDarkTheme,
@@ -1158,7 +1172,7 @@ fun RangersNavHost(
                     )
                     val eventName = backStackEntry.arguments?.getString(eventNameArgument)
                         ?: error("eventNameArgument cannot be null")
-                    val user by settingsViewModel.userUiState.collectAsState()
+                    val user by appViewModel.userUiState.collectAsState()
                     CampaignEventDialog(
                         campaignViewModel = campaignViewModel,
                         eventName = eventName,
@@ -1175,7 +1189,7 @@ fun RangersNavHost(
                         factory = AppViewModelProvider.Factory,
                         viewModelStoreOwner = parentEntry
                     )
-                    val user by settingsViewModel.userUiState.collectAsState()
+                    val user by appViewModel.userUiState.collectAsState()
                     AddMissionDialog(
                         campaignViewModel = campaignViewModel,
                         isDarkTheme = isDarkTheme,
@@ -1196,7 +1210,7 @@ fun RangersNavHost(
                     )
                     val missionName = backStackEntry.arguments?.getString(missionNameArgument)
                         ?: error("missionNameArgument cannot be null")
-                    val user by settingsViewModel.userUiState.collectAsState()
+                    val user by appViewModel.userUiState.collectAsState()
                     CampaignMissionDialog(
                         campaignViewModel = campaignViewModel,
                         missionName = missionName,
@@ -1221,7 +1235,7 @@ fun RangersNavHost(
                         factory = AppViewModelProvider.Factory,
                         viewModelStoreOwner = parentEntry
                     )
-                    val user by settingsViewModel.userUiState.collectAsState()
+                    val user by appViewModel.userUiState.collectAsState()
                     val cardIndex = backStackEntry.arguments?.getInt(cardIndexArgument)
                         ?: error("cardIndexArgument cannot be null")
                     val query = backStackEntry.arguments?.getString(cardQueryArgument).orEmpty()

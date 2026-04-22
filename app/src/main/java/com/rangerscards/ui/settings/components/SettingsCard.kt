@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -17,14 +16,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.rangerscards.R
-import com.rangerscards.ui.settings.SettingsViewModel
 import com.rangerscards.ui.theme.CustomTheme
 
 @Composable
 fun SettingsCard(
     isDarkTheme: Boolean,
-    settingsViewModel: SettingsViewModel,
+    themeInt: Int,
+    englishResults: Boolean,
     language: String,
+    onSelectTheme: (Int) -> Unit,
+    onSetEnglishSearchResults: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var openThemeDialog by rememberSaveable { mutableStateOf(false) }
@@ -36,8 +37,6 @@ fun SettingsCard(
         false -> stringResource(id = R.string.light_theme)
         else -> stringResource(id = R.string.dark_theme)
     }
-    val themeInt = settingsViewModel.themeState.collectAsState().value
-    val englishResults by settingsViewModel.isIncludeEnglishSearchResultsState.collectAsState()
     if (openThemeDialog) {
         Dialog(
             onDismissRequest = { openThemeDialog = false },
@@ -54,7 +53,7 @@ fun SettingsCard(
                 SettingsRadioButtonRow(
                     text = stringResource(id = R.string.system_theme, systemThemeText),
                     onClick = { openThemeDialog = false
-                        if (themeInt != 2) settingsViewModel.selectTheme(2) },
+                        if (themeInt != 2) onSelectTheme(2) },
                     isSelected = themeInt == 2,
                     isSingleValue = true
                 )
@@ -65,7 +64,7 @@ fun SettingsCard(
                 SettingsRadioButtonRow(
                     text = stringResource(id = R.string.light_theme),
                     onClick = { openThemeDialog = false
-                        if (themeInt != 0) settingsViewModel.selectTheme(0) },
+                        if (themeInt != 0) onSelectTheme(0) },
                     isSelected = themeInt == 0,
                     isSingleValue = true
                 )
@@ -76,7 +75,7 @@ fun SettingsCard(
                 SettingsRadioButtonRow(
                     text = stringResource(id = R.string.dark_theme),
                     onClick = { openThemeDialog = false
-                        if (themeInt != 1) settingsViewModel.selectTheme(1) },
+                        if (themeInt != 1) onSelectTheme(1) },
                     isSelected = themeInt == 1,
                     isSingleValue = true
                 )
@@ -104,7 +103,7 @@ fun SettingsCard(
         }
         if (language != "en") SettingsRadioButtonRow(
             text = stringResource(id = R.string.english_search_results_radio_button),
-            onClick = { settingsViewModel.setEnglishSearchResultsSetting(!englishResults) },
+            onClick = { onSetEnglishSearchResults(!englishResults) },
             leadingIcon = R.drawable.search_32dp,
             isSelected = englishResults
         )

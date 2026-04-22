@@ -25,7 +25,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -36,21 +35,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.rangerscards.MainActivity
 import com.rangerscards.R
+import com.rangerscards.domain.model.User
 import com.rangerscards.ui.components.SquareButton
-import com.rangerscards.ui.settings.SettingsViewModel
-import com.rangerscards.ui.settings.UserUIState
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 import kotlinx.coroutines.launch
 
 @Composable
 fun AccountCard(
-    mainActivity: MainActivity,
     isDarkTheme: Boolean,
-    settingsViewModel: SettingsViewModel,
-    user: UserUIState,
+    user: User,
+    signIn: (String, String) -> Unit,
+    signOut: () -> Unit,
+    createAccount: (String, String) -> Unit,
+    deleteAccount: (String, String) -> Unit,
+    updateHandle: suspend (String, String) -> Unit,
     navigateToFriends: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -59,18 +59,16 @@ fun AccountCard(
     var openAuthDialog by rememberSaveable { mutableStateOf(false) }
     var openHandleDialog by rememberSaveable { mutableStateOf(false) }
     var userHandle by remember { mutableStateOf("") }
-    val context = LocalContext.current.applicationContext
 
-    LaunchedEffect(user.currentUser) {
-        if (user.currentUser != null) settingsViewModel.getUserInfo(context, user.currentUser.uid)
-        userHandle = user.userInfo?.profile?.userProfile?.handle ?: ""
+    LaunchedEffect(user.userInfo) {
+        userHandle = user.userInfo?.handle ?: ""
     }
 
     SettingsBaseCard(
         isDarkTheme = isDarkTheme,
         labelIdRes = R.string.account_title
     ) {
-        if (user.currentUser == null) {
+        if (user.userInfo == null) {
             if (openAuthDialog) Dialog(
                 onDismissRequest = { openAuthDialog = false },
                 properties = DialogProperties(
@@ -108,7 +106,7 @@ fun AccountCard(
                         R.string.sign_in_to_account_button,
                         R.drawable.login_32dp,
                         onClick = {
-                            settingsViewModel.signIn(mainActivity, email, password)
+                            signIn(email, password)
                             openAuthDialog = false
                             email = ""
                             password = ""
@@ -118,7 +116,7 @@ fun AccountCard(
                         R.string.sign_up_to_app_account_button,
                         R.drawable.add_32dp,
                         onClick = {
-                            settingsViewModel.createAccount(mainActivity, email, password)
+                            createAccount(email, password)
                             openAuthDialog = false
                             email = ""
                             password = ""
@@ -182,7 +180,7 @@ fun AccountCard(
                                 R.string.delete_account_button,
                                 R.drawable.delete_32dp,
                                 onClick = {
-                                    settingsViewModel.deleteUser(context, email, password)
+                                    deleteAccount(email, password)
                                     openAuthDialog = false
                                     isDeleting = false
                                     email = ""
@@ -237,7 +235,7 @@ fun AccountCard(
                                 stringId = R.string.sign_out_account_button,
                                 leadingIcon = R.drawable.logout_32dp,
                                 onClick = {
-                                    settingsViewModel.signOut(mainActivity)
+                                    signOut()
                                     openAuthDialog = false
                                     userHandle = ""
                                 }
@@ -299,16 +297,16 @@ fun AccountCard(
                             SquareButton(
                                 stringId = R.string.done_button,
                                 leadingIcon = R.drawable.done_32dp,
-                                onClick = {
+                                onClick = if (user.userInfo?.handle != userHandle) { {
                                     isLoading = true
                                     coroutineScope.launch {
-                                        settingsViewModel.updateHandle(context, userHandle)
+                                        updateHandle(user.userInfo?.id!!, userHandle)
                                     }.invokeOnCompletion {
                                         isLoading = false
                                         openHandleDialog = false
-                                        userHandle = user.userInfo?.profile?.userProfile?.handle ?: ""
+                                        userHandle = user.userInfo?.handle ?: ""
                                     }
-                                },
+                                } } else { { openHandleDialog = false } },
                                 buttonColor = ButtonDefaults.buttonColors().copy(
                                     CustomTheme.colors.d10,
                                     disabledContainerColor = CustomTheme.colors.m
@@ -328,7 +326,7 @@ fun AccountCard(
                     CustomTheme.shapes.large
                 ),
             ) {
-                if (user.userInfo == null) Row(
+                if (user.userInfo?.id == null) Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
@@ -341,15 +339,15 @@ fun AccountCard(
                     leadingIcon = R.drawable.badge_32dp,
                     trailingIcon = R.drawable.edit_32dp,
                     headerId = R.string.account_name_header,
-                    text = user.userInfo.profile?.userProfile?.handle ?: "",
-                    { userHandle = user.userInfo.profile?.userProfile?.handle ?: ""
+                    text = user.userInfo?.handle ?: "",
+                    { userHandle = user.userInfo?.handle ?: ""
                         openHandleDialog = true }
                 )
                 HorizontalDivider(
                     modifier = Modifier.padding(horizontal = 8.dp),
                     color = CustomTheme.colors.l10
                 )
-                if (user.userInfo == null) Row(
+                if (user.userInfo?.id == null) Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
@@ -359,8 +357,8 @@ fun AccountCard(
                     )
                 }
                 else {
-                    val friendsCount = user.userInfo.profile?.userProfile?.friends?.size ?: 0
-                    val friendRequestCount = user.userInfo.profile?.userProfile?.received_requests?.size ?: 0
+                    val friendsCount = user.friends.size
+                    val friendRequestCount = user.receivedRequests.size
                     SettingsClickableSurface(
                         leadingIcon = R.drawable.group_32dp,
                         trailingIcon = R.drawable.add_32dp,

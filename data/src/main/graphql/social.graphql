@@ -56,6 +56,7 @@ query getUsersInfoByHandle($handle: String!) {
         _ilike: $handle
       }
     }
+    limit: 50
 	) {
     ...UserInfo
   }

@@ -3,10 +3,7 @@ package com.rangerscards.ui.settings.components
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,9 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -28,9 +23,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.rangerscards.R
+import com.rangerscards.domain.model.User
+import com.rangerscards.ui.components.RangersLoadingDialog
 import com.rangerscards.ui.components.SquareButton
-import com.rangerscards.ui.settings.SettingsViewModel
-import com.rangerscards.ui.settings.UserUIState
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 import kotlinx.coroutines.launch
@@ -39,44 +34,27 @@ import java.util.Locale
 @Composable
 fun CardsCard(
     isDarkTheme: Boolean,
-    settingsViewModel: SettingsViewModel,
-    userUIState: UserUIState,
+    userUIState: User,
     navigateToCollection: () -> Unit,
+    updateLocale: (String) -> Unit,
+    updateCards: () -> Unit,
+    setTaboo: suspend (String?, Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var openLanguagePickerDialog by rememberSaveable { mutableStateOf(false) }
     val selectedLocale = AppCompatDelegate.getApplicationLocales()[0] ?: Locale.getDefault()
     var showLoadingDialog by rememberSaveable { mutableStateOf(false) }
     val coroutine = rememberCoroutineScope()
-    val context = LocalContext.current.applicationContext
     var amount by rememberSaveable { mutableIntStateOf(userUIState.settings.collection.size) }
     var taboo by rememberSaveable { mutableStateOf(userUIState.settings.taboo) }
     LaunchedEffect(userUIState.settings) {
         amount = userUIState.settings.collection.size
         taboo = userUIState.settings.taboo
     }
-    if (showLoadingDialog) Dialog(
-        onDismissRequest = { showLoadingDialog = false },
-        properties = DialogProperties(
-            dismissOnBackPress = false,
-            dismissOnClickOutside = false,
-            usePlatformDefaultWidth = false
-        )
-    ) {
-        SettingsBaseCard(
-            isDarkTheme = isDarkTheme,
-            labelIdRes = R.string.saving_changes_header
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                CircularProgressIndicator(modifier = Modifier.size(32.dp), color = CustomTheme.colors.m)
-            }
-        }
-    }
+    if (showLoadingDialog) RangersLoadingDialog(
+        isDarkTheme = isDarkTheme,
+        onDismissRequest = { showLoadingDialog = false }
+    )
     if (openLanguagePickerDialog) {
         Dialog(
             onDismissRequest = { openLanguagePickerDialog = false },
@@ -104,7 +82,7 @@ fun CardsCard(
                     text = Locale.forLanguageTag("en").displayLanguage,
                     onClick = { openLanguagePickerDialog = false
                         if (selectedLocale.language != "en")
-                            settingsViewModel.updateLocale("en", context) },
+                            updateLocale("en") },
                     isSelected = selectedLocale.language == "en",
                     isSingleValue = true
                 )
@@ -116,7 +94,7 @@ fun CardsCard(
                     text = Locale.forLanguageTag("ru").displayLanguage,
                     onClick = { openLanguagePickerDialog = false
                         if (selectedLocale.language != "ru")
-                            settingsViewModel.updateLocale("ru", context) },
+                            updateLocale("ru") },
                     isSelected = selectedLocale.language == "ru",
                     isSingleValue = true
                 )
@@ -128,7 +106,7 @@ fun CardsCard(
                     text = Locale.forLanguageTag("de").displayLanguage,
                     onClick = { openLanguagePickerDialog = false
                         if (selectedLocale.language != "de")
-                            settingsViewModel.updateLocale("de", context) },
+                            updateLocale("de") },
                     isSelected = selectedLocale.language == "de",
                     isSingleValue = true
                 )
@@ -140,7 +118,7 @@ fun CardsCard(
                     text = Locale.forLanguageTag("fr").displayLanguage,
                     onClick = { openLanguagePickerDialog = false
                         if (selectedLocale.language != "fr")
-                            settingsViewModel.updateLocale("fr", context) },
+                            updateLocale("fr") },
                     isSelected = selectedLocale.language == "fr",
                     isSingleValue = true
                 )
@@ -152,7 +130,7 @@ fun CardsCard(
                     text = Locale.forLanguageTag("it").displayLanguage,
                     onClick = { openLanguagePickerDialog = false
                         if (selectedLocale.language != "it")
-                            settingsViewModel.updateLocale("it", context) },
+                            updateLocale("it") },
                     isSelected = selectedLocale.language == "it",
                     isSingleValue = true
                 )
@@ -164,7 +142,7 @@ fun CardsCard(
                     text = Locale.forLanguageTag("es").displayLanguage,
                     onClick = { openLanguagePickerDialog = false
                         if (selectedLocale.language != "es")
-                            settingsViewModel.updateLocale("es", context) },
+                            updateLocale("es") },
                     isSelected = selectedLocale.language == "es",
                     isSingleValue = true
                 )
@@ -204,7 +182,7 @@ fun CardsCard(
         SquareButton(
             stringId = R.string.update_cards_button,
             leadingIcon = R.drawable.reshuffle,
-            onClick = { settingsViewModel.updateCardsIfNotUpdated(context) }
+            onClick = updateCards
         )
         //TODO:Implement rules
 //        SquareButton(
@@ -215,7 +193,7 @@ fun CardsCard(
         SettingsRadioButtonRow(
             text = stringResource(id = R.string.use_taboo),
             onClick = { coroutine.launch { showLoadingDialog = true
-                settingsViewModel.setTaboo(!taboo, context)
+                setTaboo(userUIState.userInfo?.id, !taboo)
             }.invokeOnCompletion { showLoadingDialog = false } },
             leadingIcon = R.drawable.uncommon_wisdom,
             isSelected = taboo

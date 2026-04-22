@@ -3,6 +3,7 @@ package com.rangerscards.ui.settings.components
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -11,15 +12,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rangerscards.R
 import com.rangerscards.ui.components.SquareButton
-import com.rangerscards.ui.settings.SettingsViewModel
-import com.rangerscards.ui.settings.openLink
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
+import com.rangerscards.utils.openLink
 
 @Composable
 fun SocialsCard(
     isDarkTheme: Boolean,
-    settingsViewModel: SettingsViewModel,
     language: String,
     modifier: Modifier = Modifier
 ) {
@@ -43,12 +42,16 @@ fun SocialsCard(
             "ru" -> SquareButton(
                 stringId = R.string.telegram_button,
                 leadingIcon = R.drawable.telegram,
-                onClick = { context.openLink("https://t.me/rangersgameru") }
+                onClick = remember { {
+                    context.openLink("https://t.me/rangersgameru")
+                } }
             )
             else -> SquareButton(
                 stringId = R.string.discord_button,
                 leadingIcon = R.drawable.discord,
-                onClick = { context.openLink("https://discord.gg/pw3Cye8NQR") }
+                onClick = remember { {
+                    context.openLink("https://discord.gg/pw3Cye8NQR")
+                } }
             )
         }
     }

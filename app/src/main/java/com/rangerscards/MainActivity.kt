@@ -16,14 +16,13 @@ import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.UpdateAvailability
 import com.rangerscards.ui.navigation.RangersNavHost
-import com.rangerscards.ui.settings.SettingsViewModel
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.RangersCardsTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-    private lateinit var viewModel: SettingsViewModel
+    private lateinit var viewModel: AppViewModel
     private lateinit var appUpdateManager: AppUpdateManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,7 +55,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         setContent {
-            viewModel = hiltViewModel<SettingsViewModel>(this)
+            viewModel = hiltViewModel<AppViewModel>(this)
             // Collecting user's theme from shared preferences via viewmodel - false = light, true = dark
             val currentTheme = when(viewModel.themeState.collectAsState().value) {
                 0 -> false
@@ -72,9 +71,8 @@ class MainActivity : AppCompatActivity() {
                         color = CustomTheme.colors.l30
                     ) {
                         RangersNavHost(
-                            mainActivity = this,
                             isDarkTheme = currentTheme,
-                            settingsViewModel = viewModel
+                            appViewModel = viewModel
                         )
                     }
                 }
