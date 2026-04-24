@@ -22,7 +22,7 @@ fun SocialsCard(
     language: String,
     modifier: Modifier = Modifier
 ) {
-    SettingsBaseCard(
+    RangersBaseCard(
         isDarkTheme = isDarkTheme,
         labelIdRes = R.string.socials_title,
         modifier = modifier

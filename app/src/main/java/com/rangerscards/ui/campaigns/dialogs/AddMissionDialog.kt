@@ -37,9 +37,9 @@ import androidx.compose.ui.window.DialogProperties
 import com.google.firebase.auth.FirebaseUser
 import com.rangerscards.R
 import com.rangerscards.ui.campaigns.CampaignViewModel
-import com.rangerscards.ui.campaigns.components.CampaignDialog
+import com.rangerscards.ui.components.RangersDialogWithContent
 import com.rangerscards.ui.components.SquareButton
-import com.rangerscards.ui.settings.components.SettingsBaseCard
+import com.rangerscards.ui.settings.components.RangersBaseCard
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 import kotlinx.coroutines.launch
@@ -59,7 +59,7 @@ fun AddMissionDialog(
     val isLegitAdding by remember { derivedStateOf {
         day.isNotEmpty() && name.isNotEmpty()
     } }
-    CampaignDialog(
+    RangersDialogWithContent(
         header = stringResource(id = R.string.add_mission_button),
         isDarkTheme = isDarkTheme,
         onBack = onBack
@@ -158,7 +158,7 @@ fun AddMissionDialog(
             usePlatformDefaultWidth = false
         )
     ) {
-        SettingsBaseCard(
+        RangersBaseCard(
             isDarkTheme = isDarkTheme,
             labelIdRes = R.string.saving_changes_header
         ) {

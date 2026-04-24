@@ -48,10 +48,10 @@ import androidx.compose.ui.window.DialogProperties
 import com.google.firebase.auth.FirebaseUser
 import com.rangerscards.R
 import com.rangerscards.ui.campaigns.CampaignViewModel
-import com.rangerscards.ui.campaigns.components.CampaignDialog
+import com.rangerscards.ui.components.RangersDialogWithContent
 import com.rangerscards.ui.components.RangersRadioButton
 import com.rangerscards.ui.components.SquareButton
-import com.rangerscards.ui.settings.components.SettingsBaseCard
+import com.rangerscards.ui.settings.components.RangersBaseCard
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 import kotlinx.coroutines.launch
@@ -81,7 +81,7 @@ fun CampaignMissionDialog(
         var name by rememberSaveable { mutableStateOf(mission.name) }
         val checks = remember { mission.checks.toMutableStateList() }
         var completed by rememberSaveable { mutableStateOf(mission.completed) }
-        CampaignDialog(
+        RangersDialogWithContent(
             header = stringResource(id = R.string.mission_header),
             isDarkTheme = isDarkTheme,
             onBack = onBack
@@ -248,7 +248,7 @@ fun CampaignMissionDialog(
             usePlatformDefaultWidth = false
         )
     ) {
-        SettingsBaseCard(
+        RangersBaseCard(
             isDarkTheme = isDarkTheme,
             labelIdRes = R.string.saving_changes_header
         ) {

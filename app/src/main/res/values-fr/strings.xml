@@ -61,12 +61,12 @@
   <string name="update_cards_button">Mettre à jour les cartes</string>
   <string name="rules_button">Règles</string>
   <string name="authentication_failed_toast">Authentification échouée.</string>
-  <string name="invalid_password_toast">Mot de passe invalide. Il doit contenir au moins 6 caractères.</string>
-  <string name="invalid_email_toast">Adresse e-mail invalide.</string>
+  <string name="invalid_password_text">Mot de passe invalide. Il doit contenir au moins 6 caractères.</string>
+  <string name="invalid_email_text">Adresse e-mail invalide.</string>
   <string name="account_successfully_deleted_toast">Compte supprimé avec succès.</string>
   <string name="invalid_credentials_toast">Identifiants invalides.</string>
-  <string name="handle_already_taken_toast">Ce nom est déjà pris.</string>
-  <string name="invalid_handle_toast">Nom invalide. Il doit comporter entre 2 et 22 caractères.</string>
+  <string name="handle_already_taken_text">Ce nom est déjà pris.</string>
+  <string name="invalid_handle_text">Nom invalide. Il doit comporter entre 2 et 22 caractères.</string>
   <string name="socials_title">Réseaux sociaux</string>
   <string name="socials_text">Discute avec d\'autres joueurs d\'Earthborne Rangers:</string>
   <string name="discord_button">Discord</string>

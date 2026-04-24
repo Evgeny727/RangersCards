@@ -44,10 +44,10 @@ import com.rangerscards.objects.CampaignMaps
 import com.rangerscards.objects.ConnectionRestriction
 import com.rangerscards.objects.Path
 import com.rangerscards.ui.campaigns.CampaignViewModel
-import com.rangerscards.ui.campaigns.components.CampaignDialog
+import com.rangerscards.ui.components.RangersDialogWithContent
 import com.rangerscards.ui.components.RangersRadioButton
 import com.rangerscards.ui.components.SquareButton
-import com.rangerscards.ui.settings.components.SettingsBaseCard
+import com.rangerscards.ui.settings.components.RangersBaseCard
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 import kotlinx.coroutines.launch
@@ -87,7 +87,7 @@ fun TravelDialog(
     LaunchedEffect(currentLocation) {
         if (currentLocation == null) showAllLocations = true
     }
-    CampaignDialog(
+    RangersDialogWithContent(
         header = stringResource(
             id = R.string.travel_header,
             stringResource(currentLocation?.nameResId ?: R.string.current_path_terrain_none)
@@ -329,7 +329,7 @@ fun TravelDialog(
             usePlatformDefaultWidth = false
         )
     ) {
-        SettingsBaseCard(
+        RangersBaseCard(
             isDarkTheme = isDarkTheme,
             labelIdRes = R.string.saving_changes_header
         ) {
@@ -351,7 +351,7 @@ fun TravelDialog(
             usePlatformDefaultWidth = false
         )
     ) {
-        SettingsBaseCard(
+        RangersBaseCard(
             isDarkTheme = isDarkTheme,
             labelIdRes = when(showDialogPicker) {
                 TravelDataDialog.Location -> R.string.location_data_type

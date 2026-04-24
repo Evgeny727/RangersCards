@@ -70,12 +70,12 @@
     <string name="update_cards_button">Update cards</string>
     <string name="rules_button">Rules</string>
     <string name="authentication_failed_toast">Authentication failed.</string>
-    <string name="invalid_password_toast">Invalid password. It must be 6 characters minimum.</string>
-    <string name="invalid_email_toast">Invalid email.</string>
+    <string name="invalid_password_text">Invalid password. It must be 6 characters minimum.</string>
+    <string name="invalid_email_text">Invalid email.</string>
     <string name="account_successfully_deleted_toast">Account successfully deleted.</string>
     <string name="invalid_credentials_toast">Invalid credentials.</string>
-    <string name="handle_already_taken_toast">Sorry, this handle has already been taken.</string>
-    <string name="invalid_handle_toast">Invalid handle. It must be between 2 and 22 characters long.</string>
+    <string name="handle_already_taken_text">Sorry, this handle has already been taken.</string>
+    <string name="invalid_handle_text">Invalid handle. It must be between 2 and 22 characters long.</string>
     <string name="socials_title">Socials</string>
     <string name="socials_text">Chat with other Earthborne Rangers players:</string>
     <string name="discord_button">Discord</string>

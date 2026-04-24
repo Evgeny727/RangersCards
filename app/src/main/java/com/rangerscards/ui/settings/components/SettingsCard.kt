@@ -13,9 +13,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import com.rangerscards.R
+import com.rangerscards.ui.components.RangersDialogWithContent
 import com.rangerscards.ui.theme.CustomTheme
 
 @Composable
@@ -37,52 +36,42 @@ fun SettingsCard(
         false -> stringResource(id = R.string.light_theme)
         else -> stringResource(id = R.string.dark_theme)
     }
-    if (openThemeDialog) {
-        Dialog(
-            onDismissRequest = { openThemeDialog = false },
-            properties = DialogProperties(
-                dismissOnBackPress = true,
-                dismissOnClickOutside = true,
-                usePlatformDefaultWidth = false
-            )
-        ) {
-            SettingsBaseCard(
-                isDarkTheme = isDarkTheme,
-                labelIdRes = R.string.theme_header
-            ) {
-                SettingsRadioButtonRow(
-                    text = stringResource(id = R.string.system_theme, systemThemeText),
-                    onClick = { openThemeDialog = false
-                        if (themeInt != 2) onSelectTheme(2) },
-                    isSelected = themeInt == 2,
-                    isSingleValue = true
-                )
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 8.dp),
-                    color = CustomTheme.colors.l10
-                )
-                SettingsRadioButtonRow(
-                    text = stringResource(id = R.string.light_theme),
-                    onClick = { openThemeDialog = false
-                        if (themeInt != 0) onSelectTheme(0) },
-                    isSelected = themeInt == 0,
-                    isSingleValue = true
-                )
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 8.dp),
-                    color = CustomTheme.colors.l10
-                )
-                SettingsRadioButtonRow(
-                    text = stringResource(id = R.string.dark_theme),
-                    onClick = { openThemeDialog = false
-                        if (themeInt != 1) onSelectTheme(1) },
-                    isSelected = themeInt == 1,
-                    isSingleValue = true
-                )
-            }
-        }
+    if (openThemeDialog) RangersDialogWithContent(
+        headerId = R.string.theme_header,
+        isDarkTheme = isDarkTheme,
+        onBack = { openThemeDialog = false }
+    ) {
+        RangersRadioButtonRow(
+            text = stringResource(R.string.system_theme, systemThemeText),
+            onValueChange = { openThemeDialog = false
+                if (themeInt != 2) onSelectTheme(2) },
+            isSelected = themeInt == 2,
+            isSingleValue = true
+        )
+        HorizontalDivider(
+            modifier = Modifier.padding(horizontal = 8.dp),
+            color = CustomTheme.colors.l10
+        )
+        RangersRadioButtonRow(
+            text = stringResource(R.string.light_theme),
+            onValueChange = { openThemeDialog = false
+                if (themeInt != 0) onSelectTheme(0) },
+            isSelected = themeInt == 0,
+            isSingleValue = true
+        )
+        HorizontalDivider(
+            modifier = Modifier.padding(horizontal = 8.dp),
+            color = CustomTheme.colors.l10
+        )
+        RangersRadioButtonRow(
+            text = stringResource(R.string.dark_theme),
+            onValueChange = { openThemeDialog = false
+                if (themeInt != 1) onSelectTheme(1) },
+            isSelected = themeInt == 1,
+            isSingleValue = true
+        )
     }
-    SettingsBaseCard(
+    RangersBaseCard(
         isDarkTheme = isDarkTheme,
         labelIdRes = R.string.settings_title,
         modifier = modifier
@@ -101,9 +90,9 @@ fun SettingsCard(
                 { openThemeDialog = true }
             )
         }
-        if (language != "en") SettingsRadioButtonRow(
+        if (language != "en") RangersRadioButtonRow(
             text = stringResource(id = R.string.english_search_results_radio_button),
-            onClick = { onSetEnglishSearchResults(!englishResults) },
+            onValueChange = onSetEnglishSearchResults,
             leadingIcon = R.drawable.search_32dp,
             isSelected = englishResults
         )

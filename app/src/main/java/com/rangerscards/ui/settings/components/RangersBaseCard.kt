@@ -35,7 +35,7 @@ import com.rangerscards.ui.theme.Jost
 import com.rangerscards.ui.theme.RangersCardsTheme
 
 @Composable
-fun SettingsBaseCard(
+fun RangersBaseCard(
     isDarkTheme: Boolean,
     @StringRes labelIdRes: Int,
     modifier: Modifier = Modifier,
@@ -59,7 +59,7 @@ fun SettingsBaseCard(
                         RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
                     )
                     .fillMaxWidth()
-                    .padding(vertical = 4.dp),
+                    .padding(vertical = 4.dp, horizontal = 8.dp),
             ) {
                 Text(
                     text = stringResource(id = labelIdRes),
@@ -83,8 +83,8 @@ fun SettingsClickableSurface(
     @DrawableRes trailingIcon: Int,
     @StringRes headerId: Int,
     text: String,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier.fillMaxWidth(),
+    onClick: () -> Unit,
 ) {
     Surface(
         onClick = onClick,
@@ -157,7 +157,7 @@ fun SettingsScreenPreview() {
                 .background(CustomTheme.colors.l10)
                 .fillMaxSize()
         ) {
-            SettingsBaseCard(labelIdRes = R.string.account_title, isDarkTheme = false) {
+            RangersBaseCard(labelIdRes = R.string.account_title, isDarkTheme = false) {
                 TextWhenNotLoggedIn()
                 Column(
                     modifier = Modifier.background(
@@ -170,8 +170,7 @@ fun SettingsScreenPreview() {
                         trailingIcon = R.drawable.edit_32dp,
                         headerId = R.string.account_name_header,
                         text = "Evgeny727",
-                        {}
-                    )
+                    ) {}
                     HorizontalDivider(
                         modifier = Modifier.padding(horizontal = 8.dp),
                         color = CustomTheme.colors.l10
@@ -181,8 +180,7 @@ fun SettingsScreenPreview() {
                         trailingIcon = R.drawable.add_32dp,
                         headerId = R.string.friends_amount_header,
                         text = "3 friends",
-                        {}
-                    )
+                    ) {}
                 }
                 SquareButton(
                     R.string.sign_out_account_button,

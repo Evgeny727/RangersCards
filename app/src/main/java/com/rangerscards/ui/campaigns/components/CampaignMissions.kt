@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.rangerscards.R
 import com.rangerscards.ui.campaigns.CampaignMission
 import com.rangerscards.ui.components.SquareButton
-import com.rangerscards.ui.settings.components.SettingsRadioButtonRow
+import com.rangerscards.ui.settings.components.RangersRadioButtonRow
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 
@@ -43,9 +43,9 @@ fun CampaignMissions(
     nestedConnectionModifier: Modifier
 ) {
     Column {
-        SettingsRadioButtonRow(
+        RangersRadioButtonRow(
             text = stringResource(R.string.show_only_active_missions),
-            onClick = onActiveClick,
+            onValueChange = onActiveClick,
             modifier = Modifier,
             isSelected = isOnlyActive
         )

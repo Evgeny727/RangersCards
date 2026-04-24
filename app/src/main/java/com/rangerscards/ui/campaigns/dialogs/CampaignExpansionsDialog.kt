@@ -33,10 +33,10 @@ import com.google.firebase.auth.FirebaseUser
 import com.rangerscards.R
 import com.rangerscards.objects.CampaignMaps
 import com.rangerscards.ui.campaigns.CampaignViewModel
-import com.rangerscards.ui.campaigns.components.CampaignDialog
+import com.rangerscards.ui.components.RangersDialogWithContent
 import com.rangerscards.ui.components.RangersRadioButton
 import com.rangerscards.ui.components.SquareButton
-import com.rangerscards.ui.settings.components.SettingsBaseCard
+import com.rangerscards.ui.settings.components.RangersBaseCard
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 import kotlinx.coroutines.launch
@@ -56,7 +56,7 @@ fun CampaignExpansionsDialog(
     )) { campaign!!.expansions.toMutableStateList() }
     val allExpansions = remember { (CampaignMaps.campaignExpansionsMap[campaign!!.cycleId] ?: emptyList()).toMutableStateList() }
     val coroutine = rememberCoroutineScope()
-    CampaignDialog(
+    RangersDialogWithContent(
         header = stringResource(id = R.string.campaign_expansions),
         isDarkTheme = isDarkTheme,
         onBack = onBack
@@ -124,7 +124,7 @@ fun CampaignExpansionsDialog(
             usePlatformDefaultWidth = false
         )
     ) {
-        SettingsBaseCard(
+        RangersBaseCard(
             isDarkTheme = isDarkTheme,
             labelIdRes = R.string.saving_changes_header
         ) {

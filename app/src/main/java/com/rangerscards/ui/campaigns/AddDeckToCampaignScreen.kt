@@ -40,7 +40,7 @@ import com.rangerscards.R
 import com.rangerscards.data.local.deck.DeckListItemProjection
 import com.rangerscards.ui.components.RangersSearchOutlinedField
 import com.rangerscards.ui.decks.components.DeckListItem
-import com.rangerscards.ui.settings.components.SettingsBaseCard
+import com.rangerscards.ui.settings.components.RangersBaseCard
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 import kotlinx.coroutines.flow.drop
@@ -96,7 +96,7 @@ fun AddDeckToCampaignScreen(
                 usePlatformDefaultWidth = false
             )
         ) {
-            SettingsBaseCard(
+            RangersBaseCard(
                 isDarkTheme = isDarkTheme,
                 labelIdRes = R.string.saving_changes_header
             ) {

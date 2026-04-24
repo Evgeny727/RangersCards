@@ -45,7 +45,7 @@ import com.rangerscards.ui.components.RangersSearchOutlinedField
 import com.rangerscards.ui.components.RangersTopAppBar
 import com.rangerscards.ui.components.RowTypeDivider
 import com.rangerscards.ui.components.ScrollableRangersTabs
-import com.rangerscards.ui.settings.components.SettingsRadioButtonRow
+import com.rangerscards.ui.settings.components.RangersRadioButtonRow
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 import kotlinx.coroutines.flow.drop
@@ -214,9 +214,9 @@ fun DeckCardsSearchingListScreen(
                             .padding(8.dp),
                         horizontalArrangement = Arrangement.End
                     ) {
-                        SettingsRadioButtonRow(
+                        RangersRadioButtonRow(
                             text = stringResource(R.string.show_all_button),
-                            onClick = { deckCardsViewModel.updateShowAllSpoilers(!showAll) },
+                            onValueChange = { deckCardsViewModel.updateShowAllSpoilers(!showAll) },
                             modifier = Modifier,
                             isSelected = showAll
                         )

@@ -25,9 +25,9 @@ import androidx.compose.ui.window.DialogProperties
 import com.google.firebase.auth.FirebaseUser
 import com.rangerscards.R
 import com.rangerscards.ui.campaigns.CampaignViewModel
-import com.rangerscards.ui.campaigns.components.CampaignDialog
+import com.rangerscards.ui.components.RangersDialogWithContent
 import com.rangerscards.ui.components.SquareButton
-import com.rangerscards.ui.settings.components.SettingsBaseCard
+import com.rangerscards.ui.settings.components.RangersBaseCard
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 import kotlinx.coroutines.launch
@@ -50,7 +50,7 @@ fun UndoTravelDialog(
             usePlatformDefaultWidth = false
         )
     ) {
-        SettingsBaseCard(
+        RangersBaseCard(
             isDarkTheme = isDarkTheme,
             labelIdRes = R.string.saving_changes_header
         ) {
@@ -64,7 +64,7 @@ fun UndoTravelDialog(
             }
         }
     }
-    CampaignDialog(
+    RangersDialogWithContent(
         header = stringResource(id = R.string.undo_travel_header),
         isDarkTheme = isDarkTheme,
         onBack = onBack

@@ -45,6 +45,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -55,9 +56,11 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.rangerscards.AppViewModel
-import com.rangerscards.MainActivity
 import com.rangerscards.R
+import com.rangerscards.domain.exceptions.HandleAlreadyTakenException
 import com.rangerscards.domain.exceptions.InvalidEmailException
+import com.rangerscards.domain.exceptions.InvalidHandleSizeException
+import com.rangerscards.domain.exceptions.InvalidPasswordException
 import com.rangerscards.objects.CampaignMaps
 import com.rangerscards.ui.CardsSyncState
 import com.rangerscards.ui.campaigns.AddDeckToCampaignScreen
@@ -71,7 +74,6 @@ import com.rangerscards.ui.campaigns.CampaignScreen
 import com.rangerscards.ui.campaigns.CampaignViewModel
 import com.rangerscards.ui.campaigns.CampaignsScreen
 import com.rangerscards.ui.campaigns.CampaignsViewModel
-import com.rangerscards.ui.campaigns.components.CampaignDialog
 import com.rangerscards.ui.campaigns.dialogs.AddMissionDialog
 import com.rangerscards.ui.campaigns.dialogs.AddRemovedDialog
 import com.rangerscards.ui.campaigns.dialogs.CampaignEventDialog
@@ -88,6 +90,7 @@ import com.rangerscards.ui.cards.FullCardScreen
 import com.rangerscards.ui.cards.components.RangersSpoilerSwitch
 import com.rangerscards.ui.components.CardsFilterScreen
 import com.rangerscards.ui.components.CardsSortScreen
+import com.rangerscards.ui.components.RangersDialogWithContent
 import com.rangerscards.ui.components.RangersTopAppBar
 import com.rangerscards.ui.components.SquareButton
 import com.rangerscards.ui.deck.DeckCardsSearchingListScreen
@@ -106,6 +109,7 @@ import com.rangerscards.ui.settings.SettingsCollectionScreen
 import com.rangerscards.ui.settings.SettingsDiagnosticsScreen
 import com.rangerscards.ui.settings.SettingsFriendsScreen
 import com.rangerscards.ui.settings.SettingsScreen
+import com.rangerscards.ui.settings.SettingsViewModel
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 
@@ -150,8 +154,8 @@ fun RangersNavHost(
         snackbarHost = { SnackbarHost(snackbarHostState) { data ->
             Snackbar(
                 data,
-                containerColor = CustomTheme.colors.l30,
-                contentColor = CustomTheme.colors.d30
+                containerColor = CustomTheme.colors.d30,
+                contentColor = CustomTheme.colors.l30
             )
         } },
         containerColor = CustomTheme.colors.l30
@@ -160,48 +164,44 @@ fun RangersNavHost(
             appViewModel.checkIfCardsReady()
             appViewModel.events.collect { error ->
                 val message = when (error.exception) {
-                    is InvalidEmailException -> {
-                        TODO()
-                    }
+                    is InvalidEmailException -> context.getString(R.string.invalid_email_text)
+                    is InvalidPasswordException -> context.getString(R.string.invalid_password_text)
+                    is HandleAlreadyTakenException -> context.getString(R.string.handle_already_taken_text)
+                    is InvalidHandleSizeException -> context.getString(R.string.invalid_handle_text)
                     else -> error.exception.localizedMessage ?:
-                        context.getString(R.string.something_went_wrong)
+                    context.getString(R.string.something_went_wrong)
                 }
                 snackbarHostState.showSnackbar(message)
             }
         }
-        if (cardsState is CardsSyncState.UpdateAvailable) CampaignDialog(
-            header = stringResource(id = R.string.cards_update_available_header),
+        if (cardsState is CardsSyncState.UpdateAvailable) RangersDialogWithContent(
+            headerId = R.string.cards_update_available_header,
             isDarkTheme = isDarkTheme,
             onBack = appViewModel::cancelCardsUpdate
         ) {
-            Column(
-                modifier = Modifier.padding(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = stringResource(id = R.string.cards_update_available_text),
-                    color = CustomTheme.colors.d30,
-                    fontFamily = Jost,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 18.sp,
-                    lineHeight = 24.sp,
-                    modifier = Modifier.padding(horizontal = 4.dp)
-                )
-                SquareButton(
-                    stringId = R.string.cancel_button,
-                    leadingIcon = R.drawable.close_32dp,
-                    onClick = appViewModel::cancelCardsUpdate,
-                    buttonColor = ButtonDefaults.buttonColors()
-                        .copy(CustomTheme.colors.d30),
-                    iconColor = CustomTheme.colors.warn,
-                    textColor = CustomTheme.colors.l30
-                )
-                SquareButton(
-                    stringId = R.string.update_cards_button,
-                    leadingIcon = R.drawable.done_32dp,
-                    onClick = appViewModel::confirmCardsUpdate
-                )
-            }
+            Text(
+                text = stringResource(id = R.string.cards_update_available_text),
+                color = CustomTheme.colors.d30,
+                fontFamily = Jost,
+                fontWeight = FontWeight.Medium,
+                fontSize = 18.sp,
+                lineHeight = 24.sp,
+                modifier = Modifier.padding(horizontal = 4.dp)
+            )
+            SquareButton(
+                stringId = R.string.cancel_button,
+                leadingIcon = R.drawable.close_32dp,
+                onClick = appViewModel::cancelCardsUpdate,
+                buttonColor = ButtonDefaults.buttonColors()
+                    .copy(CustomTheme.colors.d30),
+                iconColor = CustomTheme.colors.warn,
+                textColor = CustomTheme.colors.l30
+            )
+            SquareButton(
+                stringId = R.string.update_cards_button,
+                leadingIcon = R.drawable.done_32dp,
+                onClick = appViewModel::confirmCardsUpdate
+            )
         }
         NavHost(
             navController = navController,
@@ -241,6 +241,7 @@ fun RangersNavHost(
                     if (cardsState !is CardsSyncState.Loading) {
                         SettingsScreen(
                             isDarkTheme = isDarkTheme,
+                            showSnackBar = snackbarHostState::showSnackbar,
                             navigateToAbout = {
                                 navController.navigate(
                                     "${BottomNavScreen.Settings.route}/about"
@@ -280,38 +281,43 @@ fun RangersNavHost(
                     switch = null
                 }
                 composable(BottomNavScreen.Settings.route + "/about") {
-                    SettingsAboutScreen(
-                        settingsViewModel = appViewModel,
-                        contentPadding = innerPadding
-                    )
+                    SettingsAboutScreen(contentPadding = innerPadding)
                     title = stringResource(R.string.about_button)
                     actions = null
                     switch = null
                 }
                 composable(BottomNavScreen.Settings.route + "/friends") {
                     SettingsFriendsScreen(
-                        settingsViewModel = appViewModel,
+                        appViewModel = appViewModel,
                         contentPadding = innerPadding
                     )
                     title = stringResource(R.string.your_friends)
                     actions = null
                     switch = null
                 }
-                composable(BottomNavScreen.Settings.route + "/diagnostics") {
-                    if (cardsState !is CardsSyncState.Loading) SettingsDiagnosticsScreen(
-                        settingsViewModel = appViewModel,
-                        isDarkTheme = isDarkTheme,
+                composable(BottomNavScreen.Settings.route + "/diagnostics") { backStackEntry ->
+                    val parentEntry = remember(backStackEntry) {
+                        navController.getBackStackEntry(BottomNavScreen.Settings.startDestination)
+                    }
+                    val settingsViewModel = hiltViewModel<SettingsViewModel>(parentEntry)
+                    SettingsDiagnosticsScreen(
+                        clearLocalData = settingsViewModel::clearLocalData,
+                        clearImageCache = settingsViewModel::clearImageCache,
                         contentPadding = innerPadding
                     )
-                    else CardsDownloadingCircularProgressIndicator()
                     title = stringResource(R.string.diagnostics_button)
                     actions = null
                     switch = null
                 }
-                composable(BottomNavScreen.Settings.route + "/collection") {
+                composable(BottomNavScreen.Settings.route + "/collection") { backStackEntry ->
+                    val parentEntry = remember(backStackEntry) {
+                        navController.getBackStackEntry(BottomNavScreen.Settings.startDestination)
+                    }
+                    val settingsViewModel = hiltViewModel<SettingsViewModel>(parentEntry)
+                    val user by appViewModel.userUiState.collectAsState()
                     SettingsCollectionScreen(
-                        settingsViewModel = appViewModel,
-                        isDarkTheme = isDarkTheme,
+                        user = user,
+                        setCollection = settingsViewModel::setCollection,
                         contentPadding = innerPadding
                     )
                     title = stringResource(R.string.collection_header)

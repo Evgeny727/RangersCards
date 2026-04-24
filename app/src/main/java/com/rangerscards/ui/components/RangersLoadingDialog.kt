@@ -13,14 +13,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.rangerscards.R
-import com.rangerscards.ui.settings.components.SettingsBaseCard
+import com.rangerscards.ui.settings.components.RangersBaseCard
 import com.rangerscards.ui.theme.CustomTheme
 
 @Composable
 fun RangersLoadingDialog(
     isDarkTheme: Boolean,
-    onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
+    onDismissRequest: () -> Unit = {},
     @StringRes headerIdRes: Int = R.string.saving_changes_header,
 ) {
     Dialog(
@@ -31,7 +31,7 @@ fun RangersLoadingDialog(
             usePlatformDefaultWidth = false
         )
     ) {
-        SettingsBaseCard(
+        RangersBaseCard(
             isDarkTheme = isDarkTheme,
             labelIdRes = headerIdRes
         ) {

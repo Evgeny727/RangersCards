@@ -26,9 +26,9 @@ import androidx.compose.ui.window.DialogProperties
 import com.google.firebase.auth.FirebaseUser
 import com.rangerscards.R
 import com.rangerscards.ui.campaigns.CampaignViewModel
-import com.rangerscards.ui.campaigns.components.CampaignDialog
+import com.rangerscards.ui.components.RangersDialogWithContent
 import com.rangerscards.ui.components.SquareButton
-import com.rangerscards.ui.settings.components.SettingsBaseCard
+import com.rangerscards.ui.settings.components.RangersBaseCard
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 import kotlinx.coroutines.launch
@@ -43,7 +43,7 @@ fun EndTheDayDialog(
     val campaign by campaignViewModel.campaign.collectAsState()
     var showLoadingDialog by rememberSaveable { mutableStateOf(false) }
     val coroutine = rememberCoroutineScope()
-    CampaignDialog(
+    RangersDialogWithContent(
         header = stringResource(id = R.string.end_the_day),
         isDarkTheme = isDarkTheme,
         onBack = onBack
@@ -91,7 +91,7 @@ fun EndTheDayDialog(
             usePlatformDefaultWidth = false
         )
     ) {
-        SettingsBaseCard(
+        RangersBaseCard(
             isDarkTheme = isDarkTheme,
             labelIdRes = R.string.saving_changes_header
         ) {

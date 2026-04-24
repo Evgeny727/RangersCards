@@ -1,7 +1,6 @@
 package com.rangerscards.ui.settings
 
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -33,9 +32,12 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import com.rangerscards.R
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
+import com.rangerscards.utils.applyScaffoldPaddings
+import com.rangerscards.utils.openEmail
 
 const val email = "rangerscardsapp@gmail.com"
 const val telegramIcon = "Telegram App"
@@ -44,7 +46,6 @@ const val icons8 = "Icons8"
 
 @Composable
 fun SettingsAboutScreen(
-    settingsViewModel: SettingsViewModel,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
@@ -75,10 +76,7 @@ fun SettingsAboutScreen(
         modifier = modifier
             .background(CustomTheme.colors.l30)
             .fillMaxSize()
-            .padding(
-                top = contentPadding.calculateTopPadding(),
-                bottom = contentPadding.calculateBottomPadding(),
-            ),
+            .applyScaffoldPaddings(contentPadding),
         contentPadding = PaddingValues(vertical = 8.dp, horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -204,7 +202,7 @@ fun SettingsAboutScreen(
                                         end = tappedOffset
                                     ).firstOrNull()?.let { annotation ->
                                         // When the email is tapped, open the email client.
-                                        val uri = Uri.parse(annotation.item)
+                                        val uri = annotation.item.toUri()
                                         val intent = Intent(Intent.ACTION_VIEW, uri)
                                         context.startActivity(intent)
                                     }
@@ -214,7 +212,7 @@ fun SettingsAboutScreen(
                                         end = tappedOffset
                                     ).firstOrNull()?.let { annotation ->
                                         // When the email is tapped, open the email client.
-                                        val uri = Uri.parse(annotation.item)
+                                        val uri = annotation.item.toUri()
                                         val intent = Intent(Intent.ACTION_VIEW, uri)
                                         context.startActivity(intent)
                                     }
@@ -282,7 +280,7 @@ fun SettingsAboutScreen(
                                         end = tappedOffset
                                     ).firstOrNull()?.let { annotation ->
                                         // When the email is tapped, open the email client.
-                                        val uri = Uri.parse(annotation.item)
+                                        val uri = annotation.item.toUri()
                                         val intent = Intent(Intent.ACTION_VIEW, uri)
                                         context.startActivity(intent)
                                     }
@@ -292,7 +290,7 @@ fun SettingsAboutScreen(
                                         end = tappedOffset
                                     ).firstOrNull()?.let { annotation ->
                                         // When the email is tapped, open the email client.
-                                        val uri = Uri.parse(annotation.item)
+                                        val uri = annotation.item.toUri()
                                         val intent = Intent(Intent.ACTION_VIEW, uri)
                                         context.startActivity(intent)
                                     }

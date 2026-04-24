@@ -27,7 +27,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.rangerscards.R
 import com.rangerscards.ui.settings.UserUIState
 import com.rangerscards.ui.settings.components.FriendListItem
-import com.rangerscards.ui.settings.components.SettingsBaseCard
+import com.rangerscards.ui.settings.components.RangersBaseCard
 import com.rangerscards.ui.theme.CustomTheme
 import kotlinx.coroutines.launch
 
@@ -51,7 +51,7 @@ fun AddPlayersToCampaign(
             usePlatformDefaultWidth = false
         )
     ) {
-        SettingsBaseCard(
+        RangersBaseCard(
             isDarkTheme = isDarkTheme,
             labelIdRes = R.string.saving_changes_header
         ) {

@@ -54,7 +54,7 @@ import com.rangerscards.ui.components.SquareButton
 import com.rangerscards.ui.decks.ActiveField
 import com.rangerscards.ui.decks.DecksViewModel
 import com.rangerscards.ui.settings.UserUIState
-import com.rangerscards.ui.settings.components.SettingsBaseCard
+import com.rangerscards.ui.settings.components.RangersBaseCard
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 import kotlinx.coroutines.launch
@@ -197,7 +197,7 @@ fun DeckChangingRole(
                                         usePlatformDefaultWidth = false
                                     )
                                 ) {
-                                    SettingsBaseCard(
+                                    RangersBaseCard(
                                         isDarkTheme = isDarkTheme,
                                         labelIdRes = when(showDialogPicker) {
                                             ActiveField.FieldOne -> R.string.background

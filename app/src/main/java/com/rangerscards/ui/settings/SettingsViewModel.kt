@@ -1,11 +1,11 @@
 package com.rangerscards.ui.settings
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import coil3.imageLoader
 import com.rangerscards.UiErrorState
-import com.rangerscards.domain.model.UserInfo
 import com.rangerscards.domain.repository.AuthRepository
-import com.rangerscards.domain.repository.FriendAction
 import com.rangerscards.domain.repository.SettingsRepository
 import com.rangerscards.domain.repository.UserPreferencesRepository
 import com.rangerscards.domain.usecase.ClearAllLocalDecksAndCampaignsUseCase
@@ -20,6 +20,13 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+sealed interface SettingsUiState {
+    object Idle : SettingsUiState
+    object Loading : SettingsUiState
+
+    data class Success(val message: String) : SettingsUiState
+}
+
 /**
  * ViewModel to maintain user's settings.
  */
@@ -30,6 +37,9 @@ class SettingsViewModel @Inject constructor(
     private  val settingsRepository: SettingsRepository,
     private val clearAllLocalDecksAndCampaignsUseCase: dagger.Lazy<ClearAllLocalDecksAndCampaignsUseCase>
 ) : ViewModel() {
+
+    private val _settingsUiState = MutableStateFlow<SettingsUiState>(SettingsUiState.Idle)
+    val settingsUiState: StateFlow<SettingsUiState> = _settingsUiState.asStateFlow()
 
     private val _events = MutableSharedFlow<UiErrorState>(
         replay = 0,
@@ -48,39 +58,44 @@ class SettingsViewModel @Inject constructor(
             initialValue = false
         )
 
-    // Holds the current search query entered by the user.
-    private val _searchQuery = MutableStateFlow("")
-    val searchQuery = _searchQuery.asStateFlow()
-
-    private val _searchResults = MutableStateFlow(emptyList<UserInfo>())
-    val searchResults = _searchResults.asStateFlow()
-
     fun signIn(email: String, password: String) {
         viewModelScope.launch {
+            _settingsUiState.value = SettingsUiState.Loading
             authRepository.signIn(email, password).onFailure { emitError(it) }
+            _settingsUiState.value = SettingsUiState.Idle
         }
     }
 
     fun createAccount(email: String, password: String) {
         viewModelScope.launch {
+            _settingsUiState.value = SettingsUiState.Loading
             authRepository.createAccount(email, password).onFailure { emitError(it) }
+            _settingsUiState.value = SettingsUiState.Idle
         }
     }
 
     fun signOut() {
         viewModelScope.launch {
+            _settingsUiState.value = SettingsUiState.Loading
             authRepository.signOut()
+            _settingsUiState.value = SettingsUiState.Idle
         }
     }
 
     fun deleteUser(email: String, password: String) {
         viewModelScope.launch {
+            _settingsUiState.value = SettingsUiState.Loading
             authRepository.deleteAccount(email, password).onFailure { emitError(it) }
+            _settingsUiState.value = SettingsUiState.Idle
         }
     }
 
-    suspend fun updateHandle(userId: String, handle: String) {
-        settingsRepository.updateHandle(userId, handle).onFailure { emitError(it) }
+    fun updateHandle(userId: String, handle: String) {
+        viewModelScope.launch {
+            _settingsUiState.value = SettingsUiState.Loading
+            settingsRepository.updateHandle(userId, handle).onFailure { emitError(it) }
+            _settingsUiState.value = SettingsUiState.Idle
+        }
     }
 
     fun selectTheme(theme: Int) {
@@ -89,19 +104,27 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    suspend fun setTaboo(userId: String?, taboo: Boolean) {
-        if (userId != null) {
-            settingsRepository.setTaboo(userId, taboo).onFailure { emitError(it) }
-        } else {
-            userPreferencesRepository.saveTabooPreference(taboo)
+    fun setTaboo(userId: String?, taboo: Boolean) {
+        viewModelScope.launch {
+            _settingsUiState.value = SettingsUiState.Loading
+            if (userId != null) {
+                settingsRepository.setTaboo(userId, taboo).onFailure { emitError(it) }
+            } else {
+                userPreferencesRepository.saveTabooPreference(taboo)
+            }
+            _settingsUiState.value = SettingsUiState.Idle
         }
     }
 
-    suspend fun setCollection(userId: String?, collection: List<String>) {
-        if (userId != null) {
-            settingsRepository.setCollection(userId, collection).onFailure { emitError(it) }
-        } else {
-            userPreferencesRepository.saveCollectionPreference(collection)
+    fun setCollection(userId: String?, collection: List<String>) {
+        viewModelScope.launch {
+            _settingsUiState.value = SettingsUiState.Loading
+            if (userId != null) {
+                settingsRepository.setCollection(userId, collection).onFailure { emitError(it) }
+            } else {
+                userPreferencesRepository.saveCollectionPreference(collection)
+            }
+            _settingsUiState.value = SettingsUiState.Idle
         }
     }
 
@@ -111,44 +134,22 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Called when the user enters a new search term.
-     */
-    fun onSearchQueryChanged(newQuery: String) {
-        _searchQuery.value = newQuery
-    }
-
-    fun clearSearchQuery() {
-        _searchQuery.value = ""
-    }
-
-    fun getUsersByHandle(handle: String) {
+    fun clearLocalData(message: String) {
+        _settingsUiState.value = SettingsUiState.Loading
         viewModelScope.launch {
-            if (handle == "") _searchResults.value = emptyList()
-            else settingsRepository.searchUsersByHandle(handle)
-                .onSuccess { _searchResults.value = it }
-                .onFailure {
-                    emitError(it)
-                    _searchResults.value = emptyList()
-                }
+            clearAllLocalDecksAndCampaignsUseCase.get().invoke()
+                .onFailure { emitError(it) }
+            _settingsUiState.value = SettingsUiState.Success(message)
         }
     }
 
-    suspend fun sendFriendRequest(toUserId: String) {
-        settingsRepository.friendRequestAction(FriendAction.SENT, toUserId)
-            .onFailure { emitError(it) }
-    }
-    suspend fun acceptFriendRequest(toUserId: String) {
-        settingsRepository.friendRequestAction(FriendAction.ACCEPT, toUserId)
-            .onFailure { emitError(it) }
-    }
-    suspend fun rejectFriendRequest(toUserId: String) {
-        settingsRepository.friendRequestAction(FriendAction.REVOKE, toUserId)
-            .onFailure { emitError(it) }
-    }
-
-    suspend fun clearLocalData() {
-        clearAllLocalDecksAndCampaignsUseCase.get().invoke()
-            .onFailure { emitError(it) }
+    fun clearImageCache(context: Context, message: String) {
+        _settingsUiState.value = SettingsUiState.Loading
+        val imageLoader = context.imageLoader
+        // Clear memory cache.
+        imageLoader.memoryCache?.clear()
+        // Clear disk cache.
+        imageLoader.diskCache?.clear()
+        _settingsUiState.value = SettingsUiState.Success(message)
     }
 }

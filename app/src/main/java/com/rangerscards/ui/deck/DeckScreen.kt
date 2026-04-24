@@ -75,7 +75,7 @@ import com.rangerscards.ui.deck.components.FullDeckRoleItem
 import com.rangerscards.ui.deck.components.FullDeckStatsItem
 import com.rangerscards.ui.navigation.BottomNavScreen
 import com.rangerscards.ui.settings.SUPPORTED_LANGUAGES
-import com.rangerscards.ui.settings.components.SettingsBaseCard
+import com.rangerscards.ui.settings.components.RangersBaseCard
 import com.rangerscards.ui.settings.components.SettingsInputField
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
@@ -159,7 +159,7 @@ fun DeckScreen(
             usePlatformDefaultWidth = false
         )
     ) {
-        SettingsBaseCard(
+        RangersBaseCard(
             isDarkTheme = isDarkTheme,
             labelIdRes = if (showActionDialog == DialogType.Save) R.string.save_deck_changes_header
             else R.string.options_section_delete_deck
@@ -271,7 +271,7 @@ fun DeckScreen(
             usePlatformDefaultWidth = false
         )
     ) {
-        SettingsBaseCard(
+        RangersBaseCard(
             isDarkTheme = isDarkTheme,
             labelIdRes = R.string.saving_changes_header
         ) {
@@ -295,7 +295,7 @@ fun DeckScreen(
             usePlatformDefaultWidth = false
         )
     ) {
-        SettingsBaseCard(
+        RangersBaseCard(
             isDarkTheme = isDarkTheme,
             labelIdRes = R.string.deck_creation_name_label
         ) {

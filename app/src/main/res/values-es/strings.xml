@@ -60,12 +60,12 @@
     <string name="update_cards_button">Actualizar cartas</string>
     <string name="rules_button">Reglas</string>
     <string name="authentication_failed_toast">Fallo de autenticación.</string>
-    <string name="invalid_password_toast">Contraseña no válida. Debe tener como mínimo 6 carácteres.</string>
-    <string name="invalid_email_toast">Correo no válido.</string>
+    <string name="invalid_password_text">Contraseña no válida. Debe tener como mínimo 6 carácteres.</string>
+    <string name="invalid_email_text">Correo no válido.</string>
     <string name="account_successfully_deleted_toast">Cuenta eliminada correctamente.</string>
     <string name="invalid_credentials_toast">Credenciales incorrectas.</string>
-    <string name="handle_already_taken_toast">Lo siento, este nombre de usuario ya está en uso.</string>
-    <string name="invalid_handle_toast">Usuario no válido. Debe tener entre 2 y 22 carácteres.</string>
+    <string name="handle_already_taken_text">Lo siento, este nombre de usuario ya está en uso.</string>
+    <string name="invalid_handle_text">Usuario no válido. Debe tener entre 2 y 22 carácteres.</string>
     <string name="socials_title">Social</string>
     <string name="socials_text">Chatea con otros jugadores de Earthborne Rangers:</string>
     <string name="discord_button">Discord</string>

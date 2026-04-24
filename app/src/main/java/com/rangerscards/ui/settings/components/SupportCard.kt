@@ -24,7 +24,7 @@ fun SupportCard(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    SettingsBaseCard(
+    RangersBaseCard(
         isDarkTheme = isDarkTheme,
         labelIdRes = R.string.support_title,
         modifier = modifier
@@ -32,7 +32,7 @@ fun SupportCard(
         SquareButton(
             stringId = if (language == "ru") R.string.support_text_ru else R.string.support_text,
             leadingIcon = if (language == "ru") R.drawable.boosty else R.drawable.patreon_logo,
-            onClick = remember { {
+            onClick = remember(language) { {
                 context.openLink(if (language == "ru") boostyLink else patreonLink)
             } }
         )

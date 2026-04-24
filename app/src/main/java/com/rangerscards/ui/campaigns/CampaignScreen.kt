@@ -64,7 +64,7 @@ import com.rangerscards.R
 import com.rangerscards.data.local.campaign.Campaign
 import com.rangerscards.objects.CampaignMaps
 import com.rangerscards.ui.campaigns.components.CampaignCurrentPositionCard
-import com.rangerscards.ui.campaigns.components.CampaignDialog
+import com.rangerscards.ui.components.RangersDialogWithContent
 import com.rangerscards.ui.campaigns.components.CampaignEvents
 import com.rangerscards.ui.campaigns.components.CampaignMissions
 import com.rangerscards.ui.campaigns.components.CampaignRemovedCards
@@ -78,9 +78,9 @@ import com.rangerscards.ui.components.SquareButton
 import com.rangerscards.ui.decks.components.DeckListItem
 import com.rangerscards.ui.navigation.BottomNavScreen
 import com.rangerscards.ui.settings.UserUIState
-import com.rangerscards.ui.settings.components.SettingsBaseCard
+import com.rangerscards.ui.settings.components.RangersBaseCard
 import com.rangerscards.ui.settings.components.SettingsInputField
-import com.rangerscards.ui.settings.components.SettingsRadioButtonRow
+import com.rangerscards.ui.settings.components.RangersRadioButtonRow
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 import kotlinx.coroutines.flow.drop
@@ -170,7 +170,7 @@ fun CampaignScreen(
                 usePlatformDefaultWidth = false
             )
         ) {
-            SettingsBaseCard(
+            RangersBaseCard(
                 isDarkTheme = isDarkTheme,
                 labelIdRes = R.string.saving_changes_header
             ) {
@@ -192,7 +192,7 @@ fun CampaignScreen(
                 usePlatformDefaultWidth = false
             )
         ) {
-            SettingsBaseCard(
+            RangersBaseCard(
                 isDarkTheme = isDarkTheme,
                 labelIdRes = R.string.deck_creation_name_label
             ) {
@@ -256,7 +256,7 @@ fun CampaignScreen(
                 }
             }
         }
-        if (showConfirmationDialog) CampaignDialog(
+        if (showConfirmationDialog) RangersDialogWithContent(
             header = stringResource(id = R.string.delete_campaign_button),
             isDarkTheme = isDarkTheme,
             onBack = { showConfirmationDialog = false }
@@ -516,9 +516,9 @@ fun CampaignScreen(
                                             onQueryChanged = { newQuery -> rewardsQuery = newQuery },
                                             onClearClicked = { rewardsQuery = "" }
                                         )
-                                        SettingsRadioButtonRow(
+                                        RangersRadioButtonRow(
                                             text = stringResource(R.string.show_all_rewards_in_collection),
-                                            onClick = campaignViewModel::setShowAllRewards,
+                                            onValueChange = campaignViewModel::setShowAllRewards,
                                             modifier = Modifier,
                                             isSelected = isShowAllRewards
                                         )
