@@ -32,7 +32,7 @@ interface CardsRepository {
         packIds: List<String>
     ): Flow<PagingData<CardListItem>>
 
-    suspend fun getCardByCodeFlow(cardCode: String, taboo: Boolean): FullCard?
+    fun getCardByCodeFlow(cardCode: String, taboo: Boolean): Flow<FullCard>
 
     suspend fun getRoleCardByCodeFlow(code: String, taboo: Boolean): RoleCard?
 

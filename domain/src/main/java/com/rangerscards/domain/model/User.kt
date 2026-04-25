@@ -9,7 +9,7 @@ data class User(
     val friends: ImmutableList<UserInfo> = persistentListOf(),
     val sentRequests: ImmutableList<UserInfo> = persistentListOf(),
     val receivedRequests: ImmutableList<UserInfo> = persistentListOf(),
-    val language: String = Locale.getDefault().language.substring(0..1),
+    val language: String = Locale.getDefault().language.take(2),
     val settings: UserSettings = UserSettings()
 )
 

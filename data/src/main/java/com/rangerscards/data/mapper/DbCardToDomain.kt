@@ -31,20 +31,12 @@ fun FullCardProjection.toDomain(): FullCard =
         image = CardImage(imageSrc.toString(), realImageSrc.toString()),
         name = name,
         presence = presence,
-        approaches = approachConnection?.let { connection ->
-            approachReason?.let { reason ->
-                approachConflict?.let { conflict ->
-                    approachExploration?.let { exploration ->
-                        CardApproaches(
-                            connection = connection,
-                            reason = reason,
-                            conflict = conflict,
-                            exploration = exploration
-                        )
-                    }
-                }
-            }
-        },
+        approaches = CardApproaches(
+            connection = approachConnection,
+            reason = approachReason,
+            conflict = approachConflict,
+            exploration = approachExploration
+        ),
         type = CardType(typeId.toString(), typeName.toString()),
         traits = traits,
         equip = equip,

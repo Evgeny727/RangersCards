@@ -74,7 +74,7 @@ fun CampaignCurrentPositionCard(
                                 modifier = Modifier.size(32.dp)
                             )
                             Text(
-                                text = stringResource(currentLocation?.nameResId ?: R.string.current_path_terrain_none),
+                                text = stringResource(currentLocation?.nameResId ?: R.string.text_none),
                                 color = CustomTheme.colors.d30,
                                 fontFamily = Jost,
                                 fontWeight = FontWeight.Normal,
@@ -107,7 +107,7 @@ fun CampaignCurrentPositionCard(
                             )
                             Text(
                                 text = stringResource(currentPathTerrain?.nameResId
-                                    ?: R.string.current_path_terrain_none),
+                                    ?: R.string.text_none),
                                 color = CustomTheme.colors.d30,
                                 fontFamily = Jost,
                                 fontWeight = FontWeight.Normal,

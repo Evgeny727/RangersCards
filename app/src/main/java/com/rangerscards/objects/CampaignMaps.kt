@@ -466,7 +466,7 @@ enum class Path(
     val cycles: List<String>,
     val expansions: List<String> = emptyList()
 ) {
-    NONE("none", R.string.current_path_terrain_none, null, listOf("loa")),
+    NONE("none", R.string.text_none, null, listOf("loa")),
     WOODS("woods", R.string.woods, R.drawable.woods, listOf("core", "loa")),
     MOUNTAIN_PASS("mountain_pass", R.string.mountain_pass, R.drawable.mountain_pass, listOf("core", "loa")),
     OLD_GROWTH("old_growth", R.string.old_growth, R.drawable.old_growth, listOf("core", "loa")),

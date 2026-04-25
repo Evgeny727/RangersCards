@@ -285,7 +285,7 @@
   //Campaign screen
   <string name="current_location">Position actuelle</string>
   <string name="current_path_terrain">Type de terrain actuel</string>
-  <string name="current_path_terrain_none">Aucun</string>
+  <string name="text_none">Aucun</string>
   <string name="recorded_journey_button">Voyage enregistré</string>
   <string name="extend_campaign_button">Prolonger la campagne</string>
 

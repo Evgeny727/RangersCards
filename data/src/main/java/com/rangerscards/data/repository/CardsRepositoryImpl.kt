@@ -16,7 +16,6 @@ import com.rangerscards.domain.model.CardDeckListItem
 import com.rangerscards.domain.model.CardFilterOptions
 import com.rangerscards.domain.model.CardListItem
 import com.rangerscards.domain.model.DeckInfo
-import com.rangerscards.domain.model.FullCard
 import com.rangerscards.domain.model.RoleCard
 import com.rangerscards.domain.repository.CardsRepository
 import kotlinx.coroutines.flow.Flow
@@ -45,8 +44,8 @@ class CardsRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun getCardByCodeFlow(cardCode: String, taboo: Boolean): FullCard? =
-        cardDao.getCardByCode(cardCode, taboo)?.toDomain()
+    override fun getCardByCodeFlow(cardCode: String, taboo: Boolean) =
+        cardDao.getCardByCodeFlow(cardCode, taboo).map { it.toDomain() }
 
     override suspend fun getRoleCardByCodeFlow(code: String, taboo: Boolean): RoleCard? =
         cardDao.getRoleByCode(code, taboo)?.toDomain()
@@ -108,7 +107,7 @@ class CardsRepositoryImpl @Inject constructor(
         packIds: List<String>
     ): Flow<PagingData<CardListItem>> {
         // Build the FTS query string
-        val language = Locale.getDefault().language.substring(0..1)
+        val language = Locale.getDefault().language.take(2)
         val ftsQuery = if (language == "ru") {
             val stemedString = filterOptions.searchQuery
                 .replace("\"(\\[\"]|.*)?\"".toRegex(), " ")
@@ -249,7 +248,7 @@ class CardsRepositoryImpl @Inject constructor(
         packIds: List<String>
     ): Flow<PagingData<CardDeckListItem>> {
         // Build the FTS query string
-        val language = Locale.getDefault().language.substring(0..1)
+        val language = Locale.getDefault().language.take(2)
         val ftsQuery = if (language == "ru") {
             val stemedString = filterOptions.searchQuery
                 .replace("\"(\\[\"]|.*)?\"".toRegex(), " ")

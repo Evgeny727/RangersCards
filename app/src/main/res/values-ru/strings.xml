@@ -261,7 +261,7 @@
     <string name="headwaters_station">База Верховодье</string>
     <string name="current_location">Текущая локация</string>
     <string name="current_path_terrain">Текущий тип местности</string>
-    <string name="current_path_terrain_none">Отсутствует</string>
+    <string name="text_none">Отсутствует</string>
     <string name="recorded_journey_button">Путевые заметки</string>
     <string name="extend_campaign_button">Расширить кампанию</string>
     <string name="weather_perfect_day">Ясный день</string>

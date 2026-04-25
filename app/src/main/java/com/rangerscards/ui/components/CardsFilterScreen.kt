@@ -45,16 +45,19 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rangerscards.R
-import com.rangerscards.objects.CardFilterOptions
+import com.rangerscards.domain.model.CardFilterOptions
 import com.rangerscards.objects.CardFilters
+import com.rangerscards.ui.settings.components.RangersRadioButtonRow
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
+import com.rangerscards.utils.applyScaffoldPaddings
 
 enum class Section {
     TYPES,
@@ -98,10 +101,7 @@ fun CardsFilterScreen(
     }
     Scaffold(
         containerColor = CustomTheme.colors.l30,
-        modifier = Modifier.padding(
-            top = contentPadding.calculateTopPadding(),
-            bottom = contentPadding.calculateBottomPadding()
-        ),
+        modifier = Modifier.applyScaffoldPaddings(contentPadding),
         topBar = {
             RangersTopAppBar(
                 title = stringResource(R.string.filters_screen_header),
@@ -129,10 +129,7 @@ fun CardsFilterScreen(
             modifier = Modifier
                 .background(CustomTheme.colors.l30)
                 .fillMaxSize()
-                .padding(
-                    top = innerPadding.calculateTopPadding(),
-                    bottom = innerPadding.calculateBottomPadding()
-                ),
+                .applyScaffoldPaddings(innerPadding),
         ) {
             val context = LocalContext.current
             LazyColumn(modifier = Modifier.weight(1f)) {
@@ -164,9 +161,9 @@ fun CardsFilterScreen(
                             ) { isSelected, key ->
                                 localFilterOptions = localFilterOptions.copy(
                                     types = if (isSelected) {
-                                        localFilterOptions.types - key
-                                    } else {
                                         localFilterOptions.types + key
+                                    } else {
+                                        localFilterOptions.types - key
                                     }
                                 )
                             }
@@ -203,9 +200,9 @@ fun CardsFilterScreen(
                             ) { isSelected, key ->
                                 localFilterOptions = localFilterOptions.copy(
                                     traits = if (isSelected) {
-                                        localFilterOptions.traits - key
-                                    } else {
                                         localFilterOptions.traits + key
+                                    } else {
+                                        localFilterOptions.traits - key
                                     }
                                 )
                             }
@@ -241,9 +238,9 @@ fun CardsFilterScreen(
                             ) { isSelected, key ->
                                 localFilterOptions = localFilterOptions.copy(
                                     sets = if (isSelected) {
-                                        localFilterOptions.sets - key
-                                    } else {
                                         localFilterOptions.sets + key
+                                    } else {
+                                        localFilterOptions.sets - key
                                     }
                                 )
                             }
@@ -295,157 +292,69 @@ fun CardsFilterScreen(
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(start = 16.dp, end = 16.dp),
+                                    .padding(horizontal = 8.dp),
                             ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 8.dp)
-                                        .clickable {
-                                            localFilterOptions = localFilterOptions.copy(
-                                                approaches = selectedApproaches.copy(conflict = !selectedApproaches.conflict)
-                                            )
-                                        },
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        painterResource(id = R.drawable.conflict),
-                                        contentDescription = null,
-                                        tint = CustomTheme.colors.d30,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.approaches_filter_conflict),
-                                        color = CustomTheme.colors.d30,
-                                        fontFamily = Jost,
+                                RangersRadioButtonRow(
+                                    text = stringResource(R.string.approaches_filter_conflict),
+                                    leadingIcon = R.drawable.conflict,
+                                    iconTint = CustomTheme.colors.d30,
+                                    isSelected = selectedApproaches.conflict,
+                                    textStyle = TextStyle(
                                         fontWeight = FontWeight.Normal,
                                         fontSize = 18.sp,
-                                        lineHeight = 22.sp,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    RangersRadioButton(
-                                        selected = selectedApproaches.conflict,
-                                        onClick = {
-                                            localFilterOptions = localFilterOptions.copy(
-                                                approaches = selectedApproaches.copy(conflict = !selectedApproaches.conflict)
-                                            )
-                                        },
-                                        modifier = Modifier.size(32.dp)
+                                        lineHeight = 20.sp,
+                                    ),
+                                ) { value ->
+                                    localFilterOptions = localFilterOptions.copy(
+                                        approaches = selectedApproaches.copy(conflict = value)
                                     )
                                 }
                                 HorizontalDivider(color = CustomTheme.colors.l10)
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 8.dp)
-                                        .clickable {
-                                            localFilterOptions = localFilterOptions.copy(
-                                                approaches = selectedApproaches.copy(connection = !selectedApproaches.connection)
-                                            )
-                                        },
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        painterResource(id = R.drawable.connection),
-                                        contentDescription = null,
-                                        tint = CustomTheme.colors.d30,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.approaches_filter_connection),
-                                        color = CustomTheme.colors.d30,
-                                        fontFamily = Jost,
+                                RangersRadioButtonRow(
+                                    text = stringResource(R.string.approaches_filter_connection),
+                                    leadingIcon = R.drawable.connection,
+                                    iconTint = CustomTheme.colors.d30,
+                                    isSelected = selectedApproaches.connection,
+                                    textStyle = TextStyle(
                                         fontWeight = FontWeight.Normal,
                                         fontSize = 18.sp,
-                                        lineHeight = 22.sp,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    RangersRadioButton(
-                                        selected = selectedApproaches.connection,
-                                        onClick = {
-                                            localFilterOptions = localFilterOptions.copy(
-                                                approaches = selectedApproaches.copy(connection = !selectedApproaches.connection)
-                                            )
-                                        },
-                                        modifier = Modifier.size(32.dp)
+                                        lineHeight = 20.sp,
+                                    ),
+                                ) { value ->
+                                    localFilterOptions = localFilterOptions.copy(
+                                        approaches = selectedApproaches.copy(connection = value)
                                     )
                                 }
                                 HorizontalDivider(color = CustomTheme.colors.l10)
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 8.dp)
-                                        .clickable {
-                                            localFilterOptions = localFilterOptions.copy(
-                                                approaches = selectedApproaches.copy(exploration = !selectedApproaches.exploration)
-                                            )
-                                        },
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        painterResource(id = R.drawable.exploration),
-                                        contentDescription = null,
-                                        tint = CustomTheme.colors.d30,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.approaches_filter_exploration),
-                                        color = CustomTheme.colors.d30,
-                                        fontFamily = Jost,
+                                RangersRadioButtonRow(
+                                    text = stringResource(R.string.approaches_filter_exploration),
+                                    leadingIcon = R.drawable.exploration,
+                                    iconTint = CustomTheme.colors.d30,
+                                    isSelected = selectedApproaches.exploration,
+                                    textStyle = TextStyle(
                                         fontWeight = FontWeight.Normal,
                                         fontSize = 18.sp,
-                                        lineHeight = 22.sp,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    RangersRadioButton(
-                                        selected = selectedApproaches.exploration,
-                                        onClick = {
-                                            localFilterOptions = localFilterOptions.copy(
-                                                approaches = selectedApproaches.copy(exploration = !selectedApproaches.exploration)
-                                            )
-                                        },
-                                        modifier = Modifier.size(32.dp)
+                                        lineHeight = 20.sp,
+                                    ),
+                                ) { value ->
+                                    localFilterOptions = localFilterOptions.copy(
+                                        approaches = selectedApproaches.copy(exploration = value)
                                     )
                                 }
                                 HorizontalDivider(color = CustomTheme.colors.l10)
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 8.dp)
-                                        .clickable {
-                                            localFilterOptions = localFilterOptions.copy(
-                                                approaches = selectedApproaches.copy(reason = !selectedApproaches.reason)
-                                            )
-                                        },
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        painterResource(id = R.drawable.reason),
-                                        contentDescription = null,
-                                        tint = CustomTheme.colors.d30,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.approaches_filter_reason),
-                                        color = CustomTheme.colors.d30,
-                                        fontFamily = Jost,
+                                RangersRadioButtonRow(
+                                    text = stringResource(R.string.approaches_filter_reason),
+                                    leadingIcon = R.drawable.reason,
+                                    iconTint = CustomTheme.colors.d30,
+                                    isSelected = selectedApproaches.reason,
+                                    textStyle = TextStyle(
                                         fontWeight = FontWeight.Normal,
                                         fontSize = 18.sp,
-                                        lineHeight = 22.sp,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    RangersRadioButton(
-                                        selected = selectedApproaches.reason,
-                                        onClick = {
-                                            localFilterOptions = localFilterOptions.copy(
-                                                approaches = selectedApproaches.copy(reason = !selectedApproaches.reason)
-                                            )
-                                        },
-                                        modifier = Modifier.size(32.dp)
+                                        lineHeight = 20.sp,
+                                    ),
+                                ) { value ->
+                                    localFilterOptions = localFilterOptions.copy(
+                                        approaches = selectedApproaches.copy(reason = value)
                                     )
                                 }
                             }
@@ -487,9 +396,9 @@ fun CardsFilterScreen(
                             ) { isSelected, key ->
                                 localFilterOptions = localFilterOptions.copy(
                                     packs = if (isSelected) {
-                                        localFilterOptions.packs - key
-                                    } else {
                                         localFilterOptions.packs + key
+                                    } else {
+                                        localFilterOptions.packs - key
                                     }
                                 )
                             }
@@ -529,8 +438,7 @@ fun CardsFilterScreen(
                                 localFilterOptions.aspectRequirements.equalOrLower
                             }
                             Column(
-                                modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                                modifier = Modifier.padding(top = 4.dp, start = 8.dp, end = 8.dp),
                             ) {
                                 RowWithEditableNumericValue(
                                     textResId = R.string.awa_styled_card_text,
@@ -612,38 +520,18 @@ fun CardsFilterScreen(
                                     isPlusEnabled = fit < 9,
                                     numericValue = fit
                                 )
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            localFilterOptions = localFilterOptions.copy(
-                                                aspectRequirements = localFilterOptions.aspectRequirements.copy(
-                                                    equalOrLower = !equalOrLess
-                                                )
-                                            )
-                                        },
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.aspect_requirements_equal_or_lower),
-                                        color = CustomTheme.colors.d30,
-                                        fontFamily = Jost,
+                                RangersRadioButtonRow(
+                                    text = stringResource(R.string.aspect_requirements_equal_or_lower),
+                                    isSelected = equalOrLess,
+                                    textStyle = TextStyle(
                                         fontWeight = FontWeight.Normal,
                                         fontSize = 18.sp,
                                         lineHeight = 22.sp,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    RangersRadioButton(
-                                        selected = equalOrLess,
-                                        onClick = {
-                                            localFilterOptions = localFilterOptions.copy(
-                                                aspectRequirements = localFilterOptions.aspectRequirements.copy(
-                                                    equalOrLower = !equalOrLess
-                                                )
-                                            )
-                                        },
-                                        modifier = Modifier.size(32.dp)
+                                    ),
+                                ) { value ->
+                                    localFilterOptions = localFilterOptions.copy(
+                                        aspectRequirements = localFilterOptions.aspectRequirements
+                                            .copy(equalOrLower = value)
                                     )
                                 }
                             }
@@ -748,7 +636,7 @@ fun CardsFilterCheckList(
     LazyColumn(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp)
+            .padding(horizontal = 8.dp)
             .sizeIn(maxHeight = 320.dp),
         state = state,
     ) {
@@ -756,28 +644,16 @@ fun CardsFilterCheckList(
         itemsIndexed(entries, {_, it -> it.first}) { index, (key, value) ->
             val isSelected = key in selectedOptions
             val isLast = index == entries.lastIndex
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-                    .clickable { onClick(isSelected, key) },
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = value,
-                    color = CustomTheme.colors.d30,
-                    fontFamily = Jost,
+            RangersRadioButtonRow(
+                text = value,
+                isSelected = isSelected,
+                textStyle = TextStyle(
                     fontWeight = FontWeight.Normal,
                     fontSize = 18.sp,
                     lineHeight = 22.sp,
-                    modifier = Modifier.weight(1f)
-                )
-                RangersRadioButton(
-                    selected = isSelected,
-                    onClick = { onClick(isSelected, key) },
-                    modifier = Modifier.size(32.dp)
-                )
+                ),
+            ) { value ->
+                onClick(value, key)
             }
             if (!isLast) HorizontalDivider(color = CustomTheme.colors.l10)
         }
@@ -799,8 +675,7 @@ fun CardsFilterCost(
         costRange == null || costRange.start == -2
     }
     Column(
-        modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = Modifier.padding(horizontal = 8.dp),
     ) {
         RowWithEditableNumericValue(
             textResId = R.string.cost_filter_start_value,
@@ -818,27 +693,16 @@ fun CardsFilterCost(
             isPlusEnabled = endRange < 9,
             numericValue = endRange
         )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onRangeChanged((if (!isXCostSelected) -2 else startRange)..endRange) },
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(R.string.cost_filter_include_x_cost),
-                color = CustomTheme.colors.d30,
-                fontFamily = Jost,
+        RangersRadioButtonRow(
+            text = stringResource(R.string.cost_filter_include_x_cost),
+            isSelected = isXCostSelected,
+            textStyle = TextStyle(
                 fontWeight = FontWeight.Normal,
                 fontSize = 18.sp,
                 lineHeight = 22.sp,
-                modifier = Modifier.weight(1f)
-            )
-            RangersRadioButton(
-                selected = isXCostSelected,
-                onClick = { onRangeChanged((if (!isXCostSelected) -2 else startRange)..endRange) },
-                modifier = Modifier.size(32.dp)
-            )
+            ),
+        ) { value ->
+            onRangeChanged((if (value) -2 else startRange)..endRange)
         }
     }
 }

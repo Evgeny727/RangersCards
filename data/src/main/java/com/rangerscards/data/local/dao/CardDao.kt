@@ -52,7 +52,7 @@ interface CardDao {
                 sun_challenge, mountain_challenge, crest_challenge
             FROM card WHERE code = :cardCode AND (:taboo IS 0 AND taboo_id IS NULL)
         )""")
-    suspend fun getCardByCode(cardCode: String, taboo: Boolean): FullCardProjection?
+    fun getCardByCodeFlow(cardCode: String, taboo: Boolean): Flow<FullCardProjection>
 
     @Query("""SELECT * FROM (
             -- Case 1: Taboo is set – select the override card

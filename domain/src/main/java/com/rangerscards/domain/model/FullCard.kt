@@ -7,7 +7,7 @@ data class FullCard(
     val image: CardImage,
     val name: String,
     val presence: Int?,
-    val approaches: CardApproaches?,
+    val approaches: CardApproaches,
     val type: CardType,
     val traits: String?,
     val equip: Int?,
@@ -20,7 +20,7 @@ data class FullCard(
     val set: CardSet,
     val packShortName: String?,
     val subset: CardSet?,
-    val challenges: CardChallenges?,
+    val challenges: CardChallenges,
 )
 
 data class CardAspect(
@@ -57,7 +57,7 @@ data class CardSet(
 )
 
 data class CardChallenges(
-    val sunChallenge: String?,
-    val mountainChallenge: String?,
-    val crestChallenge: String?,
+    val sun: String?,
+    val mountain: String?,
+    val crest: String?,
 )

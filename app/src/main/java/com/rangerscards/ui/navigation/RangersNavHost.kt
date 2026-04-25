@@ -331,17 +331,17 @@ fun RangersNavHost(
             ) {
                 composable(BottomNavScreen.Cards.startDestination,
                     enterTransition = { EnterTransition.None },
-                    exitTransition = { ExitTransition.None }) { backStackEntry ->
-                    val cardsViewModel: CardsViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = backStackEntry
-                    )
+                    exitTransition = { ExitTransition.None }) {
+
                     val user by appViewModel.userUiState.collectAsState()
+                    val cardsViewModel: CardsViewModel = hiltViewModel()
+                    val spoiler by cardsViewModel.spoiler.collectAsState()
+
                     if (cardsState !is CardsSyncState.Loading) {
                         CardsScreen(
                             isDarkTheme = isDarkTheme,
-                            cardsViewModel = cardsViewModel,
                             userUIState = user,
+                            cardsViewModel = cardsViewModel,
                             contentPadding = innerPadding,
                             navigateToCard = { cardIndex ->
                                 navController.navigate(
@@ -366,7 +366,7 @@ fun RangersNavHost(
                             },
                             colors = IconButtonDefaults.iconButtonColors().copy(containerColor = Color.Transparent),
                             modifier = Modifier.size(32.dp),
-                            enabled = !cardsState
+                            enabled = cardsState !is CardsSyncState.Loading
                         ) {
                             Icon(
                                 painterResource(id = R.drawable.sort_32dp),
@@ -385,7 +385,7 @@ fun RangersNavHost(
                             },
                             colors = IconButtonDefaults.iconButtonColors().copy(containerColor = Color.Transparent),
                             modifier = Modifier.size(32.dp),
-                            enabled = !cardsState
+                            enabled = cardsState !is CardsSyncState.Loading
                         ) {
                             Icon(
                                 painterResource(id = R.drawable.filter_32dp),
@@ -396,7 +396,6 @@ fun RangersNavHost(
                         }
                     }
                     switch = {
-                        val spoiler by cardsViewModel.spoiler.collectAsState()
                         RangersSpoilerSwitch(spoiler, cardsViewModel::onSpoilerChanged)
                     }
                 }
@@ -408,33 +407,31 @@ fun RangersNavHost(
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry(BottomNavScreen.Cards.startDestination)
                     }
-                    val cardsViewModel: CardsViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val cardsViewModel: CardsViewModel = hiltViewModel(parentEntry)
                     val cardIndex = backStackEntry.arguments?.getInt(cardIndexArgument)
-                        ?: error("cardIndexArgument cannot be null")
-                    FullCardScreen(
-                        cardsViewModel = cardsViewModel,
-                        cardIndex = cardIndex,
-                        isDarkTheme = isDarkTheme,
-                        contentPadding = innerPadding
-                    )
-                    title = ""
-                    actions = null
-                    switch = null
+                    if (cardIndex != null) {
+                        FullCardScreen(
+                            cardsViewModel = cardsViewModel,
+                            cardIndex = cardIndex,
+                            isDarkTheme = isDarkTheme,
+                            contentPadding = innerPadding
+                        )
+                        title = ""
+                        actions = null
+                        switch = null
+                    } else {
+                        appViewModel.emitError(IllegalStateException("cardIndexArgument cannot be null"))
+                        navController.navigateUp()
+                    }
                 }
                 composable(route = BottomNavScreen.Cards.route + "/sortOptions") { backStackEntry ->
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry(BottomNavScreen.Cards.startDestination)
                     }
-                    val cardsViewModel: CardsViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val cardsViewModel: CardsViewModel = hiltViewModel(parentEntry)
                     val filterOptions by cardsViewModel.filterOptions.collectAsState()
                     CardsSortScreen(
-                        navigateUp = { navController.navigateUp() },
+                        navigateUp = navController::navigateUp,
                         clearSortOptions = { cardsViewModel.clearSortOptions()
                             navController.navigateUp() },
                         sortOptions = filterOptions.sortOrder,
@@ -449,13 +446,10 @@ fun RangersNavHost(
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry(BottomNavScreen.Cards.startDestination)
                     }
-                    val cardsViewModel: CardsViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val cardsViewModel: CardsViewModel = hiltViewModel(parentEntry)
                     val filterOptions by cardsViewModel.filterOptions.collectAsState()
                     CardsFilterScreen(
-                        navigateUp = { navController.navigateUp() },
+                        navigateUp = navController::navigateUp,
                         clearFilterOptions = { cardsViewModel.clearFilterOptions()
                             navController.navigateUp() },
                         filterOptions = filterOptions,
@@ -474,10 +468,7 @@ fun RangersNavHost(
                 composable(BottomNavScreen.Decks.startDestination,
                     enterTransition = { EnterTransition.None },
                     exitTransition = { ExitTransition.None }) { backStackEntry ->
-                    val decksViewModel: DecksViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = backStackEntry
-                    )
+                    val decksViewModel: DecksViewModel = hiltViewModel(backStackEntry)
                     if (cardsState !is CardsSyncState.Loading) {
                         DecksScreen(
                             navigateToDeck = { deckId ->
@@ -584,10 +575,7 @@ fun RangersNavHost(
                     },
                     arguments = listOf(navArgument(deckIdArgument) { type = NavType.StringType })
                 ) { backStackEntry ->
-                    val deckViewModel: DeckViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = backStackEntry
-                    )
+                    val deckViewModel: DeckViewModel = hiltViewModel(backStackEntry)
                     val deckId = backStackEntry.arguments?.getString(deckIdArgument)
                         ?: error("deckIdArgument cannot be null")
                     val user by appViewModel.userUiState.collectAsState()
@@ -611,10 +599,7 @@ fun RangersNavHost(
                         factory = AppViewModelProvider.Factory,
                         viewModelStoreOwner = parentEntry
                     )
-                    val decksViewModel: DecksViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = backStackEntry
-                    )
+                    val decksViewModel: DecksViewModel = hiltViewModel(backStackEntry)
                     val user by appViewModel.userUiState.collectAsState()
                     DeckChangingRole(
                         onCancel = {
@@ -643,10 +628,7 @@ fun RangersNavHost(
                         factory = AppViewModelProvider.Factory,
                         viewModelStoreOwner = parentEntry
                     )
-                    val cardsViewModel: CardsViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = backStackEntry
-                    )
+                    val cardsViewModel: CardsViewModel = hiltViewModel(backStackEntry)
                     val cardId = backStackEntry.arguments?.getString(cardIdArgument)
                         ?: error("cardIdArgument cannot be null")
                     val isEditing by deckViewModel.isEditing.collectAsState()
@@ -695,10 +677,7 @@ fun RangersNavHost(
                         factory = AppViewModelProvider.Factory,
                         viewModelStoreOwner = parentEntry
                     )
-                    val deckCardsViewModel: DeckCardsViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = backStackEntry
-                    )
+                    val deckCardsViewModel: DeckCardsViewModel = hiltViewModel(backStackEntry)
                     val typeIndex = backStackEntry.arguments?.getInt(typeIndexArgument)
                         ?: error("typeIndexArgument cannot be null")
                     val user by appViewModel.userUiState.collectAsState()
@@ -747,10 +726,7 @@ fun RangersNavHost(
                         factory = AppViewModelProvider.Factory,
                         viewModelStoreOwner = parentEntry
                     )
-                    val cardsViewModel: CardsViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = backStackEntry
-                    )
+                    val cardsViewModel: CardsViewModel = hiltViewModel(backStackEntry)
                     val cardIndex = backStackEntry.arguments?.getInt(cardIndexArgument)
                         ?: error("cardIndexArgument cannot be null")
                     DeckFullCardWithPagerScreen(
@@ -813,10 +789,7 @@ fun RangersNavHost(
                 composable(BottomNavScreen.Campaigns.startDestination,
                     enterTransition = { EnterTransition.None },
                     exitTransition = { ExitTransition.None }) { backStackEntry ->
-                    val campaignsViewModel: CampaignsViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = backStackEntry
-                    )
+                    val campaignsViewModel: CampaignsViewModel = hiltViewModel(backStackEntry)
                     if (cardsState !is CardsSyncState.Loading) {
                         CampaignsScreen(
                             navigateToCampaign = { campaignId ->
@@ -1080,10 +1053,7 @@ fun RangersNavHost(
                         factory = AppViewModelProvider.Factory,
                         viewModelStoreOwner = parentEntry
                     )
-                    val campaignDecksViewModel: CampaignDecksViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = backStackEntry
-                    )
+                    val campaignDecksViewModel: CampaignDecksViewModel = hiltViewModel(backStackEntry)
                     val user by appViewModel.userUiState.collectAsState()
                     AddDeckToCampaignScreen(
                         navController = navController,

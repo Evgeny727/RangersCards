@@ -1189,7 +1189,7 @@ fun DeckScreen(
                     }
                 }
                 val isTabooSet = deck.tabooSetId != null
-                val locale = Locale.getDefault().language.substring(0..1)
+                val locale = Locale.getDefault().language.take(2)
                 val supportedLocale = if (SUPPORTED_LANGUAGES.contains(locale)) locale
                 else ""
                 DeckRightSideDrawer(

@@ -90,7 +90,7 @@ fun TravelDialog(
     RangersDialogWithContent(
         header = stringResource(
             id = R.string.travel_header,
-            stringResource(currentLocation?.nameResId ?: R.string.current_path_terrain_none)
+            stringResource(currentLocation?.nameResId ?: R.string.text_none)
         ),
         isDarkTheme = isDarkTheme,
         onBack = onBack
@@ -217,7 +217,7 @@ fun TravelDialog(
                         lineHeight = 18.sp,
                         modifier = Modifier.weight(1f)
                     ) else Text(
-                        text = stringResource(R.string.current_path_terrain_none),
+                        text = stringResource(R.string.text_none),
                         color = CustomTheme.colors.d30,
                         fontFamily = Jost,
                         fontWeight = FontWeight.Normal,

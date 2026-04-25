@@ -249,19 +249,19 @@ fun DeckCardsSearchingListScreen(
                         RowTypeDivider(text = when(headerOptions.second) {
                             "set_id" -> item.setName.toString()
                             "equip" -> "${stringResource(R.string.equip_card_divider_header)}: ${
-                                if (item.equip == null) stringResource(R.string.current_path_terrain_none)
+                                if (item.equip == null) stringResource(R.string.text_none)
                                 else item.equip.toString()
                             }"
                             "type_name" -> item.typeName.toString()
                             "cost" -> "${stringResource(R.string.cost_filter_header)}: ${
                                 when (item.cost) {
-                                    null -> stringResource(R.string.current_path_terrain_none)
+                                    null -> stringResource(R.string.text_none)
                                     -2 -> "X"
                                     else -> item.cost.toString()
                                 }
                             }"
                             "aspect_id" -> "${stringResource(R.string.aspect_card_divider_header)}: ${
-                                if (item.aspectId == null) stringResource(R.string.current_path_terrain_none)
+                                if (item.aspectId == null) stringResource(R.string.text_none)
                                 else item.aspectShortName
                             }"
                             else -> ""

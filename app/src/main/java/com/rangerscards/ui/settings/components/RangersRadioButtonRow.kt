@@ -29,8 +29,9 @@ import com.rangerscards.ui.theme.Jost
 @Composable
 fun RangersRadioButtonRow(
     text: String,
-    modifier: Modifier = Modifier.fillMaxWidth(),
+    modifier: Modifier = Modifier.fillMaxWidth().padding(8.dp),
     @DrawableRes leadingIcon: Int? = null,
+    iconTint: Color = CustomTheme.colors.m,
     isSelected: Boolean = false,
     enabled: Boolean = true,
     isSingleValue: Boolean = false,
@@ -44,15 +45,14 @@ fun RangersRadioButtonRow(
     Row(
         modifier = modifier
             .toggleable(isSelected, enabled, onValueChange = onValueChange)
-            .background(Color.Transparent, CustomTheme.shapes.large)
-            .padding(8.dp),
+            .background(Color.Transparent, CustomTheme.shapes.large),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (leadingIcon != null) Icon(
             painterResource(id = leadingIcon),
             contentDescription = null,
-            tint = CustomTheme.colors.m,
+            tint = iconTint,
             modifier = Modifier.size(32.dp)
         )
         Text(

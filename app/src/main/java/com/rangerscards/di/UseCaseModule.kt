@@ -1,8 +1,10 @@
 package com.rangerscards.di
 
 import com.rangerscards.domain.repository.CampaignsRepository
+import com.rangerscards.domain.repository.CardsRepository
 import com.rangerscards.domain.repository.DecksRepository
 import com.rangerscards.domain.usecase.ClearAllLocalDecksAndCampaignsUseCase
+import com.rangerscards.domain.usecase.SearchCardsUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,5 +21,11 @@ interface UseCaseModule {
     ) : ClearAllLocalDecksAndCampaignsUseCase {
         return ClearAllLocalDecksAndCampaignsUseCase(decksRepository, campaignsRepository)
     }
+
+    @Provides
+    fun provideSearchCardsUseCase(
+        cardsRepository: CardsRepository
+    ) : SearchCardsUseCase = SearchCardsUseCase(cardsRepository)
+
 
 }

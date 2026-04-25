@@ -13,42 +13,37 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.rangerscards.domain.model.CardApproaches
+import com.rangerscards.domain.model.CardAspect
+import com.rangerscards.domain.model.CardChallenges
+import com.rangerscards.domain.model.CardImage
+import com.rangerscards.domain.model.CardSet
+import com.rangerscards.domain.model.CardTokens
+import com.rangerscards.domain.model.CardType
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.RangersCardsTheme
 
 @Composable
 fun FullCard(
     tabooId: String?,
-    aspectId: String?,
-    aspectShortName: String?,
+    aspect: CardAspect?,
     cost: Int?,
-    imageSrc: String?,
-    realImageSrc: String?,
+    image: CardImage,
     presence: Int?,
-    approachConflict: Int?,
-    approachReason: Int?,
-    approachExploration: Int?,
-    approachConnection: Int?,
-    typeId: String?,
-    typeName: String?,
+    approaches: CardApproaches,
+    type: CardType,
     traits: String?,
     equip: Int?,
     harm: Int?,
     progress: Int?,
-    tokenPlurals: String?,
-    tokenCount: Int?,
+    tokens: CardTokens?,
     text: String?,
     flavor: String?,
     level: Int?,
-    setName: String,
-    setSize: Int,
-    setPosition: Int,
-    subsetSize: Int?,
-    subsetPosition: Int?,
+    set: CardSet,
+    subset: CardSet?,
     packShortName: String?,
-    sunChallenge: String?,
-    mountainChallenge: String?,
-    crestChallenge: String?,
+    challenges: CardChallenges,
     isDarkTheme: Boolean,
     name: String,
 ) {
@@ -59,7 +54,7 @@ fun FullCard(
             .clip(CustomTheme.shapes.large),
         shape = CustomTheme.shapes.large,
         color = CustomTheme.colors.l30,
-        border = BorderStroke(1.dp, when (aspectId) {
+        border = BorderStroke(1.dp, when (aspect?.id) {
             "AWA" -> CustomTheme.colors.green
             "FIT" -> CustomTheme.colors.red
             "FOC" -> CustomTheme.colors.blue
@@ -71,46 +66,36 @@ fun FullCard(
         Column {
             //Header
             FullCardHeader(
-                aspectId,
-                aspectShortName,
+                aspect,
                 cost,
-                realImageSrc,
+                image.realSrc,
                 name,
                 presence,
-                approachConflict,
-                approachReason,
-                approachExploration,
-                approachConnection,
+                approaches,
                 isDarkTheme,
             )
             //Content block
             FullCardContent(
-                aspectId,
-                typeId,
-                typeName,
+                aspect?.id,
+                type,
                 traits,
                 equip,
                 harm,
                 progress,
-                tokenPlurals,
-                tokenCount,
+                tokens,
                 text,
                 flavor,
-                sunChallenge,
-                mountainChallenge,
-                crestChallenge,
-                imageSrc,
+                challenges,
+                image.src,
                 isDarkTheme
             )
             //Set info
             FullCardSetInfo(
                 tabooId,
-                aspectId,
-                aspectShortName,
+                aspect,
                 level,
-                setName,
-                subsetSize ?: setSize,
-                subsetPosition ?: setPosition,
+                set,
+                subset,
                 packShortName,
                 isDarkTheme
             )
@@ -129,38 +114,42 @@ fun FullCardScreenPreview() {
         ) {
             FullCard(
                 tabooId = "",
-                aspectId = "AWA",
-                aspectShortName = "AWA",
+                aspect = CardAspect("AWA", "AWA"),
                 cost = 2,
-                imageSrc = null,
-                realImageSrc = null,
+                image = CardImage("null", "null"),
                 presence = 1,
-                approachConflict = 1,
-                approachReason = 1,
-                approachExploration = 1,
-                approachConnection = 1,
-                typeName = null,
-                typeId = null,
+                approaches = CardApproaches(
+                    connection = 1,
+                    reason = 1,
+                    conflict = 1,
+                    exploration = 1
+                ),
+                type = CardType("null", "null"),
                 traits = "Being / Companion / Mammal",
                 equip = 2,
                 harm = 1,
                 progress = 1,
-                tokenPlurals = "Запись,Записи,Записей",
-                tokenCount = 0,
+                tokens = CardTokens(
+                    plurals = "Запись,Записи,Записей",
+                    count = 1
+                ),
                 text = "Some text\nAnd [[new]] g line",
                 flavor = "Some flavor",
                 level = 2,
-                setName = "Reward",
-                setSize = 31,
-                setPosition = 2,
-                subsetPosition = null,
-                subsetSize = null,
+                set = CardSet(
+                    name = "Reward",
+                    size = 31,
+                    position = 2
+                ),
+                subset = null,
                 packShortName = null,
                 isDarkTheme = isSystemInDarkTheme(),
                 name = "Scuttler g Tunnel\nnew g line an some more",
-                sunChallenge = null,
-                mountainChallenge = null,
-                crestChallenge = null,
+                challenges = CardChallenges(
+                    sun = null,
+                    mountain = null,
+                    crest = null
+                )
             )
         }
     }

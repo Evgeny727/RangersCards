@@ -830,7 +830,7 @@ class CampaignViewModel(
             val fromPath = Path.fromValue(removed.setId)
             val fromMaps = maps[removed.setId]
             if (fromPath != null) removedSets[removed.setId] = fromPath.iconResId to fromPath.nameResId
-            else removedSets[removed.setId] = fromMaps?.iconResId to (fromMaps?.nameResId ?: R.string.current_path_terrain_none)
+            else removedSets[removed.setId] = fromMaps?.iconResId to (fromMaps?.nameResId ?: R.string.text_none)
         }
         return removedSets
     }

@@ -303,7 +303,7 @@
     //Campaign screen
     <string name="current_location">Current location</string>
     <string name="current_path_terrain">Current path terrain</string>
-    <string name="current_path_terrain_none">None</string>
+    <string name="text_none">None</string>
     <string name="recorded_journey_button">Recorded journey</string>
     <string name="extend_campaign_button">Extend campaign</string>
 

@@ -4,25 +4,26 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import com.rangerscards.objects.CardFilterOptions
-import com.rangerscards.data.local.card.CardListItemProjection
-import com.rangerscards.data.local.card.FullCardProjection
+import com.rangerscards.domain.model.CardFilterOptions
+import com.rangerscards.domain.model.CardListItem
+import com.rangerscards.domain.model.FullCard
 import com.rangerscards.domain.repository.CardsRepository
 import com.rangerscards.domain.repository.UserPreferencesRepository
+import com.rangerscards.domain.usecase.SearchCardsUseCase
+import com.rangerscards.ui.cards.components.CardListUiModel
+import com.rangerscards.ui.cards.components.withCategoryHeaders
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.Locale
 
 data class Quintuple<A, B, C, D, E>(
     val first: A,
@@ -35,6 +36,7 @@ data class Quintuple<A, B, C, D, E>(
 class CardsViewModel(
     private val cardsRepository: CardsRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val searchCardsUseCase: SearchCardsUseCase
 ) : ViewModel() {
 
     // Holds the current state of whether to include English search results.
@@ -65,34 +67,21 @@ class CardsViewModel(
 
     // Exposes the paginated search results as PagingData.
     @OptIn(ExperimentalCoroutinesApi::class)
-    val searchResults: Flow<PagingData<CardListItemProjection>> =
+    val searchResults: Flow<PagingData<CardListItem>> =
         combine(_filterOptions, _includeEnglish, _spoiler, _taboo, _packIds) { filterOptions, include, spoiler, taboo, packIds ->
             Quintuple(filterOptions, include, spoiler, taboo, packIds)
         }.flatMapLatest { (filterOptions, include, spoiler, taboo, packIds) ->
-            // When the search query or include flag changes, perform a new search.
-            if (filterOptions.searchQuery.isEmpty()) {
-                cardsRepository.getAllCards(spoiler, taboo, packIds, filterOptions).catch { throwable ->
-                    // Log the error.
-                    throwable.printStackTrace()
-                    // Return an empty PagingData on error so that the flow continues.
-                    emit(PagingData.empty())
-                }
-            } else {
-                cardsRepository.searchCards(
-                    filterOptions = filterOptions,
-                    includeEnglish = include,
-                    spoiler = spoiler,
-                    language = Locale.getDefault().language.substring(0..1),
-                    taboo = taboo,
-                    packIds = packIds
-                ).catch { throwable ->
-                    // Log the error.
-                    throwable.printStackTrace()
-                    // Return an empty PagingData on error so that the flow continues.
-                    emit(PagingData.empty())
-                }
-            }
+            searchCardsUseCase(
+                filterOptions,
+                include,
+                spoiler,
+                taboo,
+                packIds
+            )
         }.cachedIn(viewModelScope)
+
+    val searchResultsWithHeaders: Flow<PagingData<CardListUiModel>> =
+        searchResults.withCategoryHeaders(_filterOptions.value.sortOrder)
 
     /**
      * Called when the user enters a new search term.
@@ -161,13 +150,13 @@ class CardsViewModel(
     }
 
     fun setTabooId(taboo: Boolean?) {
-        _taboo.update { taboo ?: false }
+        _taboo.value = taboo ?: false
     }
 
     fun setPackIds(packIds: List<String>) {
-        _packIds.update { listOf("core") + packIds }
+        _packIds.value = listOf("core") + packIds
     }
 
-    fun getCardById(cardCode: String): Flow<FullCardProjection?> =
-        cardsRepository.getCardByCode(cardCode, _taboo.value)
+    fun getCardById(cardCode: String): Flow<FullCard?> =
+        cardsRepository.getCardByCodeFlow(cardCode, _taboo.value)
 }

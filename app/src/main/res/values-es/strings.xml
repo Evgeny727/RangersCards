@@ -284,7 +284,7 @@
     //Campaign screen
     <string name="current_location">Localización actual</string>
     <string name="current_path_terrain">Terreno de Camino actual</string>
-    <string name="current_path_terrain_none">Ninguno</string>
+    <string name="text_none">Ninguno</string>
     <string name="recorded_journey_button">Registro de viaje</string>
     <string name="extend_campaign_button">Ampliar campaña</string>
 
