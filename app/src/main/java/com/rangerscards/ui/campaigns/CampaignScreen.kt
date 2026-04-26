@@ -620,7 +620,7 @@ fun CampaignScreen(
                                 meta = deck.meta,
                                 imageSrc = role?.realImageSrc,
                                 name = deck.name,
-                                role = role?.name,
+                                roleName = role?.name,
                                 onClick = { if (!campaignState!!.uploaded || userUIState.currentUser?.uid == deck.userId)
                                     navController.navigate(
                                         "deck/${deck.id}"

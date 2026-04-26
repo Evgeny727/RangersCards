@@ -79,7 +79,7 @@ fun CustomTab(
 ) {
     Box(
         modifier = modifier
-            .selectable(selected) { onClick() }
+            .selectable(selected,  onClick = onClick)
             .padding(horizontal = 8.dp, vertical = 8.dp)
             .sizeIn(minHeight = 48.dp),
         contentAlignment = Alignment.Center

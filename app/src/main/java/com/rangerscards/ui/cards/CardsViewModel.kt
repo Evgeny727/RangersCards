@@ -12,6 +12,7 @@ import com.rangerscards.domain.repository.UserPreferencesRepository
 import com.rangerscards.domain.usecase.SearchCardsUseCase
 import com.rangerscards.ui.cards.components.CardListUiModel
 import com.rangerscards.ui.cards.components.withCategoryHeaders
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +25,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class Quintuple<A, B, C, D, E>(
     val first: A,
@@ -33,7 +35,8 @@ data class Quintuple<A, B, C, D, E>(
     val fifth: E
 )
 
-class CardsViewModel(
+@HiltViewModel
+class CardsViewModel @Inject constructor(
     private val cardsRepository: CardsRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val searchCardsUseCase: SearchCardsUseCase

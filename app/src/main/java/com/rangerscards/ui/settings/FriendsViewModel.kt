@@ -7,6 +7,7 @@ import com.rangerscards.domain.model.User
 import com.rangerscards.domain.model.UserInfo
 import com.rangerscards.domain.repository.FriendAction
 import com.rangerscards.domain.repository.SettingsRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -24,6 +25,7 @@ sealed interface FriendsUiState {
     object Loading : FriendsUiState
 }
 
+@HiltViewModel
 class FriendsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository
 ) : ViewModel() {

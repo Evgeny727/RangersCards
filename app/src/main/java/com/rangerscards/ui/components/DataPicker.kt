@@ -30,11 +30,12 @@ import com.rangerscards.ui.theme.Jost
 fun DataPicker(
     onClick: () -> Unit,
     @StringRes type: Int,
+    modifier: Modifier = Modifier,
     isRequired: Boolean = true,
     text: @Composable (RowScope.() -> Unit),
 ) {
     Surface(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = CustomTheme.shapes.small,

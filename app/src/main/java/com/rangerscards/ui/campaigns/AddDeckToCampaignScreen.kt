@@ -158,7 +158,7 @@ fun AddDeckToCampaignScreen(
                     meta = item.meta,
                     imageSrc = role?.realImageSrc,
                     name = item.name,
-                    role = role?.name,
+                    roleName = role?.name,
                     onClick = { coroutine.launch { showLoadingDialog = true
                         campaignViewModel.addDeckCampaign(item.id, user)
                     }.invokeOnCompletion { showLoadingDialog = false

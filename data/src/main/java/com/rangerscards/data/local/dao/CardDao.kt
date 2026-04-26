@@ -86,7 +86,7 @@ interface CardDao {
             FROM card WHERE code = :code AND (:taboo IS 0 AND taboo_id IS NULL)
         )"""
     )
-    suspend fun getRoleByCode(code: String, taboo: Boolean): RoleCardProjection?
+    fun getRoleByCode(code: String, taboo: Boolean): Flow<RoleCardProjection>
 
     @Query(
         """SELECT id, code, taboo_id, set_name, aspect_id, aspect_short_name, cost, real_image_src, name, 

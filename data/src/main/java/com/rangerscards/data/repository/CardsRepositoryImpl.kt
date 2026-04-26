@@ -47,8 +47,8 @@ class CardsRepositoryImpl @Inject constructor(
     override fun getCardByCodeFlow(cardCode: String, taboo: Boolean) =
         cardDao.getCardByCodeFlow(cardCode, taboo).map { it.toDomain() }
 
-    override suspend fun getRoleCardByCodeFlow(code: String, taboo: Boolean): RoleCard? =
-        cardDao.getRoleByCode(code, taboo)?.toDomain()
+    override fun getRoleCardByCodeFlow(code: String, taboo: Boolean): Flow<RoleCard> =
+        cardDao.getRoleByCode(code, taboo).map { it.toDomain() }
 
     override fun getRoleCardsByIdFlow(ids: List<String>): Flow<List<RoleCard>> =
         cardDao.getRolesImages(ids).map { list -> list.map { it.toDomain() } }

@@ -20,7 +20,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
@@ -42,7 +41,6 @@ class AppViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val userFlow = authRepository.currentUserId
-        .distinctUntilChanged()
         .flatMapLatest {
             if (it == null) flowOf(Result.success(null))
             else settingsRepository.startProfileSubscription(it)

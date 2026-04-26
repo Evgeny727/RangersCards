@@ -39,22 +39,18 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import com.rangerscards.R
+import com.rangerscards.domain.model.DeckMeta
 import com.rangerscards.objects.DeckMetaMaps
 import com.rangerscards.objects.ImageSrc
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 
 @Composable
 fun DeckListItem(
-    meta: JsonElement,
+    meta: DeckMeta,
     imageSrc: String?,
     name: String,
-    role: String?,
+    roleName: String?,
     onClick: () -> Unit,
     isCampaign: Boolean? = null, //true - display campaign icon, false - display ranger icon
     campaignName: String? = null,
@@ -83,7 +79,7 @@ fun DeckListItem(
                 DeckListItemTextContainer(
                     meta,
                     name,
-                    role,
+                    roleName,
                     isCampaign,
                     if (isCampaign == true) campaignName else if (isCampaign == false) userName else null,
                     Modifier.weight(1f)
@@ -101,7 +97,7 @@ fun DeckListItem(
                             modifier = Modifier.size(32.dp)
                         )
                     }
-                if (meta.jsonObject["problem"]?.jsonArray != null) Icon(
+                if (meta.problems != null) Icon(
                     painterResource(R.drawable.error_32dp),
                     contentDescription = "Error",
                     tint = CustomTheme.colors.warn,
@@ -149,15 +145,15 @@ fun DeckListItemImageContainer(
 
 @Composable
 fun DeckListItemTextContainer(
-    meta: JsonElement,
+    meta: DeckMeta,
     name: String,
-    role: String?,
+    roleName: String?,
     isCampaign: Boolean?,
     campaignOrUserName: String?,
-    weight: Modifier
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = weight,
+        modifier = modifier,
     ) {
         Text(
             text = name,
@@ -169,27 +165,25 @@ fun DeckListItemTextContainer(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        if (meta is JsonObject) {
-            val background = DeckMetaMaps.background[meta["background"]?.jsonPrimitive?.content]
-            val specialty = DeckMetaMaps.specialty[meta["specialty"]?.jsonPrimitive?.content]
-            Text(
-                text = buildAnnotatedString {
-                    if (background != null)
-                        append(stringResource(background) + " - ")
-                    if (specialty != null)
-                        append(stringResource(specialty))
-                    if (role != null) append(" - $role")
-                },
-                color = CustomTheme.colors.d20,
-                fontFamily = Jost,
-                fontWeight = FontWeight.Normal,
-                fontStyle = FontStyle.Italic,
-                fontSize = 16.sp,
-                lineHeight = 18.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
+        val background = DeckMetaMaps.background[meta.background]
+        val specialty = DeckMetaMaps.specialty[meta.specialty]
+        Text(
+            text = buildAnnotatedString {
+                if (background != null)
+                    append(stringResource(background) + " - ")
+                if (specialty != null)
+                    append(stringResource(specialty))
+                if (roleName != null) append(" - $roleName")
+            },
+            color = CustomTheme.colors.d20,
+            fontFamily = Jost,
+            fontWeight = FontWeight.Normal,
+            fontStyle = FontStyle.Italic,
+            fontSize = 16.sp,
+            lineHeight = 18.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
         if (isCampaign != null) {
             val iconId = if (isCampaign) "campaign" else "ranger"
             BasicText(

@@ -85,7 +85,7 @@ fun DeckListItemProjection.toDomain(): DeckListItem =
 
 internal fun JsonElement.toDeckMeta(): DeckMeta =
     DeckMeta(
-        roleId = jsonObject["role"]?.jsonPrimitive?.content.toString(),
+        roleId = jsonObject["role"]?.jsonPrimitive?.content ?: "",
         background = jsonObject["background"]?.jsonPrimitive?.content ?: "",
         specialty = jsonObject["specialty"]?.jsonPrimitive?.content ?: "",
         problems = jsonObject["problem"]?.jsonArray?.map { it.jsonPrimitive.content }?.toImmutableList()

@@ -479,7 +479,7 @@ fun RangersNavHost(
                                 }
                             },
                             decksViewModel = decksViewModel,
-                            settingsViewModel = appViewModel,
+                            appViewModel = appViewModel,
                             contentPadding = innerPadding
                         )
                     } else {
@@ -497,7 +497,7 @@ fun RangersNavHost(
                             },
                             colors = IconButtonDefaults.iconButtonColors().copy(containerColor = Color.Transparent),
                             modifier = Modifier.size(32.dp),
-                            enabled = !cardsState
+                            enabled = cardsState !is CardsSyncState.Loading
                         ) {
                             Icon(
                                 painterResource(id = R.drawable.add_32dp),
@@ -509,15 +509,10 @@ fun RangersNavHost(
                     }
                     switch = null
                 }
-                composable(BottomNavScreen.Decks.route + "/creation") { backStackEntry ->
-                    val parentEntry = remember(backStackEntry) {
-                        navController.getBackStackEntry(BottomNavScreen.Decks.startDestination)
-                    }
-                    val decksViewModel: DecksViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                composable(BottomNavScreen.Decks.route + "/creation") {
+
                     val user by appViewModel.userUiState.collectAsState()
+
                     DeckCreationScreen(
                         onCancel = {
                             navController.navigateUp()
@@ -532,7 +527,7 @@ fun RangersNavHost(
                                 launchSingleTop = true
                             }
                         },
-                        decksViewModel = decksViewModel,
+                        emitError = appViewModel::emitError,
                         user = user,
                         isDarkTheme = isDarkTheme,
                         contentPadding = innerPadding
@@ -595,10 +590,7 @@ fun RangersNavHost(
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("deck/{$deckIdArgument}")
                     }
-                    val deckViewModel: DeckViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val deckViewModel: DeckViewModel = hiltViewModel(parentEntry)
                     val decksViewModel: DecksViewModel = hiltViewModel(backStackEntry)
                     val user by appViewModel.userUiState.collectAsState()
                     DeckChangingRole(
@@ -624,10 +616,7 @@ fun RangersNavHost(
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("deck/{$deckIdArgument}")
                     }
-                    val deckViewModel: DeckViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val deckViewModel: DeckViewModel = hiltViewModel(parentEntry)
                     val cardsViewModel: CardsViewModel = hiltViewModel(backStackEntry)
                     val cardId = backStackEntry.arguments?.getString(cardIdArgument)
                         ?: error("cardIdArgument cannot be null")
@@ -646,10 +635,7 @@ fun RangersNavHost(
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("deck/{$deckIdArgument}")
                     }
-                    val deckViewModel: DeckViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val deckViewModel: DeckViewModel = hiltViewModel(parentEntry)
                     DeckVersionsScreen(
                         navigateUp = { navController.navigateUp() },
                         navigateToDeck = { deckId -> navController.navigate(
@@ -673,10 +659,7 @@ fun RangersNavHost(
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("deck/{$deckIdArgument}")
                     }
-                    val deckViewModel: DeckViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val deckViewModel: DeckViewModel = hiltViewModel(parentEntry)
                     val deckCardsViewModel: DeckCardsViewModel = hiltViewModel(backStackEntry)
                     val typeIndex = backStackEntry.arguments?.getInt(typeIndexArgument)
                         ?: error("typeIndexArgument cannot be null")
@@ -722,10 +705,7 @@ fun RangersNavHost(
                         factory = AppViewModelProvider.Factory,
                         viewModelStoreOwner = parentGraphEntry
                     )
-                    val deckCardsViewModel: DeckCardsViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val deckCardsViewModel: DeckCardsViewModel = hiltViewModel(parentEntry)
                     val cardsViewModel: CardsViewModel = hiltViewModel(backStackEntry)
                     val cardIndex = backStackEntry.arguments?.getInt(cardIndexArgument)
                         ?: error("cardIndexArgument cannot be null")
@@ -743,10 +723,7 @@ fun RangersNavHost(
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("deck/cardsList/{$typeIndexArgument}")
                     }
-                    val deckCardsViewModel: DeckCardsViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val deckCardsViewModel: DeckCardsViewModel = hiltViewModel(parentEntry)
                     val filterOptions by deckCardsViewModel.filterOptions.collectAsState()
                     CardsSortScreen(
                         navigateUp = { navController.navigateUp() },
@@ -764,10 +741,7 @@ fun RangersNavHost(
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("deck/cardsList/{$typeIndexArgument}")
                     }
-                    val deckCardsViewModel: DeckCardsViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val deckCardsViewModel: DeckCardsViewModel = hiltViewModel(parentEntry)
                     val filterOptions by deckCardsViewModel.filterOptions.collectAsState()
                     CardsFilterScreen(
                         navigateUp = { navController.navigateUp() },
@@ -835,10 +809,7 @@ fun RangersNavHost(
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry(BottomNavScreen.Campaigns.startDestination)
                     }
-                    val campaignsViewModel: CampaignsViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val campaignsViewModel: CampaignsViewModel = hiltViewModel(parentEntry)
                     val user by appViewModel.userUiState.collectAsState()
                     CampaignCreationScreen(
                         onCancel = {
@@ -945,10 +916,7 @@ fun RangersNavHost(
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
-                    val campaignViewModel: CampaignViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
                     val user by appViewModel.userUiState.collectAsState()
                     CampaignExpansionsDialog(
                         campaignViewModel = campaignViewModel,
@@ -964,10 +932,7 @@ fun RangersNavHost(
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
-                    val campaignViewModel: CampaignViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
                     val dayInfoId = backStackEntry.arguments?.getInt(dayInfoIdArgument)
                         ?: error("dayInfoId cannot be null")
                     val user by appViewModel.userUiState.collectAsState()
@@ -983,10 +948,7 @@ fun RangersNavHost(
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
-                    val campaignViewModel: CampaignViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
                     CampaignJourneyScreen(
                         campaignViewModel = campaignViewModel,
                         contentPadding = innerPadding
@@ -999,10 +961,7 @@ fun RangersNavHost(
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
-                    val campaignViewModel: CampaignViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
                     val user by appViewModel.userUiState.collectAsState()
                     EndTheDayDialog(
                         campaignViewModel = campaignViewModel,
@@ -1015,10 +974,7 @@ fun RangersNavHost(
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
-                    val campaignViewModel: CampaignViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
                     val user by appViewModel.userUiState.collectAsState()
                     TravelDialog(
                         campaignViewModel = campaignViewModel,
@@ -1031,10 +987,7 @@ fun RangersNavHost(
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
-                    val campaignViewModel: CampaignViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
                     CampaignChallengeDeckScreen(
                         campaignViewModel = campaignViewModel,
                         navigateBack = { navController.navigateUp() },
@@ -1049,10 +1002,7 @@ fun RangersNavHost(
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
-                    val campaignViewModel: CampaignViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
                     val campaignDecksViewModel: CampaignDecksViewModel = hiltViewModel(backStackEntry)
                     val user by appViewModel.userUiState.collectAsState()
                     AddDeckToCampaignScreen(
@@ -1071,10 +1021,7 @@ fun RangersNavHost(
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
-                    val campaignViewModel: CampaignViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
                     val user by appViewModel.userUiState.collectAsState()
                     AddPlayersToCampaign(
                         navigateBack = { navController.navigateUp() },
@@ -1091,10 +1038,7 @@ fun RangersNavHost(
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
-                    val campaignViewModel: CampaignViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
                     val user by appViewModel.userUiState.collectAsState()
                     UndoTravelDialog(
                         campaignViewModel = campaignViewModel,
@@ -1107,10 +1051,7 @@ fun RangersNavHost(
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
-                    val campaignViewModel: CampaignViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
                     val user by appViewModel.userUiState.collectAsState()
                     AddRemovedDialog(
                         campaignViewModel = campaignViewModel,
@@ -1123,10 +1064,7 @@ fun RangersNavHost(
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
-                    val campaignViewModel: CampaignViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
                     val user by appViewModel.userUiState.collectAsState()
                     RecordEventDialog(
                         campaignViewModel = campaignViewModel,
@@ -1142,10 +1080,7 @@ fun RangersNavHost(
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
-                    val campaignViewModel: CampaignViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
                     val eventName = backStackEntry.arguments?.getString(eventNameArgument)
                         ?: error("eventNameArgument cannot be null")
                     val user by appViewModel.userUiState.collectAsState()
@@ -1161,10 +1096,7 @@ fun RangersNavHost(
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
-                    val campaignViewModel: CampaignViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
                     val user by appViewModel.userUiState.collectAsState()
                     AddMissionDialog(
                         campaignViewModel = campaignViewModel,
@@ -1180,10 +1112,7 @@ fun RangersNavHost(
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
-                    val campaignViewModel: CampaignViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
                     val missionName = backStackEntry.arguments?.getString(missionNameArgument)
                         ?: error("missionNameArgument cannot be null")
                     val user by appViewModel.userUiState.collectAsState()
@@ -1207,10 +1136,7 @@ fun RangersNavHost(
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
-                    val campaignViewModel: CampaignViewModel = viewModel(
-                        factory = AppViewModelProvider.Factory,
-                        viewModelStoreOwner = parentEntry
-                    )
+                    val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
                     val user by appViewModel.userUiState.collectAsState()
                     val cardIndex = backStackEntry.arguments?.getInt(cardIndexArgument)
                         ?: error("cardIndexArgument cannot be null")

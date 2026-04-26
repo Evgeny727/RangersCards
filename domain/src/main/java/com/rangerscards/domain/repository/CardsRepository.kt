@@ -34,7 +34,7 @@ interface CardsRepository {
 
     fun getCardByCodeFlow(cardCode: String, taboo: Boolean): Flow<FullCard>
 
-    suspend fun getRoleCardByCodeFlow(code: String, taboo: Boolean): RoleCard?
+    fun getRoleCardByCodeFlow(code: String, taboo: Boolean): Flow<RoleCard>
 
     fun getAllPaginatedRoleCardsFlow(specialty: String, taboo: Boolean, packIds: List<String>): Flow<PagingData<RoleCard>>
 

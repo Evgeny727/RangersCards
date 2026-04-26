@@ -28,7 +28,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -38,41 +37,40 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
+import com.rangerscards.AppViewModel
 import com.rangerscards.R
-import com.rangerscards.data.local.deck.DeckListItemProjection
 import com.rangerscards.ui.components.RangersSearchOutlinedField
 import com.rangerscards.ui.decks.components.DeckListItem
-import com.rangerscards.ui.settings.SettingsViewModel
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
+import com.rangerscards.utils.applyScaffoldPaddings
 import kotlinx.coroutines.flow.drop
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import com.rangerscards.domain.model.DeckListItem as DeckListItemModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DecksScreen(
     navigateToDeck: (String) -> Unit,
     decksViewModel: DecksViewModel,
-    settingsViewModel: SettingsViewModel,
+    appViewModel: AppViewModel,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
-    val user by settingsViewModel.userUiState.collectAsState()
-    val isRefreshing by decksViewModel.isRefreshing.collectAsState()
+    val user by appViewModel.userUiState.collectAsState()
+    val decksUiState by decksViewModel.decksUiState.collectAsState()
     val refreshState = rememberPullToRefreshState()
-    var userId by rememberSaveable { mutableStateOf("") }
+    var userId by rememberSaveable { mutableStateOf<String?>(null) }
     val decksLazyItems = decksViewModel.searchResults.collectAsLazyPagingItems()
-    val context = LocalContext.current.applicationContext
-    LaunchedEffect(user.currentUser) {
-        if (userId != user.currentUser.toString()) {
-            decksViewModel.getAllNetworkDecks(user.currentUser, context)
-            userId = user.currentUser.toString()
-            decksViewModel.onSearchQueryChanged(" ")
-            decksViewModel.clearSearchQuery()
-            user.currentUser?.let {
-                settingsViewModel.getUserInfo(context, it)
-            }
+
+    LaunchedEffect(user.userInfo?.id) {
+        if (userId != user.userInfo?.id) {
+            decksViewModel.getAllNetworkDecks(user.userInfo?.id)
+            userId = user.userInfo?.id
+        }
+    }
+    LaunchedEffect(Unit) {
+        decksViewModel.events.collect {
+            appViewModel.emitError(it.exception)
         }
     }
 
@@ -97,10 +95,7 @@ fun DecksScreen(
         modifier = modifier
             .background(CustomTheme.colors.l20)
             .fillMaxSize()
-            .padding(
-                top = contentPadding.calculateTopPadding(),
-                bottom = contentPadding.calculateBottomPadding()
-            ),
+            .applyScaffoldPaddings(contentPadding),
     ) {
         RangersSearchOutlinedField(
             query = searchQuery,
@@ -109,13 +104,13 @@ fun DecksScreen(
             onClearClicked = decksViewModel::clearSearchQuery
         )
         PullToRefreshBox(
-            isRefreshing = isRefreshing,
+            isRefreshing = decksUiState is DecksUiState.Loading,
             state = refreshState,
-            onRefresh = { decksViewModel.getAllNetworkDecks(user.currentUser, context) },
+            onRefresh = { decksViewModel.getAllNetworkDecks(user.userInfo?.id) },
             indicator = {
                 PullToRefreshDefaults.Indicator(
                     modifier = Modifier.align(Alignment.TopCenter),
-                    isRefreshing = isRefreshing,
+                    isRefreshing = decksUiState is DecksUiState.Loading,
                     containerColor = CustomTheme.colors.d10,
                     color = CustomTheme.colors.l30,
                     state = refreshState
@@ -129,7 +124,7 @@ fun DecksScreen(
                 contentPadding = PaddingValues(vertical = 8.dp),
                 state = listState
             ) {
-                if (decksLazyItems.itemCount == 0 && decksLazyItems.loadState.isIdle) item {
+                if (decksLazyItems.itemCount == 0 && decksLazyItems.loadState.isIdle) item("no_results") {
                     Column(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -153,19 +148,20 @@ fun DecksScreen(
                 }
                 items(
                     count = decksLazyItems.itemCount,
-                    key = decksLazyItems.itemKey(DeckListItemProjection::id),
+                    key = decksLazyItems.itemKey(DeckListItemModel::id),
                     contentType = decksLazyItems.itemContentType { it }
                 ) { index ->
                     val item = decksLazyItems[index] ?: return@items
-                    val role by decksViewModel.getCard(
-                        item.meta.jsonObject["role"]?.jsonPrimitive?.content.toString()
+                    val role by decksViewModel.getRoleCard(
+                        item.meta.roleId,
+                        user.settings.taboo
                     ).collectAsState(null)
                     DeckListItem(
                         meta = item.meta,
                         imageSrc = role?.realImageSrc,
                         name = item.name,
-                        role = role?.name,
-                        onClick = { navigateToDeck.invoke(item.id) },
+                        roleName = role?.name,
+                        onClick = { navigateToDeck(item.id) },
                         isCampaign = if (item.campaignName != null) true else null,
                         campaignName = item.campaignName,
                     )
