@@ -1,4 +1,4 @@
-package com.rangerscards.ui.campaigns.components
+package com.rangerscards.ui.campaign.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
@@ -50,7 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rangerscards.R
 import com.rangerscards.objects.Weather
-import com.rangerscards.ui.campaigns.DayInfo
+import com.rangerscards.ui.campaign.DayInfo
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 

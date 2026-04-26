@@ -546,5 +546,6 @@
     <string name="nimbus_facility">Nimbus Facility</string>
     <string name="arbor_mists">Arbor Mists</string>
     <string name="the_undergrove">The Undergrove</string>
+    <string name="transfer_campaign_no_results">No campaigns available for transfer.</string>
 
 </resources>

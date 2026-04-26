@@ -1,4 +1,4 @@
-package com.rangerscards.ui.campaigns
+package com.rangerscards.ui.campaign
 
 import android.util.Log
 import androidx.annotation.DrawableRes
@@ -67,6 +67,9 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import kotlin.collections.get
+import kotlin.collections.iterator
+import kotlin.text.get
 
 data class DayInfo(
     val guides: List<String>,

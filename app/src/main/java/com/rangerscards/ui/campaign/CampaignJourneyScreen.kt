@@ -1,4 +1,4 @@
-package com.rangerscards.ui.campaigns
+package com.rangerscards.ui.campaign
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -46,6 +45,7 @@ import com.rangerscards.objects.CampaignMaps
 import com.rangerscards.objects.Path
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
+import kotlin.collections.get
 
 @Composable
 fun CampaignJourneyScreen(

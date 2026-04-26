@@ -1,131 +1,82 @@
 package com.rangerscards.ui.campaigns
 
-import android.content.Context
-import android.net.ConnectivityManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import com.apollographql.apollo.ApolloClient
-import com.apollographql.apollo.cache.normalized.FetchPolicy
-import com.apollographql.apollo.cache.normalized.fetchPolicy
-import com.google.firebase.auth.FirebaseUser
-import com.rangerscards.CreateCampaignMutation
-import com.rangerscards.GetCampaignQuery
-import com.rangerscards.GetMyCampaignsQuery
-import com.rangerscards.TransferCampaignMutation
-import com.rangerscards.data.local.campaign.Campaign
-import com.rangerscards.data.local.campaign.CampaignListItemProjection
-import com.rangerscards.data.local.deck.Deck
-import com.rangerscards.domain.TimestampNormilizer
-import com.rangerscards.ui.decks.getCurrentDateTime
-import com.rangerscards.ui.decks.toDeck
-import com.rangerscards.ui.settings.UserUIState
-import com.rangerscards.ui.settings.performFirebaseOperationWithRetry
+import com.rangerscards.UiErrorState
+import com.rangerscards.domain.model.CampaignListItem
+import com.rangerscards.domain.repository.AuthRepository
+import com.rangerscards.domain.repository.CampaignsRepository
+import com.rangerscards.domain.usecase.GetRolesImagesByIdFlowUseCase
+import com.rangerscards.domain.usecase.SearchCampaignsUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.add
-import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.put
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
+import javax.inject.Inject
 
-class CampaignsViewModel(
-    private val apolloClient: ApolloClient,
+sealed interface CampaignsUiState {
+    object Idle : CampaignsUiState
+    object Loading : CampaignsUiState
+}
+
+@HiltViewModel
+class CampaignsViewModel @Inject constructor(
+    authRepository: AuthRepository,
     private val campaignsRepository: CampaignsRepository,
-    private val deckRepository: DeckRepository,
+    private val searchCampaignsUseCase: SearchCampaignsUseCase,
+    private val getRolesImagesByIdFlowUseCase: GetRolesImagesByIdFlowUseCase
 ) : ViewModel() {
-    
-    private val _campaignIdToOpen = MutableStateFlow("")
-    val campaignIdToOpen: StateFlow<String> = _campaignIdToOpen.asStateFlow()
 
-    private val _isRefreshing = MutableStateFlow(false)
-    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+    private val _campaignsUiState = MutableStateFlow<CampaignsUiState>(CampaignsUiState.Idle)
+    val campaignsUiState: StateFlow<CampaignsUiState> = _campaignsUiState.asStateFlow()
 
     // Holds the current search term entered by the user.
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
-    fun getAllNetworkCampaigns(user: FirebaseUser?, context: Context) {
-        viewModelScope.launch {
-            _isRefreshing.update { true }
-            if (isConnected(context) && user != null) {
-                var token: String? = ""
-                val result = performFirebaseOperationWithRetry {
-                    token = user.getIdToken(true).await().token
-                }
-                if (result != null) {
-                    val response = apolloClient.query(GetMyCampaignsQuery(user.uid))
-                        .addHttpHeader("Authorization", "Bearer $token")
-                        .fetchPolicy(FetchPolicy.NetworkOnly).execute()
-                    if (response.data != null) {
-                        if (response.data!!.campaigns.isEmpty()) campaignsRepository.syncCampaigns(emptyList())
-                        else {
-                            campaignsRepository.syncCampaigns(response.data!!.campaigns.toCampaigns(true))
-                            val decks = response.data!!.campaigns.flatMap { campaign ->
-                                campaign.campaign!!.campaign.latest_decks.map { deck ->
-                                    deck.deck!!.deck.toDeck(true)
-                                }
-                            }
-                            campaignsRepository.insertDecks(decks)
-                        }
-                    }
-                }
-            } else campaignsRepository.deleteAllUploadedCampaigns()
-        }.invokeOnCompletion { _isRefreshing.update { false } }
+    private val _events = MutableSharedFlow<UiErrorState>(
+        replay = 0,
+        extraBufferCapacity = 1
+    )
+    val events: SharedFlow<UiErrorState> = _events
+
+    private fun emitError(throwable: Throwable) {
+        _events.tryEmit(UiErrorState(throwable))
     }
 
-    fun isConnected(context: Context): Boolean {
-        val connectivityManager =
-            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        return connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork) != null
+    fun getAllNetworkCampaigns(userId: String?) {
+        viewModelScope.launch {
+            _campaignsUiState.value = CampaignsUiState.Loading
+            userId?.let {
+                campaignsRepository.syncCampaigns(userId)
+                    .onFailure { emitError(it) }
+            }
+            _campaignsUiState.value = CampaignsUiState.Idle
+        }
     }
 
     // Exposes the paginated search results as PagingData.
     @OptIn(ExperimentalCoroutinesApi::class)
-    val searchResults: Flow<PagingData<CampaignListItemProjection>> =
-        _searchQuery.flatMapLatest { query ->
-            // When the search query or include flag changes, perform a new search.
-            if (query.trim().isEmpty()) {
-                campaignsRepository.getAllCampaigns().catch { throwable ->
-                    // Log the error.
-                    throwable.printStackTrace()
-                    // Return an empty PagingData on error so that the flow continues.
-                    emit(PagingData.empty())
-                }
-            } else {
-                campaignsRepository.searchCampaigns(query.trim()).catch { throwable ->
-                    // Log the error.
-                    throwable.printStackTrace()
-                    // Return an empty PagingData on error so that the flow continues.
-                    emit(PagingData.empty())
-                }
-            }
+    val searchResults: Flow<PagingData<CampaignListItem>> =
+        combine(_searchQuery, authRepository.currentUserId) { query, userIdFlow ->
+            Pair(query, userIdFlow)
+        }.flatMapLatest { (query, userIdFlow) ->
+            searchCampaignsUseCase(query, userIdFlow ?: "")
         }.cachedIn(viewModelScope)
 
-    fun getTransferCampaigns(cycleId: String, currentUserId: FirebaseUser?) =
-        campaignsRepository.getAllCampaignsForTransfer(cycleId, currentUserId?.uid ?: "")
-
-    fun getRolesImages(ids: List<String>): Flow<List<String>> =
-        campaignsRepository.getRolesImages(ids).map { rolesList ->
-            // Create a map from id to RoleCardProjection
-            val itemById = rolesList.associateBy { it.id }
-            // Map the list of ids to the corresponding real image URLs.
-            ids.map { id -> itemById[id]?.realImageSrc.orEmpty() }
-        }
+    fun getRolesImages(ids: List<String>): Flow<ImmutableList<String>> =
+        getRolesImagesByIdFlowUseCase(ids)
 
     /**
      * Called when the user enters a new search term.
@@ -138,114 +89,5 @@ class CampaignsViewModel(
 
     fun clearSearchQuery() {
         _searchQuery.update { "" }
-    }
-
-    @OptIn(ExperimentalUuidApi::class)
-    suspend fun createCampaign(
-        name: String,
-        cycleId: String,
-        currentLocation: String,
-        isUploading: Boolean,
-        user: UserUIState,
-        transferCampaignId: String,
-        expansions: List<String>
-    ) {
-        if (transferCampaignId.isEmpty()) {
-            if (isUploading) {
-                val token = user.currentUser!!.getIdToken(true).await().token
-                val newCampaign = apolloClient.mutation(
-                    CreateCampaignMutation(
-                        name = name,
-                        cycleId = cycleId,
-                        currentLocation = currentLocation,
-                        expansions = buildJsonArray { expansions.forEach { add(it) } },
-                        calendar = JsonArray(emptyList()),
-                    )
-                ).addHttpHeader("Authorization", "Bearer $token").execute()
-                if (newCampaign.data != null) {
-                    campaignsRepository.insertCampaign(newCampaign.data!!.campaign!!.campaign.toCampaign(true))
-                    _campaignIdToOpen.update { newCampaign.data!!.campaign!!.campaign.id.toString() }
-                }
-            } else {
-                val uuid = Uuid.random().toString()
-                campaignsRepository.insertCampaign(createLocalCampaign(
-                    id = uuid,
-                    name = name,
-                    cycleId = cycleId,
-                    currentLocation = currentLocation,
-                    expansions = expansions
-                ))
-                _campaignIdToOpen.update { uuid }
-            }
-        }
-        else {
-            val isUploaded = transferCampaignId.toIntOrNull() != null
-            if (isUploaded) {
-                val token = user.currentUser!!.getIdToken(true).await().token
-                val newCampaign = apolloClient.mutation(
-                    TransferCampaignMutation(
-                        campaignId = transferCampaignId.toInt(),
-                        cycleId = cycleId,
-                        currentLocation = currentLocation,
-                    )
-                ).addHttpHeader("Authorization", "Bearer $token").execute()
-                if (newCampaign.data != null) {
-                    val oldCampaign = apolloClient.query(
-                        GetCampaignQuery(campaignId = transferCampaignId.toInt())
-                    ).addHttpHeader("Authorization", "Bearer $token")
-                        .fetchPolicy(FetchPolicy.NetworkOnly).execute()
-                    campaignsRepository.upsertCampaigns(
-                        listOf(
-                            newCampaign.data!!.campaign[0].campaign.toCampaign(true),
-                            oldCampaign.data!!.campaign!!.campaign.toCampaign(true)
-                        )
-                    )
-                    _campaignIdToOpen.update { newCampaign.data!!.campaign.first().campaign.id.toString() }
-                }
-            } else {
-                val uuid = Uuid.random().toString()
-                val previousCampaign = campaignsRepository.getCampaignById(transferCampaignId)
-                campaignsRepository.upsertCampaigns(listOf(
-                    previousCampaign.copy(
-                        latestDecks = JsonObject(emptyMap()),
-                        updatedAt = getCurrentDateTime(),
-                        nextCampaignId = uuid
-                    ),
-                    previousCampaign.copy(
-                        id = uuid,
-                        day = 1,
-                        extendedCalendar = null,
-                        cycleId = cycleId,
-                        currentLocation = currentLocation,
-                        currentPathTerrain = null,
-                        history = JsonArray(emptyList()),
-                        calendar = JsonArray(emptyList()),
-                        expansions = JsonArray(emptyList()),
-                        createdAt = getCurrentDateTime(),
-                        updatedAt = getCurrentDateTime(),
-                        previousCampaignId = previousCampaign.id
-                    )
-                ))
-                val decks: MutableList<Deck> = mutableListOf()
-                for (deck in previousCampaign.latestDecks.jsonObject) {
-                    var deckDb = deckRepository.getDeck(deck.key)
-                    if (deckDb != null) {
-                        decks.add(deckDb.copy(
-                            updatedAt = getCurrentDateTime(),
-                            campaignId = uuid,
-                        ))
-                        while (deckDb!!.previousId != null) {
-                            deckDb = deckRepository.getDeck(deckDb.previousId)
-                            decks.add(deckDb!!.copy(
-                                updatedAt = getCurrentDateTime(),
-                                campaignId = uuid,
-                            ))
-                        }
-                    }
-                }
-                deckRepository.upsertDecks(decks)
-                _campaignIdToOpen.update { uuid }
-            }
-        }
     }
 }

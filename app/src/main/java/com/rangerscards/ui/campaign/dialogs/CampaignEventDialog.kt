@@ -1,4 +1,4 @@
-package com.rangerscards.ui.campaigns.dialogs
+package com.rangerscards.ui.campaign.dialogs
 
 import android.widget.Toast
 import androidx.compose.foundation.clickable
@@ -43,7 +43,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.google.firebase.auth.FirebaseUser
 import com.rangerscards.R
-import com.rangerscards.ui.campaigns.CampaignViewModel
+import com.rangerscards.ui.campaign.CampaignViewModel
 import com.rangerscards.ui.components.RangersDialogWithContent
 import com.rangerscards.ui.components.RangersRadioButton
 import com.rangerscards.ui.components.SquareButton

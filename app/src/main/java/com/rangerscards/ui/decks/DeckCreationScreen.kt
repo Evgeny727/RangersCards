@@ -13,12 +13,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -34,7 +32,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -55,6 +52,7 @@ import com.rangerscards.objects.DeckMetaMaps
 import com.rangerscards.objects.StarterDecks
 import com.rangerscards.ui.components.DataPicker
 import com.rangerscards.ui.components.RangersDialogWithContent
+import com.rangerscards.ui.components.RangersLoadingDialog
 import com.rangerscards.ui.components.ScrollableRangersTabs
 import com.rangerscards.ui.components.SquareButton
 import com.rangerscards.ui.decks.components.StarterDeck
@@ -116,6 +114,8 @@ fun DeckCreationScreen(
             emitError(it.exception)
         }
     }
+
+    if (deckCreationUiState is DeckCreationUiState.Loading) RangersLoadingDialog(isDarkTheme)
 
     if (showDialogPicker != null) RangersDialogWithContent(
         headerId = when (showDialogPicker) {
@@ -229,237 +229,224 @@ fun DeckCreationScreen(
             .fillMaxSize()
             .applyScaffoldPaddings(contentPadding),
     ) {
-        when (deckCreationUiState) {
-            DeckCreationUiState.Loading -> Column(
-                modifier = modifier
-                    .background(CustomTheme.colors.l30)
-                    .fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                CircularProgressIndicator(modifier = Modifier.size(32.dp), color = CustomTheme.colors.m)
+        Column(
+            modifier = modifier
+                .background(CustomTheme.colors.l30)
+                .fillMaxWidth()
+                .weight(1f),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            ScrollableRangersTabs(
+                listOf(
+                    R.string.custom_deck_tab,
+                    R.string.starter_deck_tab
+                ),
+                tabIndex
+            ) { index ->
+                tabIndex = index
+                if (index == 0) selectedStarterDeck = -1
             }
-            else -> {
-                Column(
-                    modifier = modifier
-                        .background(CustomTheme.colors.l30)
-                        .fillMaxWidth()
-                        .weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    ScrollableRangersTabs(
-                        listOf(
-                            R.string.custom_deck_tab,
-                            R.string.starter_deck_tab
-                        ),
-                        tabIndex
-                    ) { index ->
-                        tabIndex = index
-                        if (index == 0) selectedStarterDeck = -1
-                    }
 
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        item {
-                            OutlinedTextField(
-                                modifier = Modifier
-                                    .padding(horizontal = 8.dp)
-                                    .fillMaxWidth(),
-                                value = name,
-                                onValueChange = { name = it },
-                                label = {
-                                    Text(text = stringResource(R.string.deck_creation_name_label))
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                item {
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp)
+                            .fillMaxWidth(),
+                        value = name,
+                        onValueChange = { name = it },
+                        label = {
+                            Text(text = stringResource(R.string.deck_creation_name_label))
+                        },
+                        placeholder = {
+                            Text(text = stringResource(R.string.deck_creation_name_placeholder))
+                        },
+                        textStyle = TextStyle(
+                            color = CustomTheme.colors.d30,
+                            fontFamily = Jost,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 16.sp,
+                            lineHeight = 18.sp,
+                        ),
+                        singleLine = true,
+                        shape = CustomTheme.shapes.small,
+                        colors = TextFieldDefaults.colors().copy(
+                            focusedIndicatorColor = CustomTheme.colors.m,
+                            unfocusedIndicatorColor = CustomTheme.colors.m,
+                            unfocusedLabelColor = CustomTheme.colors.d30,
+                            focusedLabelColor = CustomTheme.colors.d30,
+                            unfocusedPlaceholderColor = CustomTheme.colors.d30,
+                            focusedPlaceholderColor = CustomTheme.colors.d30,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent
+                        )
+                    )
+                }
+                when (tabIndex) {
+                    0 -> {
+                        item(background) {
+                            DataPicker(
+                                onClick = {
+                                    showDialogPicker = ActiveField.FieldOne
                                 },
-                                placeholder = {
-                                    Text(text = stringResource(R.string.deck_creation_name_placeholder))
-                                },
-                                textStyle = TextStyle(
+                                type = R.string.background,
+                                modifier = Modifier.padding(horizontal = 8.dp)
+                            ) {
+                                Text(
+                                    text = background.second.ifEmpty { stringResource(R.string.background_placeholder) },
                                     color = CustomTheme.colors.d30,
                                     fontFamily = Jost,
-                                    fontWeight = FontWeight.Medium,
+                                    fontWeight = FontWeight.Normal,
                                     fontSize = 16.sp,
-                                    lineHeight = 18.sp,
-                                ),
-                                singleLine = true,
-                                shape = CustomTheme.shapes.small,
-                                colors = TextFieldDefaults.colors().copy(
-                                    focusedIndicatorColor = CustomTheme.colors.m,
-                                    unfocusedIndicatorColor = CustomTheme.colors.m,
-                                    unfocusedLabelColor = CustomTheme.colors.d30,
-                                    focusedLabelColor = CustomTheme.colors.d30,
-                                    unfocusedPlaceholderColor = CustomTheme.colors.d30,
-                                    focusedPlaceholderColor = CustomTheme.colors.d30,
-                                    focusedContainerColor = Color.Transparent,
-                                    unfocusedContainerColor = Color.Transparent
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
-                            )
-                        }
-                        when (tabIndex) {
-                            0 -> {
-                                item(background) {
-                                    DataPicker(
-                                        onClick = {
-                                            showDialogPicker = ActiveField.FieldOne
-                                        },
-                                        type = R.string.background,
-                                        modifier = Modifier.padding(horizontal = 8.dp)
-                                    ) {
-                                        Text(
-                                            text = background.second.ifEmpty { stringResource(R.string.background_placeholder) },
-                                            color = CustomTheme.colors.d30,
-                                            fontFamily = Jost,
-                                            fontWeight = FontWeight.Normal,
-                                            fontSize = 16.sp,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                }
-                                item(specialty) {
-                                    DataPicker(
-                                        onClick = {
-                                            showDialogPicker = ActiveField.FieldTwo
-                                        },
-                                        type = R.string.specialty
-                                    ) {
-                                        Text(
-                                            text = specialty.second.ifEmpty { stringResource(R.string.specialty_placeholder) },
-                                            color = CustomTheme.colors.d30,
-                                            fontFamily = Jost,
-                                            fontWeight = FontWeight.Normal,
-                                            fontSize = 16.sp,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                }
-                                item(role.first) {
-                                    AnimatedVisibility(specialty.first.isNotEmpty()) {
-                                        DataPicker(
-                                            onClick = {
-                                                showDialogPicker = ActiveField.FieldThree
-                                            },
-                                            type = R.string.role
-                                        ) {
-                                            Text(
-                                                text = role.second.ifEmpty { stringResource(R.string.role_placeholder) },
-                                                color = CustomTheme.colors.d30,
-                                                fontFamily = Jost,
-                                                fontWeight = FontWeight.Normal,
-                                                fontSize = 16.sp,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                        }
-                                    }
-                                }
                             }
-
-                            1 -> {
-                                item("starter_deck_header") {
+                        }
+                        item(specialty) {
+                            DataPicker(
+                                onClick = {
+                                    showDialogPicker = ActiveField.FieldTwo
+                                },
+                                type = R.string.specialty
+                            ) {
+                                Text(
+                                    text = specialty.second.ifEmpty { stringResource(R.string.specialty_placeholder) },
+                                    color = CustomTheme.colors.d30,
+                                    fontFamily = Jost,
+                                    fontWeight = FontWeight.Normal,
+                                    fontSize = 16.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                        item(role.first) {
+                            AnimatedVisibility(specialty.first.isNotEmpty()) {
+                                DataPicker(
+                                    onClick = {
+                                        showDialogPicker = ActiveField.FieldThree
+                                    },
+                                    type = R.string.role
+                                ) {
                                     Text(
-                                        text = stringResource(R.string.starter_deck_title),
+                                        text = role.second.ifEmpty { stringResource(R.string.role_placeholder) },
                                         color = CustomTheme.colors.d30,
                                         fontFamily = Jost,
-                                        fontWeight = FontWeight.Medium,
-                                        fontSize = 20.sp,
-                                        lineHeight = 22.sp,
-                                        modifier = Modifier.padding(horizontal = 8.dp)
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = 16.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
-                                itemsIndexed(
-                                    StarterDecks.starterDecks(),
-                                    key = { index, _ -> "starterDeck - $index" }
-                                ) { index, starterDeck ->
-                                    val starterRole by deckCreationViewModel.getRoleCard(
-                                        starterDeck.meta.roleId, false
-                                    ).collectAsState(null)
-                                    StarterDeck(
-                                        onclick = { backgroundLocalized, specialtyLocalized ->
-                                            background = background.first to backgroundLocalized
-                                            specialty = specialty.first to specialtyLocalized
-                                            selectedStarterDeck = index
-                                        },
-                                        isSelected = selectedStarterDeck == index,
-                                        imageSrc = starterRole?.realImageSrc,
-                                        name = starterRole?.name,
-                                        starterDeck = starterDeck,
-                                        isDarkTheme = isDarkTheme
-                                    )
-                                }
-                            }
-                        }
-                        item("taboo_row") {
-                            RangersRadioButtonRow(
-                                text = stringResource(R.string.use_taboo),
-                                isSelected = taboo,
-                                modifier = Modifier.fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                            ) { value ->
-                                taboo = value
-                            }
-                        }
-                        if (user.userInfo?.id != null) item("upload_row") {
-                            RangersRadioButtonRow(
-                                text = stringResource(R.string.upload_to_rangersdb),
-                                isSelected = isUploading,
-                                modifier = Modifier.fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                            ) { value ->
-                                isUploading = value
                             }
                         }
                     }
+
+                    1 -> {
+                        item("starter_deck_header") {
+                            Text(
+                                text = stringResource(R.string.starter_deck_title),
+                                color = CustomTheme.colors.d30,
+                                fontFamily = Jost,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 20.sp,
+                                lineHeight = 22.sp,
+                                modifier = Modifier.padding(horizontal = 8.dp)
+                            )
+                        }
+                        itemsIndexed(
+                            StarterDecks.starterDecks(),
+                            key = { index, _ -> "starterDeck - $index" }
+                        ) { index, starterDeck ->
+                            val starterRole by deckCreationViewModel.getRoleCard(
+                                starterDeck.meta.roleId, false
+                            ).collectAsState(null)
+                            StarterDeck(
+                                onclick = { backgroundLocalized, specialtyLocalized ->
+                                    background = background.first to backgroundLocalized
+                                    specialty = specialty.first to specialtyLocalized
+                                    selectedStarterDeck = index
+                                },
+                                isSelected = selectedStarterDeck == index,
+                                imageSrc = starterRole?.realImageSrc,
+                                name = starterRole?.name,
+                                starterDeck = starterDeck,
+                                isDarkTheme = isDarkTheme
+                            )
+                        }
+                    }
                 }
-                Row(
-                    modifier = Modifier.height(IntrinsicSize.Max)
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    SquareButton(
-                        stringId = R.string.cancel_button,
-                        leadingIcon = R.drawable.close_32dp,
-                        onClick = onCancel,
-                        buttonColor = ButtonDefaults.buttonColors()
-                            .copy(CustomTheme.colors.warn),
-                        iconColor = if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30,
-                        textColor = if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30,
-                        modifier = Modifier.weight(1f).fillMaxHeight()
-                    )
-                    val postfix = stringResource(R.string.starter_deck_name_postfix)
-                    SquareButton(
-                        stringId = R.string.create_deck_button,
-                        leadingIcon = R.drawable.add_32dp,
-                        onClick = {
-                            val deckMeta = if (selectedStarterDeck >= 0) null else DeckMeta(
-                                roleId = role.first,
-                                background = background.first,
-                                specialty = specialty.first
-                            )
-                            deckCreationViewModel.createDeck(
-                                name = name,
-                                deckMeta = deckMeta,
-                                backgroundLocalized = background.second,
-                                specialtyLocalized = specialty.second,
-                                isUploading = isUploading,
-                                starterDeckId = selectedStarterDeck,
-                                postfix = postfix,
-                                taboo = taboo,
-                            )
-                        },
-                        buttonColor = ButtonDefaults.buttonColors().copy(
-                            containerColor = CustomTheme.colors.d10,
-                            disabledContainerColor = CustomTheme.colors.d10.copy(alpha = 0.25f)
-                        ),
-                        iconColor = CustomTheme.colors.m,
-                        textColor = CustomTheme.colors.l30,
-                        modifier = Modifier.weight(1.1f).fillMaxHeight(),
-                        isEnabled = isLegit
-                    )
+                item("taboo_row") {
+                    RangersRadioButtonRow(
+                        text = stringResource(R.string.use_taboo),
+                        isSelected = taboo,
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                    ) { value ->
+                        taboo = value
+                    }
+                }
+                if (user.userInfo?.id != null) item("upload_row") {
+                    RangersRadioButtonRow(
+                        text = stringResource(R.string.upload_to_rangersdb),
+                        isSelected = isUploading,
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                    ) { value ->
+                        isUploading = value
+                    }
                 }
             }
+        }
+        Row(
+            modifier = Modifier.height(IntrinsicSize.Max)
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            SquareButton(
+                stringId = R.string.cancel_button,
+                leadingIcon = R.drawable.close_32dp,
+                onClick = onCancel,
+                buttonColor = ButtonDefaults.buttonColors()
+                    .copy(CustomTheme.colors.warn),
+                iconColor = if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30,
+                textColor = if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30,
+                modifier = Modifier.weight(1f).fillMaxHeight()
+            )
+            val postfix = stringResource(R.string.starter_deck_name_postfix)
+            SquareButton(
+                stringId = R.string.create_deck_button,
+                leadingIcon = R.drawable.add_32dp,
+                onClick = {
+                    val deckMeta = if (selectedStarterDeck >= 0) null else DeckMeta(
+                        roleId = role.first,
+                        background = background.first,
+                        specialty = specialty.first
+                    )
+                    deckCreationViewModel.createDeck(
+                        name = name,
+                        deckMeta = deckMeta,
+                        backgroundLocalized = background.second,
+                        specialtyLocalized = specialty.second,
+                        isUploading = isUploading,
+                        starterDeckId = selectedStarterDeck,
+                        postfix = postfix,
+                        taboo = taboo,
+                    )
+                },
+                buttonColor = ButtonDefaults.buttonColors().copy(
+                    containerColor = CustomTheme.colors.d10,
+                    disabledContainerColor = CustomTheme.colors.d10.copy(alpha = 0.25f)
+                ),
+                iconColor = CustomTheme.colors.m,
+                textColor = CustomTheme.colors.l30,
+                modifier = Modifier.weight(1.1f).fillMaxHeight(),
+                isEnabled = isLegit
+            )
         }
     }
 }

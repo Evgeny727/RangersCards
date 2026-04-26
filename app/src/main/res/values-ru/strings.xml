@@ -457,4 +457,5 @@
 
     <string name="cards_update_available_header">Обновление карт</string>
     <string name="cards_update_available_text">Доступно обновление карт.</string>
+    <string name="transfer_campaign_no_results">Нет кампаний доступных для переноса.</string>
 </resources>

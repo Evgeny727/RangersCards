@@ -1,4 +1,4 @@
-package com.rangerscards.ui.campaigns
+package com.rangerscards.ui.campaign
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -44,8 +44,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rangerscards.R
 import com.rangerscards.objects.ChallengeDeck
-import com.rangerscards.ui.campaigns.components.AspectsRowCharts
-import com.rangerscards.ui.campaigns.components.ChallengeCard
+import com.rangerscards.ui.campaign.components.AspectsRowCharts
+import com.rangerscards.ui.campaign.components.ChallengeCard
 import com.rangerscards.ui.components.SquareButton
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost

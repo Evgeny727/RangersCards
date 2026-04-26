@@ -1,4 +1,4 @@
-package com.rangerscards.ui.campaigns.dialogs
+package com.rangerscards.ui.campaign.dialogs
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -36,7 +36,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.google.firebase.auth.FirebaseUser
 import com.rangerscards.R
-import com.rangerscards.ui.campaigns.CampaignViewModel
+import com.rangerscards.ui.campaign.CampaignViewModel
 import com.rangerscards.ui.components.RangersDialogWithContent
 import com.rangerscards.ui.components.SquareButton
 import com.rangerscards.ui.settings.components.RangersBaseCard

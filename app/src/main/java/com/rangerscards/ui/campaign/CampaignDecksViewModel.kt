@@ -1,4 +1,4 @@
-package com.rangerscards.ui.campaigns
+package com.rangerscards.ui.campaign
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

@@ -1,4 +1,4 @@
-package com.rangerscards.ui.campaigns.components
+package com.rangerscards.ui.campaign.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background

@@ -1,4 +1,4 @@
-package com.rangerscards.ui.campaigns
+package com.rangerscards.ui.campaign
 
 import android.net.Uri
 import android.widget.Toast
@@ -63,14 +63,14 @@ import androidx.navigation.NavHostController
 import com.rangerscards.R
 import com.rangerscards.data.local.campaign.Campaign
 import com.rangerscards.objects.CampaignMaps
-import com.rangerscards.ui.campaigns.components.CampaignCurrentPositionCard
+import com.rangerscards.ui.campaign.components.CampaignCurrentPositionCard
 import com.rangerscards.ui.components.RangersDialogWithContent
-import com.rangerscards.ui.campaigns.components.CampaignEvents
-import com.rangerscards.ui.campaigns.components.CampaignMissions
-import com.rangerscards.ui.campaigns.components.CampaignRemovedCards
-import com.rangerscards.ui.campaigns.components.CampaignSettingsSection
-import com.rangerscards.ui.campaigns.components.CampaignTitleRow
-import com.rangerscards.ui.campaigns.components.TimeLineLazyRow
+import com.rangerscards.ui.campaign.components.CampaignEvents
+import com.rangerscards.ui.campaign.components.CampaignMissions
+import com.rangerscards.ui.campaign.components.CampaignRemovedCards
+import com.rangerscards.ui.campaign.components.CampaignSettingsSection
+import com.rangerscards.ui.campaign.components.CampaignTitleRow
+import com.rangerscards.ui.campaign.components.TimeLineLazyRow
 import com.rangerscards.ui.cards.components.CardListItem
 import com.rangerscards.ui.components.RangersSearchOutlinedField
 import com.rangerscards.ui.components.ScrollableRangersTabs

@@ -1,16 +1,9 @@
 package com.rangerscards.ui.deck
 
 import android.content.Context
-import android.content.Intent
 import android.net.ConnectivityManager
-import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.apollographql.apollo.ApolloClient
-import com.apollographql.apollo.api.Optional
-import com.apollographql.apollo.cache.normalized.FetchPolicy
-import com.apollographql.apollo.cache.normalized.fetchPolicy
-import com.google.firebase.auth.FirebaseUser
 import com.rangerscards.CreateDeckMutation
 import com.rangerscards.DeleteDeckMutation
 import com.rangerscards.GetDeckQuery
@@ -18,13 +11,14 @@ import com.rangerscards.R
 import com.rangerscards.SaveDeckMutation
 import com.rangerscards.SaveDeckTabooSetMutation
 import com.rangerscards.UpgradeDeckMutation
-import com.rangerscards.data.local.card.CardDeckListItemProjection
-import com.rangerscards.data.local.deck.Deck
-import com.rangerscards.data.local.deck.RoleCardProjection
+import com.rangerscards.domain.model.CardDeckListItem
+import com.rangerscards.domain.model.Deck
+import com.rangerscards.domain.model.OftenUpdatableDeckValues
+import com.rangerscards.domain.model.RoleCard
 import com.rangerscards.domain.repository.CampaignsRepository
+import com.rangerscards.domain.repository.DecksRepository
 import com.rangerscards.ui.decks.CURRENT_TABOO_SET
-import com.rangerscards.ui.decks.getCurrentDateTime
-import com.rangerscards.ui.decks.toDeck
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -40,23 +34,13 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.add
-import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.int
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.put
+import javax.inject.Inject
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-class DeckViewModel(
-    private val apolloClient: ApolloClient,
-    private val deckRepository: DeckRepository,
+@HiltViewModel
+class DeckViewModel @Inject constructor(
+    private val decksRepository: DecksRepository,
     private val campaignsRepository: CampaignsRepository
 ) : ViewModel() {
 
@@ -64,11 +48,11 @@ class DeckViewModel(
         private set
 
     // Holds the original deck loaded from the database.
-    private val _originalDeck = MutableStateFlow<FullDeckState?>(null)
-    val originalDeck: StateFlow<FullDeckState?> = _originalDeck.asStateFlow()
+    private val _originalDeck = MutableStateFlow<Deck?>(null)
+    val originalDeck: StateFlow<Deck?> = _originalDeck.asStateFlow()
 
     // Holds the deck being edited.
-    var editableDeck = MutableStateFlow<FullDeckState?>(null)
+    var editableDeck = MutableStateFlow<Deck?>(null)
         private set
 
     private val _updatableValues = MutableStateFlow<OftenUpdatableDeckValues?>(null)
@@ -82,22 +66,22 @@ class DeckViewModel(
         private set
 
     // Deck Role
-    private val _role = MutableStateFlow<RoleCardProjection?>(null)
-    val role: StateFlow<RoleCardProjection?> = _role.asStateFlow()
+    private val _role = MutableStateFlow<RoleCard?>(null)
+    val role: StateFlow<RoleCard?> = _role.asStateFlow()
 
     // Deck Changed cards
-    private val _changedCards = MutableStateFlow<Map<Int, List<CardDeckListItemProjection>>?>(null)
-    val changedCards: StateFlow<Map<Int, List<CardDeckListItemProjection>>?> = _changedCards.asStateFlow()
+    private val _changedCards = MutableStateFlow<Map<Int, List<CardDeckListItem>>?>(null)
+    val changedCards: StateFlow<Map<Int, List<CardDeckListItem>>?> = _changedCards.asStateFlow()
 
     // Create flows that fetch the corresponding cards from Room.
     @OptIn(ExperimentalCoroutinesApi::class)
-    val slotsCardsFlow: Flow<List<CardDeckListItemProjection>> = _updatableValues
+    val slotsCardsFlow: Flow<List<CardDeckListItem>> = _updatableValues
         .filterNotNull().map { it.slots.keys.toList() to _originalDeck.value?.tabooSetId }.distinctUntilChanged().flatMapLatest {
             deckRepository.getCardsByIds(it.first, it.second)
         }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val extraSlotsCardsFlow: Flow<List<CardDeckListItemProjection>> = _updatableValues
+    val extraSlotsCardsFlow: Flow<List<CardDeckListItem>> = _updatableValues
         .filterNotNull().map { it.extraSlots.keys.toList() to _originalDeck.value?.tabooSetId }.distinctUntilChanged().flatMapLatest {
             deckRepository.getCardsByIds(it.first, it.second)
         }
@@ -118,7 +102,7 @@ class DeckViewModel(
 
     fun loadDeck(id: String) {
         viewModelScope.launch {
-            val deck = deckRepository.getDeck(id)
+            val deck = decksRepository.getDeck(id)
             if (deck != null) {
                 _updatableValues.update {
                     OftenUpdatableDeckValues(
@@ -936,80 +920,4 @@ class DeckViewModel(
             }
         }
     }
-    fun openLink(link: String, context: Context) {
-        context.startActivity(
-            Intent(
-                Intent.ACTION_VIEW,
-                link.toUri()
-            ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        )
-    }
-}
-
-fun JsonElement.toPersistentMap(): PersistentMap<String, Int> {
-    return this.jsonObject.mapValues { (_, value) -> value.jsonPrimitive.int }.toPersistentMap()
-}
-
-fun Deck.toDeckState(): FullDeckState {
-    return FullDeckState(
-        id = this.id,
-        uploaded = this.uploaded,
-        userId = this.userId,
-        tabooSetId = this.tabooSetId,
-        userHandle = this.userHandle,
-        version = this.version,
-        name = this.name,
-        description = this.description,
-        createdAt = this.createdAt,
-        updatedAt = this.updatedAt,
-        roleId = this.meta.jsonObject["role"]?.jsonPrimitive?.content.toString(),
-        background = this.meta.jsonObject["background"]!!.jsonPrimitive.content,
-        specialty = this.meta.jsonObject["specialty"]!!.jsonPrimitive.content,
-        problems = this.meta.jsonObject["problem"]?.jsonArray?.map { it.jsonPrimitive.content },
-        campaignId = this.campaignId,
-        campaignName = this.campaignName,
-        campaignRewards = this.campaignRewards?.jsonArray?.map { it.jsonPrimitive.content },
-        previousId = this.previousId,
-        previousSlots = this.previousSlots?.toPersistentMap(),
-        previousSideSlots = this.previousSideSlots?.toPersistentMap(),
-        nextId = this.nextId
-    )
-}
-
-fun FullDeckState.toDeck(values: OftenUpdatableDeckValues, problems: List<String>?): Deck {
-    val deckState = this
-    return Deck(
-        id = this.id,
-        uploaded = this.uploaded,
-        userId = this.userId,
-        tabooSetId = this.tabooSetId,
-        userHandle = this.userHandle,
-        slots = buildJsonObject { values.slots.forEach { (key, value) -> put(key, value) } },
-        sideSlots = buildJsonObject { values.sideSlots.forEach { (key, value) -> put(key, value) } },
-        extraSlots = buildJsonObject { values.extraSlots.forEach { (key, value) -> put(key, value) } },
-        version = this.version,
-        name = this.name,
-        description = this.description,
-        awa = values.awa,
-        spi = values.spi,
-        fit = values.fit,
-        foc = values.foc,
-        createdAt = this.createdAt,
-        updatedAt = getCurrentDateTime(),
-        meta = buildJsonObject {
-            put("role", deckState.roleId)
-            if (!problems.isNullOrEmpty()) put("problem", buildJsonArray {
-                problems.forEach { add(it) }
-            })
-            put("background", deckState.background)
-            put("specialty", deckState.specialty)
-        },
-        campaignId = this.campaignId,
-        campaignName = this.campaignName,
-        campaignRewards = buildJsonArray { deckState.campaignRewards?.forEach { add(it) } },
-        previousId = this.previousId,
-        previousSlots = buildJsonObject { deckState.previousSlots?.forEach { (key, value) -> put(key, value) } },
-        previousSideSlots = buildJsonObject { deckState.previousSideSlots?.forEach { (key, value) -> put(key, value) } },
-        nextId = this.nextId
-    )
 }

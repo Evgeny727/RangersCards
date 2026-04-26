@@ -63,27 +63,27 @@ import com.rangerscards.domain.exceptions.InvalidHandleSizeException
 import com.rangerscards.domain.exceptions.InvalidPasswordException
 import com.rangerscards.objects.CampaignMaps
 import com.rangerscards.ui.CardsSyncState
-import com.rangerscards.ui.campaigns.AddDeckToCampaignScreen
-import com.rangerscards.ui.campaigns.AddPlayersToCampaign
-import com.rangerscards.ui.campaigns.CampaignChallengeDeckScreen
+import com.rangerscards.ui.campaign.AddDeckToCampaignScreen
+import com.rangerscards.ui.campaign.AddPlayersToCampaign
+import com.rangerscards.ui.campaign.CampaignChallengeDeckScreen
+import com.rangerscards.ui.campaign.CampaignDecksViewModel
+import com.rangerscards.ui.campaign.CampaignJourneyScreen
+import com.rangerscards.ui.campaign.CampaignRewardFullScreen
+import com.rangerscards.ui.campaign.CampaignScreen
+import com.rangerscards.ui.campaign.CampaignViewModel
+import com.rangerscards.ui.campaign.dialogs.AddMissionDialog
+import com.rangerscards.ui.campaign.dialogs.AddRemovedDialog
+import com.rangerscards.ui.campaign.dialogs.CampaignEventDialog
+import com.rangerscards.ui.campaign.dialogs.CampaignExpansionsDialog
+import com.rangerscards.ui.campaign.dialogs.CampaignMissionDialog
+import com.rangerscards.ui.campaign.dialogs.DayInfoDialog
+import com.rangerscards.ui.campaign.dialogs.EndTheDayDialog
+import com.rangerscards.ui.campaign.dialogs.RecordEventDialog
+import com.rangerscards.ui.campaign.dialogs.TravelDialog
+import com.rangerscards.ui.campaign.dialogs.UndoTravelDialog
 import com.rangerscards.ui.campaigns.CampaignCreationScreen
-import com.rangerscards.ui.campaigns.CampaignDecksViewModel
-import com.rangerscards.ui.campaigns.CampaignJourneyScreen
-import com.rangerscards.ui.campaigns.CampaignRewardFullScreen
-import com.rangerscards.ui.campaigns.CampaignScreen
-import com.rangerscards.ui.campaigns.CampaignViewModel
 import com.rangerscards.ui.campaigns.CampaignsScreen
 import com.rangerscards.ui.campaigns.CampaignsViewModel
-import com.rangerscards.ui.campaigns.dialogs.AddMissionDialog
-import com.rangerscards.ui.campaigns.dialogs.AddRemovedDialog
-import com.rangerscards.ui.campaigns.dialogs.CampaignEventDialog
-import com.rangerscards.ui.campaigns.dialogs.CampaignExpansionsDialog
-import com.rangerscards.ui.campaigns.dialogs.CampaignMissionDialog
-import com.rangerscards.ui.campaigns.dialogs.DayInfoDialog
-import com.rangerscards.ui.campaigns.dialogs.EndTheDayDialog
-import com.rangerscards.ui.campaigns.dialogs.RecordEventDialog
-import com.rangerscards.ui.campaigns.dialogs.TravelDialog
-import com.rangerscards.ui.campaigns.dialogs.UndoTravelDialog
 import com.rangerscards.ui.cards.CardsScreen
 import com.rangerscards.ui.cards.CardsViewModel
 import com.rangerscards.ui.cards.FullCardScreen
@@ -510,13 +510,10 @@ fun RangersNavHost(
                     switch = null
                 }
                 composable(BottomNavScreen.Decks.route + "/creation") {
-
                     val user by appViewModel.userUiState.collectAsState()
 
                     DeckCreationScreen(
-                        onCancel = {
-                            navController.navigateUp()
-                        },
+                        onCancel = navController::navigateUp,
                         onCreate = { deckId ->
                             navController.navigate(
                                 "deck/$deckId"
@@ -541,7 +538,8 @@ fun RangersNavHost(
             navigation(
                 startDestination = "deck/{$deckIdArgument}",
                 route = "deck",
-            ) {
+            )
+            {
                 composable(
                     route = "deck/{$deckIdArgument}",
                     enterTransition = {
@@ -572,33 +570,33 @@ fun RangersNavHost(
                 ) { backStackEntry ->
                     val deckViewModel: DeckViewModel = hiltViewModel(backStackEntry)
                     val deckId = backStackEntry.arguments?.getString(deckIdArgument)
-                        ?: error("deckIdArgument cannot be null")
                     val user by appViewModel.userUiState.collectAsState()
-                    DeckScreen(
-                        navController = navController,
-                        deckViewModel = deckViewModel,
-                        deckId = deckId,
-                        user = user.currentUser,
-                        isDarkTheme = isDarkTheme,
-                        contentPadding = innerPadding
-                    )
-                    title = ""
-                    actions = null
-                    switch = null
+                    if (deckId != null) {
+                        DeckScreen(
+                            navController = navController,
+                            deckViewModel = deckViewModel,
+                            deckId = deckId,
+                            user = user,
+                            isDarkTheme = isDarkTheme,
+                            contentPadding = innerPadding
+                        )
+                        title = ""
+                        actions = null
+                        switch = null
+                    } else {
+                        appViewModel.emitError(IllegalStateException("deckIdArgument cannot be null"))
+                        navController.navigateUp()
+                    }
                 }
                 composable("deck/roleChanging") { backStackEntry ->
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("deck/{$deckIdArgument}")
                     }
                     val deckViewModel: DeckViewModel = hiltViewModel(parentEntry)
-                    val decksViewModel: DecksViewModel = hiltViewModel(backStackEntry)
                     val user by appViewModel.userUiState.collectAsState()
                     DeckChangingRole(
-                        onCancel = {
-                            navController.navigateUp()
-                        },
-                        onSave = { navController.navigateUp() },
-                        decksViewModel = decksViewModel,
+                        onCancel = navController::navigateUp,
+                        onSave = navController::navigateUp,
                         deckViewModel = deckViewModel,
                         user = user,
                         isDarkTheme = isDarkTheme,
@@ -774,7 +772,7 @@ fun RangersNavHost(
                                 }
                             },
                             campaignsViewModel = campaignsViewModel,
-                            settingsViewModel = appViewModel,
+                            appViewModel = appViewModel,
                             isDarkTheme = isDarkTheme,
                             contentPadding = innerPadding
                         )
@@ -805,16 +803,10 @@ fun RangersNavHost(
                     }
                     switch = null
                 }
-                composable(BottomNavScreen.Campaigns.route + "/creation") { backStackEntry ->
-                    val parentEntry = remember(backStackEntry) {
-                        navController.getBackStackEntry(BottomNavScreen.Campaigns.startDestination)
-                    }
-                    val campaignsViewModel: CampaignsViewModel = hiltViewModel(parentEntry)
+                composable(BottomNavScreen.Campaigns.route + "/creation") {
                     val user by appViewModel.userUiState.collectAsState()
                     CampaignCreationScreen(
-                        onCancel = {
-                            navController.navigateUp()
-                        },
+                        onCancel = navController::navigateUp,
                         onCreate = { campaignId ->
                             navController.navigate(
                                 "${BottomNavScreen.Campaigns.route}/campaign/$campaignId"
@@ -825,8 +817,8 @@ fun RangersNavHost(
                                 launchSingleTop = true
                             }
                         },
-                        campaignsViewModel = campaignsViewModel,
-                        user = user,
+                        emitError = appViewModel::emitError,
+                        userInfo = user.userInfo,
                         isDarkTheme = isDarkTheme,
                         contentPadding = innerPadding
                     )

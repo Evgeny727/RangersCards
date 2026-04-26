@@ -28,10 +28,7 @@ import com.rangerscards.objects.CampaignMaps
 import com.rangerscards.ui.decks.components.DeckListItemImageContainer
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.collections.immutable.ImmutableList
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -40,8 +37,8 @@ fun CampaignListItem(
     name: String,
     day: Int,
     currentLocation: String,
-    rolesImages: List<String>,
-    access: JsonElement,
+    rolesImages: ImmutableList<String>,
+    players: ImmutableList<String>,
     onClick: () -> Unit,
     isDarkTheme: Boolean,
 ) {
@@ -135,10 +132,7 @@ fun CampaignListItem(
                     }
                 }
             }
-            val names = access.jsonObject.values.joinToString(separator = ", ") {
-                it.jsonPrimitive.contentOrNull ?: ""
-            }
-            if (names.isNotEmpty()) Row(
+            if (players.isNotEmpty()) Row(
                 modifier = Modifier.fillMaxWidth().padding(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -150,7 +144,7 @@ fun CampaignListItem(
                     modifier = Modifier.size(24.dp)
                 )
                 Text(
-                    text = names,
+                    text = players.joinToString(", "),
                     color = CustomTheme.colors.d10,
                     fontFamily = Jost,
                     fontWeight = FontWeight.Normal,

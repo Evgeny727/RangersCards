@@ -47,25 +47,25 @@ import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import com.rangerscards.R
 import com.rangerscards.data.local.card.CardListItemProjection
+import com.rangerscards.domain.model.User
 import com.rangerscards.objects.DeckMetaMaps
 import com.rangerscards.ui.components.DataPicker
 import com.rangerscards.ui.components.RangersTopAppBar
 import com.rangerscards.ui.components.SquareButton
 import com.rangerscards.ui.decks.ActiveField
 import com.rangerscards.ui.decks.DecksViewModel
-import com.rangerscards.ui.settings.UserUIState
 import com.rangerscards.ui.settings.components.RangersBaseCard
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
+import com.rangerscards.utils.applyScaffoldPaddings
 import kotlinx.coroutines.launch
 
 @Composable
 fun DeckChangingRole(
     onCancel: () -> Unit,
     onSave: () -> Unit,
-    decksViewModel: DecksViewModel,
     deckViewModel: DeckViewModel,
-    user: UserUIState,
+    user: User,
     isDarkTheme: Boolean,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
@@ -74,7 +74,7 @@ fun DeckChangingRole(
     val deckRole by deckViewModel.role.collectAsState()
     var isCreating by remember { mutableStateOf(false) }
     val taboo by rememberSaveable { mutableStateOf(deck!!.tabooSetId != null) }
-    val packIds = remember { user.settings.collection.toMutableStateList() }
+    val packIds = remember(user.settings.collection) { user.settings.collection.toMutableStateList() }
     var background by rememberSaveable { mutableStateOf(deck!!.background) }
     var specialty by rememberSaveable { mutableStateOf(deck!!.specialty) }
     var role by remember { mutableStateOf((if (deck?.roleId.toString() == "null") "" else deck!!.roleId)
@@ -90,10 +90,7 @@ fun DeckChangingRole(
     }
     Scaffold(
         containerColor = CustomTheme.colors.l30,
-        modifier = modifier.padding(
-            top = contentPadding.calculateTopPadding(),
-            bottom = contentPadding.calculateBottomPadding()
-        ),
+        modifier = modifier.applyScaffoldPaddings(contentPadding),
         topBar = {
             RangersTopAppBar(
                 title = "",

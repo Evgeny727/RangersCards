@@ -9,24 +9,21 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -34,7 +31,6 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -44,30 +40,36 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
 import com.rangerscards.R
+import com.rangerscards.domain.model.UserInfo
 import com.rangerscards.objects.CampaignMaps
+import com.rangerscards.ui.campaigns.components.CampaignCreationUiState
+import com.rangerscards.ui.campaigns.components.CampaignCreationViewModel
 import com.rangerscards.ui.components.DataPicker
-import com.rangerscards.ui.components.RangersRadioButton
+import com.rangerscards.ui.components.RangersDialogWithContent
+import com.rangerscards.ui.components.RangersLoadingDialog
 import com.rangerscards.ui.components.SquareButton
-import com.rangerscards.ui.settings.UserUIState
-import com.rangerscards.ui.settings.components.RangersBaseCard
+import com.rangerscards.ui.settings.components.RangersRadioButtonRow
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
-import kotlinx.coroutines.launch
+import com.rangerscards.utils.applyScaffoldPaddings
 
 @Composable
 fun CampaignCreationScreen(
     onCancel: () -> Unit,
     onCreate: (String) -> Unit,
-    campaignsViewModel: CampaignsViewModel,
-    user: UserUIState,
+    emitError: (Throwable) -> Unit,
+    userInfo: UserInfo?,
     isDarkTheme: Boolean,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
+    campaignCreationViewModel: CampaignCreationViewModel = hiltViewModel()
 ) {
-    var isCreating by remember { mutableStateOf(false) }
+    val campaignCreationUiState by campaignCreationViewModel.campaignCreationUiState.collectAsState()
     var name by rememberSaveable { mutableStateOf("") }
     var isUploading by rememberSaveable { mutableStateOf(false) }
     var cycle by remember { mutableStateOf("") }
@@ -83,293 +85,261 @@ fun CampaignCreationScreen(
         save = { stateList -> stateList.toList() },
         restore = { restored -> restored.toMutableStateList() }
     )) { mutableStateListOf<String>() }
+    val availableExpansions = remember(cycle) { CampaignMaps.campaignExpansionsMap[cycle] }
+
+    LaunchedEffect(campaignCreationUiState) {
+        when (val state = campaignCreationUiState) {
+            is CampaignCreationUiState.Success -> onCreate(state.campaignId)
+            is CampaignCreationUiState.Error -> onCancel()
+            else -> Unit
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        campaignCreationViewModel.events.collect {
+            emitError(it.exception)
+        }
+    }
+
+    if (campaignCreationUiState is CampaignCreationUiState.Loading) RangersLoadingDialog(isDarkTheme)
+
+    if (showDialogPicker) RangersDialogWithContent(
+        headerId = R.string.campaign,
+        isDarkTheme = isDarkTheme,
+        onBack = { showDialogPicker = false },
+    ) {
+        LazyColumn(modifier = Modifier.sizeIn(maxHeight = 400.dp)) {
+            CampaignMaps.campaignCyclesMap.forEach { (key, value) ->
+                item(key) {
+                    Text(
+                        text = stringResource(value),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                cycle = key
+                                showDialogPicker = false
+                            }
+                            .padding(
+                                horizontal = 16.dp,
+                                vertical = 8.dp
+                            ),
+                        color = CustomTheme.colors.d30,
+                        fontFamily = Jost,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 18.sp,
+                        lineHeight = 22.sp,
+                    )
+                    HorizontalDivider(color = CustomTheme.colors.l10)
+                }
+            }
+        }
+    }
+    if (showTransferDialogPicker) RangersDialogWithContent(
+        headerId = R.string.transfer_campaign,
+        isDarkTheme = isDarkTheme,
+        onBack = { showTransferDialogPicker = false },
+    ) {
+        val campaignsForTransfer = campaignCreationViewModel.getTransferCampaigns(cycle, userInfo?.id).collectAsLazyPagingItems()
+        LazyColumn(modifier = Modifier.sizeIn(maxHeight = 400.dp)) {
+            if (campaignsForTransfer.itemCount == 0 && campaignsForTransfer.loadState.isIdle) item("no_results") {
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(16.dp).fillMaxWidth()
+                ) {
+                    Text(
+                        text = stringResource(R.string.transfer_campaign_no_results),
+                        color = CustomTheme.colors.d30,
+                        fontFamily = Jost,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 18.sp,
+                        lineHeight = 24.sp,
+                        letterSpacing = 0.2.sp,
+                    )
+                }
+            }
+            items(
+                count = campaignsForTransfer.itemCount,
+                key = campaignsForTransfer.itemKey { it.id },
+                contentType = campaignsForTransfer.itemContentType { it }
+            ) { index ->
+                val campaignForTransfer = campaignsForTransfer[index] ?: return@items
+                Text(
+                    text = campaignForTransfer.name,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            transferCampaignInfo = campaignForTransfer.id to campaignForTransfer.name
+                            name = campaignForTransfer.name
+                            showTransferDialogPicker = false
+                        }
+                        .padding(
+                            horizontal = 16.dp,
+                            vertical = 8.dp
+                        ),
+                    color = CustomTheme.colors.d30,
+                    fontFamily = Jost,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 18.sp,
+                    lineHeight = 22.sp,
+                )
+                HorizontalDivider(color = CustomTheme.colors.l10)
+            }
+        }
+    }
+
     Column(
         modifier = modifier
             .background(CustomTheme.colors.l30)
             .fillMaxSize()
-            .padding(
-                top = contentPadding.calculateTopPadding(),
-                bottom = contentPadding.calculateBottomPadding()
-            ),
+            .applyScaffoldPaddings(contentPadding),
     ) {
-        val coroutine = rememberCoroutineScope()
-        if (!isCreating) {
-            Column(
-                modifier = modifier
-                    .background(CustomTheme.colors.l30)
-                    .fillMaxWidth().padding(horizontal = 8.dp)
-                    .weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                    value = name,
-                    onValueChange = { name = it },
-                    label = {
-                        Text(text = buildAnnotatedString {
-                            append(stringResource(R.string.deck_creation_name_label))
-                            withStyle(style = SpanStyle(color = CustomTheme.colors.warn)) {
-                                append("*")
-                            }
-                        })
-                    },
-                    placeholder = {
-                        Text(text = stringResource(R.string.campaign_creation_name_placeholder))
-                    },
-                    textStyle = TextStyle(
-                        color = CustomTheme.colors.d30,
-                        fontFamily = Jost,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 16.sp,
-                        lineHeight = 18.sp,
-                    ),
-                    singleLine = true,
-                    shape = CustomTheme.shapes.small,
-                    colors = TextFieldDefaults.colors().copy(
-                        focusedIndicatorColor = CustomTheme.colors.m,
-                        unfocusedIndicatorColor = CustomTheme.colors.m,
-                        unfocusedLabelColor = CustomTheme.colors.d30,
-                        focusedLabelColor = CustomTheme.colors.d30,
-                        disabledLabelColor = CustomTheme.colors.d30,
-                        unfocusedPlaceholderColor = CustomTheme.colors.d30,
-                        focusedPlaceholderColor = CustomTheme.colors.d30,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        disabledContainerColor = CustomTheme.colors.m
-                    ),
-                    enabled = transferCampaignInfo.second.isEmpty()
-                )
-                DataPicker(
-                    onClick = { showDialogPicker = true },
-                    type = R.string.campaign
-                ) {
-                    Text(
-                        text = stringResource(if (cycle.isEmpty())
-                            R.string.campaign_placeholder
-                        else CampaignMaps.campaignCyclesMap[cycle]!!),
-                        color = CustomTheme.colors.d30,
-                        fontFamily = Jost,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 16.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-                if (cycle.isNotEmpty() && cycle != "core") DataPicker(
-                    onClick = { showTransferDialogPicker = true },
-                    type = R.string.transfer_campaign,
-                    isRequired = false
-                ) {
-                    Text(
-                        text = if (transferCampaignInfo.first.isEmpty()) stringResource(R.string.campaign_placeholder)
-                            else transferCampaignInfo.second,
-                        color = CustomTheme.colors.d30,
-                        fontFamily = Jost,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 16.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-                if (cycle.isNotEmpty()) Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = stringResource(R.string.campaign_expansions),
-                        color = CustomTheme.colors.d30,
-                        fontFamily = Jost,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 20.sp,
-                    )
-                    val availableExpansions = CampaignMaps.campaignExpansionsMap[cycle]
-                    availableExpansions?.forEach { expansion ->
-                        val isAdded = expansions.contains(expansion.id)
-                        Row(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp, vertical = 4.dp)
-                                .clickable {
-                                    if (isAdded) expansions.remove(expansion.id)
-                                    else expansions.add(expansion.id)
-                                },
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = stringResource(expansion.name),
-                                color = CustomTheme.colors.d30,
-                                fontFamily = Jost,
-                                fontWeight = FontWeight.Normal,
-                                fontSize = 18.sp,
-                                lineHeight = 20.sp,
-                                modifier = Modifier.weight(1f)
-                            )
-                            RangersRadioButton(
-                                selected = isAdded,
-                                onClick = {
-                                    if (isAdded) expansions.remove(expansion.id)
-                                    else expansions.add(expansion.id)
-                                },
-                                modifier = Modifier.size(32.dp)
-                            )
-                        }
-                    }
-                }
-                if (showDialogPicker) Dialog(
-                    onDismissRequest = { showDialogPicker = false },
-                    properties = DialogProperties(
-                        dismissOnBackPress = true,
-                        dismissOnClickOutside = true,
-                        usePlatformDefaultWidth = false
-                    )
-                ) {
-                    RangersBaseCard(
-                        isDarkTheme = isDarkTheme,
-                        labelIdRes = R.string.campaign
-                    ) {
-                        LazyColumn(modifier = Modifier.sizeIn(maxHeight = 400.dp)) {
-                            CampaignMaps.campaignCyclesMap.forEach { (key, value) ->
-                                item {
-                                    Text(
-                                        text = stringResource(value),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable {
-                                                cycle = key
-                                                showDialogPicker = false
-                                            }
-                                            .padding(
-                                                horizontal = 16.dp,
-                                                vertical = 8.dp
-                                            ),
-                                        color = CustomTheme.colors.d30,
-                                        fontFamily = Jost,
-                                        fontWeight = FontWeight.Medium,
-                                        fontSize = 18.sp,
-                                        lineHeight = 22.sp,
-                                    )
-                                    HorizontalDivider(color = CustomTheme.colors.l10)
-                                }
-                            }
-                        }
-                    }
-                }
-                if (showTransferDialogPicker) Dialog(
-                    onDismissRequest = { showTransferDialogPicker = false },
-                    properties = DialogProperties(
-                        dismissOnBackPress = true,
-                        dismissOnClickOutside = true,
-                        usePlatformDefaultWidth = false
-                    )
-                ) {
-                    val campaignsForTransfer by campaignsViewModel.getTransferCampaigns(cycle, user.currentUser)
-                        .collectAsState(emptyList())
-                    RangersBaseCard(
-                        isDarkTheme = isDarkTheme,
-                        labelIdRes = R.string.campaign
-                    ) {
-                        LazyColumn(modifier = Modifier.sizeIn(maxHeight = 400.dp)) {
-                            items(items = campaignsForTransfer, key = { campaign -> campaign.id }) { campaignForTransfer ->
-                                Text(
-                                    text = campaignForTransfer.name,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            transferCampaignInfo = campaignForTransfer.id to campaignForTransfer.name
-                                            name = campaignForTransfer.name
-                                            showTransferDialogPicker = false
-                                        }
-                                        .padding(
-                                            horizontal = 16.dp,
-                                            vertical = 8.dp
-                                        ),
-                                    color = CustomTheme.colors.d30,
-                                    fontFamily = Jost,
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 18.sp,
-                                    lineHeight = 22.sp,
-                                )
-                                HorizontalDivider(color = CustomTheme.colors.l10)
-                            }
-                        }
-                    }
-                }
-                val context = LocalContext.current.applicationContext
-                if (user.currentUser != null && campaignsViewModel.isConnected(context)
-                    && transferCampaignInfo.first.isEmpty()) Row(
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp, vertical = 4.dp)
-                            .clickable { isUploading = !isUploading },
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.upload_to_rangersdb),
-                        color = CustomTheme.colors.d30,
-                        fontFamily = Jost,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 20.sp,
-                        lineHeight = 22.sp,
-                        modifier = Modifier.weight(1f)
-                    )
-                    RangersRadioButton(
-                        selected = isUploading,
-                        onClick = { isUploading = !isUploading },
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                SquareButton(
-                    stringId = R.string.cancel_button,
-                    leadingIcon = R.drawable.close_32dp,
-                    onClick = onCancel,
-                    buttonColor = ButtonDefaults.buttonColors()
-                        .copy(CustomTheme.colors.warn),
-                    iconColor = if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30,
-                    textColor = if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30,
-                    modifier = Modifier.weight(1f)
-                )
-                SquareButton(
-                    stringId = R.string.create_campaign_button,
-                    leadingIcon = R.drawable.add_32dp,
-                    onClick = {
-                        coroutine.launch {
-                            isCreating = true
-                            campaignsViewModel.createCampaign(
-                                name = name,
-                                cycleId = cycle,
-                                isUploading = isUploading,
-                                currentLocation = CampaignMaps.startingLocations[cycle]!!,
-                                user = user,
-                                transferCampaignId = transferCampaignInfo.first,
-                                expansions = expansions
-                            )
-                        }.invokeOnCompletion {
-                            onCreate.invoke(campaignsViewModel.campaignIdToOpen.value)
-                        }
-                    },
-                    buttonColor = ButtonDefaults.buttonColors().copy(
-                        containerColor = CustomTheme.colors.d10,
-                        disabledContainerColor = CustomTheme.colors.d10.copy(alpha = 0.25f)
-                    ),
-                    iconColor = CustomTheme.colors.m,
-                    textColor = CustomTheme.colors.l30,
-                    modifier = Modifier.weight(1.1f),
-                    isEnabled = isLegit
-                )
-            }
-        }
-        else Column(
+        Column(
             modifier = modifier
-                .background(CustomTheme.colors.l30)
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxWidth().padding(horizontal = 8.dp)
+                .weight(1f),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            CircularProgressIndicator(modifier = Modifier.size(32.dp), color = CustomTheme.colors.m)
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                value = name,
+                onValueChange = { name = it },
+                label = {
+                    Text(text = buildAnnotatedString {
+                        append(stringResource(R.string.deck_creation_name_label))
+                        withStyle(style = SpanStyle(color = CustomTheme.colors.warn)) {
+                            append("*")
+                        }
+                    })
+                },
+                placeholder = {
+                    Text(text = stringResource(R.string.campaign_creation_name_placeholder))
+                },
+                textStyle = TextStyle(
+                    color = CustomTheme.colors.d30,
+                    fontFamily = Jost,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 16.sp,
+                    lineHeight = 18.sp,
+                ),
+                singleLine = true,
+                shape = CustomTheme.shapes.small,
+                colors = TextFieldDefaults.colors().copy(
+                    focusedIndicatorColor = CustomTheme.colors.m,
+                    unfocusedIndicatorColor = CustomTheme.colors.m,
+                    unfocusedLabelColor = CustomTheme.colors.d30,
+                    focusedLabelColor = CustomTheme.colors.d30,
+                    disabledLabelColor = CustomTheme.colors.d30,
+                    unfocusedPlaceholderColor = CustomTheme.colors.d30,
+                    focusedPlaceholderColor = CustomTheme.colors.d30,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    disabledContainerColor = CustomTheme.colors.m
+                ),
+                enabled = transferCampaignInfo.second.isEmpty()
+            )
+            DataPicker(
+                onClick = { showDialogPicker = true },
+                type = R.string.campaign
+            ) {
+                Text(
+                    text = stringResource(if (cycle.isEmpty())
+                        R.string.campaign_placeholder
+                    else CampaignMaps.campaignCyclesMap[cycle]!!),
+                    color = CustomTheme.colors.d30,
+                    fontFamily = Jost,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 16.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            if (cycle.isNotEmpty() && cycle != "core") DataPicker(
+                onClick = { showTransferDialogPicker = true },
+                type = R.string.transfer_campaign,
+                isRequired = false
+            ) {
+                Text(
+                    text = if (transferCampaignInfo.first.isEmpty()) stringResource(R.string.campaign_placeholder)
+                        else transferCampaignInfo.second,
+                    color = CustomTheme.colors.d30,
+                    fontFamily = Jost,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 16.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            if (!availableExpansions.isNullOrEmpty()) Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = stringResource(R.string.campaign_expansions),
+                    color = CustomTheme.colors.d30,
+                    fontFamily = Jost,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 20.sp,
+                )
+                availableExpansions.forEach { expansion ->
+                    val isAdded = remember(expansions) { expansions.contains(expansion.id) }
+                    RangersRadioButtonRow(
+                        text = stringResource(expansion.name),
+                        isSelected = isAdded,
+                        textStyle = TextStyle(
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 18.sp,
+                            lineHeight = 20.sp,
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                    ) { value ->
+                        if (value) expansions.add(expansion.id)
+                        else expansions.remove(expansion.id)
+                    }
+                }
+            }
+            if (userInfo?.id != null && transferCampaignInfo.first.isEmpty()) RangersRadioButtonRow(
+                text = stringResource(R.string.upload_to_rangersdb),
+                isSelected = isUploading,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
+            ) { value -> isUploading = value }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            SquareButton(
+                stringId = R.string.cancel_button,
+                leadingIcon = R.drawable.close_32dp,
+                onClick = onCancel,
+                buttonColor = ButtonDefaults.buttonColors()
+                    .copy(CustomTheme.colors.warn),
+                iconColor = if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30,
+                textColor = if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30,
+                modifier = Modifier.weight(1f)
+            )
+            SquareButton(
+                stringId = R.string.create_campaign_button,
+                leadingIcon = R.drawable.add_32dp,
+                onClick = {
+                    campaignCreationViewModel.createCampaign(
+                        name = name,
+                        cycleId = cycle,
+                        isUploading = isUploading,
+                        currentLocation = CampaignMaps.startingLocations[cycle]!!,
+                        transferCampaignId = transferCampaignInfo.first,
+                        expansions = expansions
+                    )
+                },
+                buttonColor = ButtonDefaults.buttonColors().copy(
+                    containerColor = CustomTheme.colors.d10,
+                    disabledContainerColor = CustomTheme.colors.d10.copy(alpha = 0.25f)
+                ),
+                iconColor = CustomTheme.colors.m,
+                textColor = CustomTheme.colors.l30,
+                modifier = Modifier.weight(1.1f),
+                isEnabled = isLegit
+            )
         }
     }
 }

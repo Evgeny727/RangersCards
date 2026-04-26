@@ -1,4 +1,4 @@
-package com.rangerscards.ui.campaigns.components
+package com.rangerscards.ui.campaign.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
