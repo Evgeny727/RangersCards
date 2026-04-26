@@ -791,7 +791,7 @@ fun RangersNavHost(
                             },
                             colors = IconButtonDefaults.iconButtonColors().copy(containerColor = Color.Transparent),
                             modifier = Modifier.size(32.dp),
-                            enabled = !cardsState
+                            enabled = cardsState !is CardsSyncState.Loading
                         ) {
                             Icon(
                                 painterResource(id = R.drawable.add_32dp),
@@ -855,17 +855,14 @@ fun RangersNavHost(
                     },
                     arguments = listOf(navArgument(campaignIdArgument) { type = NavType.StringType }))
                     { backStackEntry ->
-                        val campaignViewModel: CampaignViewModel = viewModel(
-                            factory = AppViewModelProvider.Factory,
-                            viewModelStoreOwner = backStackEntry
-                        )
+                        val campaignViewModel: CampaignViewModel = hiltViewModel(backStackEntry)
                         val campaignId = backStackEntry.arguments?.getString(campaignIdArgument)
                             ?: error("campaignIdArgument cannot be null")
                         val user by appViewModel.userUiState.collectAsState()
                         val campaign = campaignViewModel.getCampaignById(campaignId).collectAsState(null)
                         val challengeDeck = campaignViewModel.getCampaignChallengeDeckIds(campaignId)
-                            .collectAsState(JsonArray(emptyList()))
-                        if (!cardsState) {
+                            .collectAsState(emptyList())
+                        if (cardsState !is CardsSyncState.Loading) {
                             CampaignScreen(
                                 campaignViewModel = campaignViewModel,
                                 campaign = campaign.value,
@@ -891,7 +888,7 @@ fun RangersNavHost(
                                 },
                                 colors = IconButtonDefaults.iconButtonColors().copy(containerColor = Color.Transparent),
                                 modifier = Modifier.size(32.dp),
-                                enabled = !cardsState
+                                enabled = cardsState !is CardsSyncState.Loading
                             ) {
                                 Icon(
                                     painterResource(id = R.drawable.undo_32dp),
@@ -914,7 +911,7 @@ fun RangersNavHost(
                         campaignViewModel = campaignViewModel,
                         isDarkTheme = isDarkTheme,
                         onBack = { navController.popBackStack(destinationId = parentEntry.destination.id, inclusive = false) },
-                        user = user.currentUser
+                        user = user
                     )
                 }
                 val dayInfoIdArgument = "dayInfoId"
@@ -933,7 +930,7 @@ fun RangersNavHost(
                         dayId = dayInfoId,
                         isDarkTheme = isDarkTheme,
                         onBack = { navController.popBackStack(destinationId = parentEntry.destination.id, inclusive = false) },
-                        user = user.currentUser
+                        user = user
                     )
                 }
                 composable(route = "${BottomNavScreen.Campaigns.route}/campaign/journey") { backStackEntry ->
@@ -959,7 +956,7 @@ fun RangersNavHost(
                         campaignViewModel = campaignViewModel,
                         isDarkTheme = isDarkTheme,
                         onBack = { navController.popBackStack(destinationId = parentEntry.destination.id, inclusive = false) },
-                        user = user.currentUser
+                        user = user
                     )
                 }
                 dialog("${BottomNavScreen.Campaigns.route}/campaign/travel") { backStackEntry ->
@@ -972,7 +969,7 @@ fun RangersNavHost(
                         campaignViewModel = campaignViewModel,
                         isDarkTheme = isDarkTheme,
                         onBack = { navController.popBackStack(destinationId = parentEntry.destination.id, inclusive = false) },
-                        user = user.currentUser
+                        user = user
                     )
                 }
                 composable(route = "${BottomNavScreen.Campaigns.route}/campaign/challengeDeck") { backStackEntry ->
@@ -1001,7 +998,7 @@ fun RangersNavHost(
                         navController = navController,
                         campaignViewModel = campaignViewModel,
                         campaignDecksViewModel = campaignDecksViewModel,
-                        user = user.currentUser,
+                        user = user,
                         isDarkTheme = isDarkTheme,
                         contentPadding = innerPadding,
                     )
@@ -1036,7 +1033,7 @@ fun RangersNavHost(
                         campaignViewModel = campaignViewModel,
                         isDarkTheme = isDarkTheme,
                         onBack = { navController.popBackStack(destinationId = parentEntry.destination.id, inclusive = false) },
-                        user = user.currentUser
+                        user = user
                     )
                 }
                 dialog("${BottomNavScreen.Campaigns.route}/campaign/removeCard") { backStackEntry ->
@@ -1049,7 +1046,7 @@ fun RangersNavHost(
                         campaignViewModel = campaignViewModel,
                         isDarkTheme = isDarkTheme,
                         onBack = { navController.popBackStack(destinationId = parentEntry.destination.id, inclusive = false) },
-                        user = user.currentUser
+                        user = user
                     )
                 }
                 dialog("${BottomNavScreen.Campaigns.route}/campaign/recordEvent") { backStackEntry ->
@@ -1062,7 +1059,7 @@ fun RangersNavHost(
                         campaignViewModel = campaignViewModel,
                         isDarkTheme = isDarkTheme,
                         onBack = { navController.popBackStack(destinationId = parentEntry.destination.id, inclusive = false) },
-                        user = user.currentUser
+                        user = user
                     )
                 }
                 val eventNameArgument = "eventNameArgument"
@@ -1081,7 +1078,7 @@ fun RangersNavHost(
                         eventName = eventName,
                         isDarkTheme = isDarkTheme,
                         onBack = { navController.popBackStack(destinationId = parentEntry.destination.id, inclusive = false) },
-                        user = user.currentUser
+                        user = user
                     )
                 }
                 dialog("${BottomNavScreen.Campaigns.route}/campaign/addMission") { backStackEntry ->
@@ -1094,7 +1091,7 @@ fun RangersNavHost(
                         campaignViewModel = campaignViewModel,
                         isDarkTheme = isDarkTheme,
                         onBack = { navController.popBackStack(destinationId = parentEntry.destination.id, inclusive = false) },
-                        user = user.currentUser
+                        user = user
                     )
                 }
                 val missionNameArgument = "missionNameArgument"
@@ -1113,7 +1110,7 @@ fun RangersNavHost(
                         missionName = missionName,
                         isDarkTheme = isDarkTheme,
                         onBack = { navController.popBackStack(destinationId = parentEntry.destination.id, inclusive = false) },
-                        user = user.currentUser
+                        user = user
                     )
                 }
                 val cardIndexArgument = "cardIndex"
@@ -1137,7 +1134,7 @@ fun RangersNavHost(
                         campaignViewModel = campaignViewModel,
                         cardIndex = cardIndex,
                         query = query,
-                        user = user.currentUser,
+                        user = user,
                         isDarkTheme = isDarkTheme,
                         contentPadding = innerPadding,
                     )

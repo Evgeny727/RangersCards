@@ -16,21 +16,12 @@ class SearchCardsUseCase (
         taboo: Boolean,
         packIds: List<String>
     ): Flow<PagingData<CardListItem>> {
-        return if (filterOptions.searchQuery.isEmpty()) {
-            cardsRepository.getAllPaginatedCardsFlow(
-                spoiler,
-                taboo,
-                packIds,
-                filterOptions
-            )
-        } else {
-            cardsRepository.searchPaginatedCardsFlow(
-                filterOptions = filterOptions,
-                includeEnglish = includeEnglish,
-                spoiler = spoiler,
-                taboo = taboo,
-                packIds = packIds
-            )
-        }
+        return cardsRepository.searchPaginatedCardsFlow(
+            filterOptions = filterOptions,
+            spoiler = spoiler,
+            taboo = taboo,
+            packIds = packIds,
+            includeEnglish = if (filterOptions.searchQuery.isEmpty()) null else includeEnglish
+        )
     }
 }

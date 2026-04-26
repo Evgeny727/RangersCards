@@ -16,13 +16,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -41,14 +39,6 @@ class CardsViewModel @Inject constructor(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val searchCardsUseCase: SearchCardsUseCase
 ) : ViewModel() {
-
-    // Holds the current state of whether to include English search results.
-    private val _includeEnglish: StateFlow<Boolean> =
-        userPreferencesRepository.isIncludeEnglishSearchResults.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = false
-        )
 
     // Holds the current spoiler state.
     private val _spoiler = MutableStateFlow(false)
@@ -71,7 +61,12 @@ class CardsViewModel @Inject constructor(
     // Exposes the paginated search results as PagingData.
     @OptIn(ExperimentalCoroutinesApi::class)
     val searchResults: Flow<PagingData<CardListItem>> =
-        combine(_filterOptions, _includeEnglish, _spoiler, _taboo, _packIds) { filterOptions, include, spoiler, taboo, packIds ->
+        combine(_filterOptions,
+            userPreferencesRepository.isIncludeEnglishSearchResults,
+            _spoiler,
+            _taboo,
+            _packIds
+        ) { filterOptions, include, spoiler, taboo, packIds ->
             Quintuple(filterOptions, include, spoiler, taboo, packIds)
         }.flatMapLatest { (filterOptions, include, spoiler, taboo, packIds) ->
             searchCardsUseCase(

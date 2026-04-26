@@ -13,10 +13,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -52,11 +50,7 @@ class SettingsViewModel @Inject constructor(
     }
 
     val isIncludeEnglishSearchResultsState: StateFlow<Boolean> =
-        userPreferencesRepository.isIncludeEnglishSearchResults.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = false
-        )
+        userPreferencesRepository.isIncludeEnglishSearchResults
 
     fun signIn(email: String, password: String) {
         viewModelScope.launch {

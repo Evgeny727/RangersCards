@@ -79,52 +79,19 @@ class CardsRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getAllPaginatedCardsFlow(
-        spoiler: Boolean,
-        taboo: Boolean,
-        packIds: List<String>,
-        filterOptions: CardFilterOptions
-    ): Flow<PagingData<CardListItem>> {
-        val rawQuery = buildSearchCardsQuery(spoiler, taboo, packIds, filterOptions)
-        // Create a Pager that wraps the PagingSource from the DAO.
-        return Pager(
-            config = PagingConfig(
-                pageSize = 20,
-                enablePlaceholders = false,
-                initialLoadSize = 40
-            ),
-            pagingSourceFactory = { cardDao.searchCardsRaw(rawQuery) }
-        ).flow.map { pagingData ->
-            pagingData.map { it.toDomain() }
-        }
-    }
-
     override fun searchPaginatedCardsFlow(
         filterOptions: CardFilterOptions,
-        includeEnglish: Boolean,
         spoiler: Boolean,
         taboo: Boolean,
-        packIds: List<String>
+        packIds: List<String>,
+        includeEnglish: Boolean?,
     ): Flow<PagingData<CardListItem>> {
-        // Build the FTS query string
-        val language = Locale.getDefault().language.take(2)
-        val ftsQuery = if (language == "ru") {
-            val stemedString = filterOptions.searchQuery
-                .replace("\"(\\[\"]|.*)?\"".toRegex(), " ")
-                .split("[^\\p{Alnum}]+".toRegex())
-                .filter { it.isNotBlank() }
-                .joinToString(separator = " ", transform = { "${PorterStem.stem(it)}*" })
-            createQueryString(stemedString, includeEnglish, language)
-        } else {
-            val stemedString = filterOptions.searchQuery
-                .lowercase(Locale.forLanguageTag(language))
-                .replace("\"(\\[\"]|.*)?\"".toRegex(), " ")
-                .split("[^\\p{Alnum}]+".toRegex())
-                .filter { it.isNotBlank() }
-                .joinToString(separator = " ", transform = { "$it*" })
-            createQueryString(stemedString, includeEnglish, language)
-        }
-        val rawQuery = buildSearchCardsQuery(spoiler, taboo, packIds, filterOptions.copy(searchQuery = ftsQuery))
+        val newOptions = if (includeEnglish != null) {
+            // Build the FTS query string
+            val ftsQuery = createQueryString(filterOptions.searchQuery, includeEnglish)
+            filterOptions.copy(searchQuery = ftsQuery)
+        } else filterOptions
+        val rawQuery = buildSearchCardsQuery(spoiler, taboo, packIds, newOptions)
         // Create a Pager that wraps the PagingSource from the DAO.
         return Pager(
             config = PagingConfig(
@@ -133,107 +100,6 @@ class CardsRepositoryImpl @Inject constructor(
                 initialLoadSize = 40
             ),
             pagingSourceFactory = { cardDao.searchCardsRaw(rawQuery) }
-        ).flow.map { pagingData ->
-            pagingData.map { it.toDomain() }
-        }
-    }
-
-    override fun getAllPaginatedDeckCardsFlow(
-        deckInfo: DeckInfo,
-        typeIndex: Int,
-        showAllSpoilers: Boolean,
-        packIds: List<String>,
-        filterOptions: CardFilterOptions
-    ): Flow<PagingData<CardDeckListItem>> {
-        val rawQuery = if (!deckInfo.isUpgrade) {
-            when(typeIndex) {
-                0 -> buildSearchDeckCardsQuery(
-                    additionalClause = "set_id = 'personality'",
-                    orderByClause = "aspect_id, set_position",
-                    taboo = deckInfo.taboo,
-                    isPacksNeeded = true,
-                    packIds = packIds,
-                    filterOptions = filterOptions
-                )
-                1 -> buildSearchDeckCardsQuery(
-                    additionalClause = "set_id = ? AND set_type_id = 'background' AND type_id != 'role'",
-                    orderByClause = "aspect_id, set_position",
-                    background = deckInfo.background,
-                    taboo = deckInfo.taboo,
-                    isPacksNeeded = true,
-                    packIds = packIds,
-                    filterOptions = filterOptions
-                )
-                2 -> buildSearchDeckCardsQuery(
-                    additionalClause = "set_id = ? AND set_type_id = 'specialty' AND type_id != 'role'",
-                    orderByClause = "aspect_id, set_position",
-                    specialty = deckInfo.specialty,
-                    taboo = deckInfo.taboo,
-                    isPacksNeeded = true,
-                    packIds = packIds,
-                    filterOptions = filterOptions
-                )
-                else -> buildSearchDeckCardsQuery(
-                    additionalClause = "set_id != ? AND set_id != ? AND type_id != 'role' AND set_id != 'personality' AND real_traits NOT LIKE '%expert%'",
-                    orderByClause = "(set_type_id IS NULL), set_type_id, set_id, set_position",
-                    background = deckInfo.background,
-                    specialty = deckInfo.specialty,
-                    taboo = deckInfo.taboo,
-                    isPacksNeeded = true,
-                    packIds = packIds,
-                    filterOptions = filterOptions
-                )
-            }
-        } else {
-            when(typeIndex) {
-                0 -> if (showAllSpoilers) buildSearchDeckCardsQuery(
-                    additionalClause = "set_id == 'reward'",
-                    orderByClause = "(set_type_id IS NULL), set_type_id, set_id, set_position",
-                    taboo = deckInfo.taboo,
-                    isPacksNeeded = true,
-                    packIds = packIds,
-                    filterOptions = filterOptions
-                ) else buildSearchDeckCardsQuery(
-                    additionalClause = "code IN (${deckInfo.rewards.joinToString { "?" }})",
-                    orderByClause = "(set_type_id IS NULL), set_type_id, set_id, set_position",
-                    rewards = deckInfo.rewards,
-                    taboo = deckInfo.taboo,
-                    filterOptions = filterOptions
-                )
-                1 -> buildSearchDeckCardsQuery(
-                    additionalClause = "set_id == 'malady'",
-                    orderByClause = "(set_type_id IS NULL), set_type_id, set_id, set_position",
-                    taboo = deckInfo.taboo,
-                    isPacksNeeded = true,
-                    packIds = packIds,
-                    filterOptions = filterOptions
-                )
-                2 -> buildSearchDeckCardsQuery(
-                    additionalClause = "(spoiler = 'false' OR (spoiler IS NULL AND NOT EXISTS (SELECT 1 FROM card WHERE spoiler = 'false'))) AND type_id != 'role'",
-                    orderByClause = "(set_type_id IS NULL), set_type_id, set_id, set_position",
-                    taboo = deckInfo.taboo,
-                    isPacksNeeded = true,
-                    packIds = packIds,
-                    filterOptions = filterOptions
-                )
-                else -> buildSearchDeckCardsQuery(
-                    additionalClause = "code IN (${deckInfo.extraSlots.joinToString { "?" }})",
-                    orderByClause = "(set_type_id IS NULL), set_type_id, set_id, set_position",
-                    extraSlots = deckInfo.extraSlots,
-                    taboo = deckInfo.taboo,
-                    filterOptions = filterOptions
-                )
-            }
-        }
-
-        // Create a Pager that wraps the PagingSource from the DAO.
-        return Pager(
-            config = PagingConfig(
-                pageSize = 20,
-                enablePlaceholders = false,
-                initialLoadSize = 40
-            ),
-            pagingSourceFactory = { cardDao.searchDeckCardsRaw(rawQuery) }
         ).flow.map { pagingData ->
             pagingData.map { it.toDomain() }
         }
@@ -242,30 +108,16 @@ class CardsRepositoryImpl @Inject constructor(
     override fun searchPaginatedDeckCardsFlow(
         filterOptions: CardFilterOptions,
         deckInfo: DeckInfo,
-        includeEnglish: Boolean,
         typeIndex: Int,
         showAllSpoilers: Boolean,
-        packIds: List<String>
+        packIds: List<String>,
+        includeEnglish: Boolean?,
     ): Flow<PagingData<CardDeckListItem>> {
-        // Build the FTS query string
-        val language = Locale.getDefault().language.take(2)
-        val ftsQuery = if (language == "ru") {
-            val stemedString = filterOptions.searchQuery
-                .replace("\"(\\[\"]|.*)?\"".toRegex(), " ")
-                .split("[^\\p{Alnum}]+".toRegex())
-                .filter { it.isNotBlank() }
-                .joinToString(separator = " ", transform = { "${PorterStem.stem(it)}*" })
-            createQueryString(stemedString, includeEnglish, language)
-        } else {
-            val stemedString = filterOptions.searchQuery
-                .lowercase(Locale.forLanguageTag(language))
-                .replace("\"(\\[\"]|.*)?\"".toRegex(), " ")
-                .split("[^\\p{Alnum}]+".toRegex())
-                .filter { it.isNotBlank() }
-                .joinToString(separator = " ", transform = { "$it*" })
-            createQueryString(stemedString, includeEnglish, language)
-        }
-        val newOptions = filterOptions.copy(searchQuery = ftsQuery)
+        val newOptions = if (includeEnglish != null) {
+            // Build the FTS query string
+            val ftsQuery = createQueryString(filterOptions.searchQuery, includeEnglish)
+            filterOptions.copy(searchQuery = ftsQuery)
+        } else filterOptions
 
         val rawQuery = if (!deckInfo.isUpgrade) {
             when(typeIndex) {
@@ -296,7 +148,9 @@ class CardsRepositoryImpl @Inject constructor(
                     filterOptions = newOptions
                 )
                 else -> buildSearchDeckCardsQuery(
-                    additionalClause = "set_id != ? AND set_id != ? AND type_id != 'role' AND set_id != 'personality' AND real_traits NOT LIKE '%expert%'",
+                    additionalClause = "set_id != ? AND set_id != ? AND type_id != 'role' " +
+                            "AND set_id != 'personality' AND real_traits NOT LIKE '%expert%' " +
+                            "AND set_id != 'reward' AND set_id != 'malady'",
                     orderByClause = "(set_type_id IS NULL), set_type_id, set_id, set_position",
                     background = deckInfo.background,
                     specialty = deckInfo.specialty,
@@ -361,9 +215,25 @@ class CardsRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun createQueryString(searchQuery: String, includeEnglish: Boolean, language: String): String {
-        return if (!includeEnglish || language == "en") "composite:($searchQuery)"
-        else "real_composite:($searchQuery)"
+    private fun createQueryString(
+        searchQuery: String,
+        includeEnglish: Boolean
+    ): String {
+        val language = Locale.getDefault().language.take(2)
+        val stemedString = if (language == "ru") {
+            searchQuery.replace("\"(\\[\"]|.*)?\"".toRegex(), " ")
+                .split("[^\\p{Alnum}]+".toRegex())
+                .filter { it.isNotBlank() }
+                .joinToString(separator = " ", transform = { "${PorterStem.stem(it)}*" })
+        } else {
+            searchQuery.lowercase(Locale.forLanguageTag(language))
+                .replace("\"(\\[\"]|.*)?\"".toRegex(), " ")
+                .split("[^\\p{Alnum}]+".toRegex())
+                .filter { it.isNotBlank() }
+                .joinToString(separator = " ", transform = { "$it*" })
+        }
+        return if (!includeEnglish || language == "en") "composite:($stemedString)"
+        else "real_composite:($stemedString)"
     }
 
     private fun buildSearchCardsQuery(

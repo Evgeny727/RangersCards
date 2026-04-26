@@ -17,19 +17,12 @@ interface CardsRepository {
 
     suspend fun isCardsUpdateAvailable(locale: String, savedTimestamp: String): Result<Boolean>
 
-    fun getAllPaginatedCardsFlow(
+    fun searchPaginatedCardsFlow(
+        filterOptions: CardFilterOptions,
         spoiler: Boolean,
         taboo: Boolean,
         packIds: List<String>,
-        filterOptions: CardFilterOptions
-    ): Flow<PagingData<CardListItem>>
-
-    fun searchPaginatedCardsFlow(
-        filterOptions: CardFilterOptions,
-        includeEnglish: Boolean,
-        spoiler: Boolean,
-        taboo: Boolean,
-        packIds: List<String>
+        includeEnglish: Boolean? = null,
     ): Flow<PagingData<CardListItem>>
 
     fun getCardByCodeFlow(cardCode: String, taboo: Boolean): Flow<FullCard>
@@ -44,21 +37,13 @@ interface CardsRepository {
 
     suspend fun getChangedDeckCardsById(ids: List<String>, tabooId: String?): List<CardDeckListItem>
 
-    fun getAllPaginatedDeckCardsFlow(
+    fun searchPaginatedDeckCardsFlow(
+        filterOptions: CardFilterOptions,
         deckInfo: DeckInfo,
         typeIndex: Int,
         showAllSpoilers: Boolean,
         packIds: List<String>,
-        filterOptions: CardFilterOptions
-    ): Flow<PagingData<CardDeckListItem>>
-
-    fun searchPaginatedDeckCardsFlow(
-        filterOptions: CardFilterOptions,
-        deckInfo: DeckInfo,
-        includeEnglish: Boolean,
-        typeIndex: Int,
-        showAllSpoilers: Boolean,
-        packIds: List<String>
+        includeEnglish: Boolean? = null,
     ): Flow<PagingData<CardDeckListItem>>
 
     fun getRewards(taboo: Boolean, packIds: List<String>): Flow<List<CardListItem>>

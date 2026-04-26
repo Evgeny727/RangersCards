@@ -9,18 +9,23 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.rangerscards.data.di.ApplicationScope
 import com.rangerscards.domain.repository.UserPreferencesRepository
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
-import kotlin.collections.joinToString
 
 class UserPreferencesRepositoryImpl @Inject constructor(
-    private val dataStore: DataStore<Preferences>
+    private val dataStore: DataStore<Preferences>,
+    @ApplicationScope private val appScope: CoroutineScope
 ) : UserPreferencesRepository {
     override val isDarkTheme: Flow<Int> = dataStore.data
         .catch {
@@ -34,7 +39,7 @@ class UserPreferencesRepositoryImpl @Inject constructor(
             preferences[THEME] ?: 2
         }
 
-    override val isIncludeEnglishSearchResults: Flow<Boolean> = dataStore.data
+    override val isIncludeEnglishSearchResults: StateFlow<Boolean> = dataStore.data
         .catch {
             if (it is IOException) {
                 Log.e(TAG, "Error reading preferences.", it)
@@ -44,7 +49,11 @@ class UserPreferencesRepositoryImpl @Inject constructor(
             }
         }.map { preferences ->
             preferences[INCLUDE_ENGLISH_SEARCH_RESULTS] ?: false
-        }
+        }.stateIn(
+            scope = appScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = false
+        )
 
     override val isTabooSet: Flow<Boolean> = dataStore.data
         .catch {
@@ -56,7 +65,11 @@ class UserPreferencesRepositoryImpl @Inject constructor(
             }
         }.map { preferences ->
             preferences[TABOO] ?: false
-        }
+        }.stateIn(
+            scope = appScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = false
+        )
 
     override val collection: Flow<ImmutableList<String>> = dataStore.data
         .catch {

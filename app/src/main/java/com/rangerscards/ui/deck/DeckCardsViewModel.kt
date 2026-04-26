@@ -4,22 +4,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import com.rangerscards.objects.CardFilterOptions
-import com.rangerscards.data.repository.UserPreferencesRepository
 import com.rangerscards.data.local.card.CardDeckListItemProjection
 import com.rangerscards.domain.model.Deck
+import com.rangerscards.domain.repository.UserPreferencesRepository
+import com.rangerscards.objects.CardFilterOptions
 import com.rangerscards.ui.cards.Quintuple
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import java.util.Locale
 
@@ -35,11 +33,7 @@ class DeckCardsViewModel(
 
     // Holds the current state of whether to include English search results.
     private val _includeEnglish: StateFlow<Boolean> =
-        userPreferencesRepository.isIncludeEnglishSearchResults.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = false
-        )
+        userPreferencesRepository.isIncludeEnglishSearchResults
 
     // Holds the current type index.
     private val _typeIndex = MutableStateFlow(0)

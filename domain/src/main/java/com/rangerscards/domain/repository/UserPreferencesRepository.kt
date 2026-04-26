@@ -1,10 +1,11 @@
 package com.rangerscards.domain.repository
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
 interface UserPreferencesRepository {
     val isDarkTheme: Flow<Int>
-    val isIncludeEnglishSearchResults: Flow<Boolean>
+    val isIncludeEnglishSearchResults: StateFlow<Boolean>
     val isTabooSet: Flow<Boolean>
     val collection: Flow<List<String>>
     val cardsUpdatedAt: Flow<String>
