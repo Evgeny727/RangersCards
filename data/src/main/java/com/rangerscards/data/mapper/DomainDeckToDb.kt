@@ -19,9 +19,9 @@ fun Deck.toDbDeck(): DbDeck =
     DbDeck(
         id = id,
         uploaded = uploaded,
-        userId = playerInfo.userId,
+        userId = playerInfo.id,
         tabooSetId = tabooSetId,
-        userHandle = playerInfo.userName,
+        userHandle = playerInfo.name,
         slots = oftenUpdatableDeckValues.slots.toJsonDeckSlots(),
         sideSlots = oftenUpdatableDeckValues.sideSlots.toJsonDeckSlots(),
         extraSlots = oftenUpdatableDeckValues.extraSlots.toJsonDeckSlots(),

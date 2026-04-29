@@ -13,6 +13,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,15 +27,16 @@ import com.rangerscards.objects.CampaignMaps
 import com.rangerscards.objects.Path
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
+import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 fun CampaignCurrentPositionCard(
     cycleId: String,
     location: String,
     pathTerrain: String?,
-    expansions: List<String>,
-    onRecordedJourney: () -> Unit)
-{
+    expansions: ImmutableList<String>,
+    onRecordedJourney: () -> Unit
+) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = CustomTheme.colors.l30,
@@ -61,7 +63,10 @@ fun CampaignCurrentPositionCard(
                             fontSize = 18.sp,
                             lineHeight = 20.sp,
                         )
-                        val currentLocation = CampaignMaps.getMapLocations(false, cycleId, expansions)[location]
+                        val locations = remember(expansions) {
+                            CampaignMaps.getMapLocations(false, cycleId, expansions)
+                        }
+                        val currentLocation = locations[location]
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),

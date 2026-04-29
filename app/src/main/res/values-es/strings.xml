@@ -110,7 +110,7 @@
     <string name="new_deck">Nuevo mazo</string>
     <string name="custom_deck_tab">Mazo personalizado</string>
     <string name="starter_deck_tab">Mazo de inicio</string>
-    <string name="deck_creation_name_label">Nombre</string>
+    <string name="name_label">Nombre</string>
     <string name="deck_creation_name_placeholder">Añade un nombre para este mazo.</string>
     <string name="starter_deck_title">Elige un mazo de inicio:</string>
     <string name="upload_to_rangersdb">Subir a RangersDB</string>
@@ -197,7 +197,7 @@
     //Deck Side Drawer
     <string name="deck_section_header">Mazo</string>
     <string name="deck_section_deck_id">Mazo #%s</string>
-    <string name="deck_section_notes">Notas</string>
+    <string name="section_notes">Notas</string>
     <string name="tools_section_header">Herramientas</string>
     <string name="tools_section_charts">Gráficos</string>
     <string name="campaign_section_header">Campaña</string>
@@ -323,7 +323,6 @@
     //Rangers section
     <string name="rangers_section_header">— Guardianes —</string>
     <string name="add_ranger_button">Añadir Guardian</string>
-    <string name="no_decks_for_add">No hay mazos elegibles.</string>
 
     //Settings section
     <string name="settings_section_header">— Configuración —</string>

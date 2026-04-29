@@ -1,8 +1,10 @@
 package com.rangerscards.data.remote
 
 import com.apollographql.apollo.ApolloClient
+import com.apollographql.apollo.annotations.ApolloExperimental
 import com.apollographql.apollo.api.Optional
 import com.rangerscards.AddFriendToCampaignMutation
+import com.rangerscards.CampaignSubscription
 import com.rangerscards.CreateCampaignMutation
 import com.rangerscards.DeleteCampaignMutation
 import com.rangerscards.ExtendCampaignMutation
@@ -146,4 +148,8 @@ class CampaignsRemoteDataSource @Inject constructor(
         .mutation(DeleteCampaignMutation(campaignId))
         .execute()
 
+    @OptIn(ApolloExperimental::class)
+    fun startSubscription(campaignId: Int) = apolloClient
+        .subscription(CampaignSubscription(campaignId))
+        .toFlow()
 }

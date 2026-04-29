@@ -2,12 +2,13 @@ package com.rangerscards.data.di
 
 import android.content.Context
 import com.apollographql.apollo.ApolloClient
+import com.apollographql.apollo.annotations.ApolloExperimental
 import com.apollographql.apollo.api.http.HttpRequest
 import com.apollographql.apollo.api.http.HttpResponse
 import com.apollographql.apollo.cache.normalized.FetchPolicy
 import com.apollographql.apollo.cache.normalized.fetchPolicy
-import com.apollographql.apollo.cache.normalized.normalizedCache
-import com.apollographql.apollo.cache.normalized.sql.SqlNormalizedCacheFactory
+import com.apollographql.apollo.interceptor.RetryOnErrorInterceptor
+import com.apollographql.apollo.network.NetworkMonitor
 import com.apollographql.apollo.network.http.HttpInterceptor
 import com.apollographql.apollo.network.http.HttpInterceptorChain
 import com.apollographql.apollo.network.ws.SubscriptionWsProtocol
@@ -15,7 +16,6 @@ import com.apollographql.apollo.network.ws.WebSocketNetworkTransport
 import com.google.firebase.auth.FirebaseAuth
 import com.rangerscards.data.objects.JsonElementAdapter
 import com.rangerscards.data.remote.AuthTokenProvider
-import com.rangerscards.data.remote.NetworkConnectivityObserver
 import com.rangerscards.type.Jsonb
 import dagger.Module
 import dagger.Provides
@@ -35,14 +35,13 @@ object NetworkModule {
     @Singleton
     fun provideFirebaseAuth(): FirebaseAuth = FirebaseAuth.getInstance()
 
+    @OptIn(ApolloExperimental::class)
     @Provides
     @Singleton
-    fun provideNetworkObserver(@ApplicationContext context: Context): NetworkConnectivityObserver =
-        NetworkConnectivityObserver(context)
-
-    @Provides
-    @Singleton
-    fun provideApolloClient(authTokenProvider: AuthTokenProvider): ApolloClient = ApolloClient.Builder()
+    fun provideApolloClient(
+        authTokenProvider: AuthTokenProvider,
+        @ApplicationContext context: Context
+    ): ApolloClient = ApolloClient.Builder()
         .serverUrl("https://$SERVER_URL")
         .subscriptionNetworkTransport(
             WebSocketNetworkTransport.Builder()
@@ -74,6 +73,8 @@ object NetworkModule {
                 return chain.proceed(newRequest)
             }
         })
+        .retryOnErrorInterceptor(RetryOnErrorInterceptor(NetworkMonitor(context)))
+        .failFastIfOffline(true)
         .addCustomScalarAdapter(Jsonb.type, JsonElementAdapter)
         .fetchPolicy(FetchPolicy.NetworkOnly)
         .build()

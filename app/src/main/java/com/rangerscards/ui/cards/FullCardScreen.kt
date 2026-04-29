@@ -1,8 +1,6 @@
 package com.rangerscards.ui.cards
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -43,11 +42,10 @@ fun FullCardScreen(
     ) { page ->
         val item = cardsLazyItems[page] ?: return@HorizontalPager
         val fullCard by cardsViewModel.getCardById(item.code).collectAsState(null)
-        val scrollState = rememberScrollState()
         Column (
             modifier = Modifier.fillMaxSize()
                 .applyScaffoldPaddings(contentPadding)
-                .scrollable(scrollState, Orientation.Vertical),
+                .verticalScroll(rememberScrollState()),
         ) {
             if (fullCard == null) Column(
                 verticalArrangement = Arrangement.Center,

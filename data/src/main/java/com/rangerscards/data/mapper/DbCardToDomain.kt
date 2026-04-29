@@ -83,20 +83,12 @@ fun CardListItemProjection.toDomain(): CardListItem =
         code = code,
         tabooId = tabooId,
         name = name,
-        approaches = approachConnection?.let { connection ->
-            approachReason?.let { reason ->
-                approachConflict?.let { conflict ->
-                    approachExploration?.let { exploration ->
-                        CardApproaches(
-                            connection = connection,
-                            reason = reason,
-                            conflict = conflict,
-                            exploration = exploration
-                        )
-                    }
-                }
-            }
-        },
+        approaches = CardApproaches(
+            connection = approachConnection,
+            reason = approachReason,
+            conflict = approachConflict,
+            exploration = approachExploration
+        ),
         traits = traits,
         equip = equip,
         setName = setName,

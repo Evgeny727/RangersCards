@@ -297,7 +297,7 @@ fun DeckScreen(
     ) {
         RangersBaseCard(
             isDarkTheme = isDarkTheme,
-            labelIdRes = R.string.deck_creation_name_label
+            labelIdRes = R.string.name_label
         ) {
             SettingsInputField(
                 leadingIcon = R.drawable.badge_32dp,

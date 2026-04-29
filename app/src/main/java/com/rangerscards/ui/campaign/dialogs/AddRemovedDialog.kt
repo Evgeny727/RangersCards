@@ -83,7 +83,7 @@ fun AddRemovedDialog(
                 onValueChange = { name = it },
                 label = {
                     Text(text = buildAnnotatedString {
-                        append(stringResource(R.string.deck_creation_name_label))
+                        append(stringResource(R.string.name_label))
                         withStyle(style = SpanStyle(color = CustomTheme.colors.warn)) {
                             append("*")
                         }

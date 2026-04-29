@@ -2,22 +2,30 @@ package com.rangerscards.ui.campaign.dialogs
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -28,25 +36,27 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rangerscards.R
+import com.rangerscards.domain.model.CampaignMission
+import com.rangerscards.domain.model.CampaignNote
 import com.rangerscards.ui.components.RangersDialogWithContent
 import com.rangerscards.ui.components.SquareButton
+import com.rangerscards.ui.settings.components.RangersRadioButtonRow
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 
 @Composable
-fun AddMissionDialog(
-    addCampaignMission: (Int, String) -> Unit,
-    currentDay: Int,
+fun CampaignNoteDialog(
+    index: Int,
+    note: CampaignNote,
+    updateCampaignNotes: (Int, CampaignNote) -> Unit,
     isDarkTheme: Boolean,
     onBack: () -> Unit,
 ) {
-    var day by rememberSaveable(currentDay) { mutableStateOf("$currentDay") }
-    var name by rememberSaveable { mutableStateOf("") }
-    val isLegitAdding by remember { derivedStateOf {
-        day.isNotEmpty() && name.isNotEmpty()
-    } }
+    var day by rememberSaveable { mutableStateOf(note.day.toString()) }
+    var text by rememberSaveable { mutableStateOf(note.text) }
+    var crossedOut by rememberSaveable { mutableStateOf(note.crossedOut) }
     RangersDialogWithContent(
-        headerId = R.string.add_mission_button,
+        headerId = R.string.note_text,
         isDarkTheme = isDarkTheme,
         onBack = onBack
     ) {
@@ -89,11 +99,11 @@ fun AddMissionDialog(
             )
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                value = name,
-                onValueChange = { name = it },
+                value = text,
+                onValueChange = { text = it },
                 label = {
                     Text(text = buildAnnotatedString {
-                        append(stringResource(R.string.name_label))
+                        append(stringResource(R.string.note_text))
                         withStyle(style = SpanStyle(color = CustomTheme.colors.warn)) {
                             append("*")
                         }
@@ -119,16 +129,37 @@ fun AddMissionDialog(
                     unfocusedContainerColor = Color.Transparent
                 )
             )
+            RangersRadioButtonRow(
+                text = stringResource(R.string.event_crossed_out),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                isSelected = crossedOut,
+            ) { value ->
+                crossedOut = value
+            }
         }
+        Spacer(Modifier.height(8.dp))
         SquareButton(
-            stringId = R.string.add_mission_button,
-            leadingIcon = R.drawable.add_circle_32dp,
+            stringId = R.string.delete_note_button,
+            leadingIcon = R.drawable.delete_32dp,
+            iconColor = if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30,
+            textColor = if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30,
+            buttonColor = ButtonDefaults.buttonColors().copy(
+                containerColor = CustomTheme.colors.warn,
+            ),
+            onClick = { updateCampaignNotes(index, CampaignNote(day.toInt(), "")); onBack() },
+            modifier = Modifier.padding(horizontal = 8.dp)
+        )
+        SquareButton(
+            stringId = R.string.save_deck_changes_button,
+            leadingIcon = R.drawable.done_32dp,
             buttonColor = ButtonDefaults.buttonColors().copy(
                 containerColor = CustomTheme.colors.d10,
-                disabledContainerColor = CustomTheme.colors.d10.copy(alpha = 0.3f)
             ),
-            onClick = { addCampaignMission(day.toInt(), name); onBack() },
-            isEnabled = isLegitAdding,
+            onClick = { updateCampaignNotes(index, CampaignNote(
+                day = day.toInt(),
+                text = text,
+                crossedOut = crossedOut
+            )); onBack() },
             modifier = Modifier.padding(8.dp)
         )
     }

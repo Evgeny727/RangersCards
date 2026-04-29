@@ -63,7 +63,7 @@ object CardFilters {
 
     fun getSortOptions(): Map<String, Int> {
         return mapOf(
-            "name" to R.string.deck_creation_name_label,
+            "name" to R.string.name_label,
             "traits" to R.string.traits_sort_header,
             "equip" to R.string.equip_sort_header,
             "set_id" to R.string.sets_sort_header,

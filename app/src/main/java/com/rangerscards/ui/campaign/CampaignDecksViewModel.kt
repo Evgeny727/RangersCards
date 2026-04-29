@@ -4,22 +4,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import com.google.firebase.auth.auth
-import com.google.firebase.Firebase
-import com.rangerscards.data.local.deck.DeckListItemProjection
-import com.rangerscards.domain.repository.CampaignsRepository
+import com.rangerscards.domain.model.DeckListItem
+import com.rangerscards.domain.usecase.SearchDecksUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.update
+import javax.inject.Inject
 
-class CampaignDecksViewModel(
-    private val campaignRepository: CampaignsRepository
+@HiltViewModel
+class CampaignDecksViewModel @Inject constructor(
+    private val searchDecksUseCase: SearchDecksUseCase
 ) : ViewModel() {
 
     // Holds the current search term entered by the user.
@@ -28,41 +27,30 @@ class CampaignDecksViewModel(
 
     private val _uploaded = MutableStateFlow(false)
 
+    private val _userId = MutableStateFlow("")
+
     // Exposes the paginated search results as PagingData.
     @OptIn(ExperimentalCoroutinesApi::class)
-    val searchResults: Flow<PagingData<DeckListItemProjection>> = combine(_searchQuery, _uploaded) { query, uploaded ->
-        query.trim() to uploaded
-    }.flatMapLatest { (query, uploaded) ->
-        // When the search query or include flag changes, perform a new search.
-        val userId = Firebase.auth.currentUser?.uid ?: ""
-        if (query.isEmpty()) {
-            campaignRepository.getAllDecks(userId, uploaded).catch { throwable ->
-                // Log the error.
-                throwable.printStackTrace()
-                // Return an empty PagingData on error so that the flow continues.
-                emit(PagingData.empty())
-            }
-        } else {
-            campaignRepository.searchDecks(query, userId, uploaded).catch { throwable ->
-                // Log the error.
-                throwable.printStackTrace()
-                // Return an empty PagingData on error so that the flow continues.
-                emit(PagingData.empty())
-            }
-        }
-    }.cachedIn(viewModelScope)
+    val searchResults: Flow<PagingData<DeckListItem>> =
+        combine(_searchQuery, _uploaded, _userId) { query, uploaded, userId ->
+            Triple(query.trim(), uploaded, userId)
+        }.flatMapLatest { (query, uploaded, userId) ->
+            searchDecksUseCase(query, userId, uploaded)
+        }.cachedIn(viewModelScope)
 
     fun setUploaded(uploaded: Boolean) {
-        _uploaded.update { uploaded }
+        _uploaded.value = uploaded
+    }
+
+    fun setUserId(userId: String) {
+        _userId.value = userId
     }
 
     fun onSearchQueryChanged(newQuery: String) {
-        _searchQuery.update {
-            newQuery
-        }
+        _searchQuery.value = newQuery
     }
 
     fun clearSearchQuery() {
-        _searchQuery.update { "" }
+        _searchQuery.value = ""
     }
 }

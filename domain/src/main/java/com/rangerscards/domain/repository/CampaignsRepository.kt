@@ -34,15 +34,16 @@ interface CampaignsRepository {
 
     suspend fun addFriendToCampaign(campaignId: String, friendUserId: String): Result<Unit>
 
-    suspend fun removeFriendToCampaign(campaignId: String, friendUserId: String): Result<Unit>
+    suspend fun removeFriendFromCampaign(campaignId: String, friendUserId: String): Result<Unit>
 
     suspend fun leaveCampaign(campaignId: String, userId: String): Result<Unit>
 
     suspend fun deleteCampaignById(id: String, uploaded: Boolean): Result<Unit>
 
-    suspend fun upsertChallengeDeck(campaignId: String, challengeDeckIds: List<String>)
+    suspend fun upsertChallengeDeck(campaignId: String, challengeDeckIds: List<Int>)
 
-    fun getCampaignChallengeDeckFlowById(campaignId: String): Flow<List<String>>
+    fun getCampaignChallengeDeckFlowById(campaignId: String): Flow<List<Int>>
+    fun startSubscription(campaignId: String): Flow<Result<Unit>>
 }
 
 enum class RemoteUpdateAction {

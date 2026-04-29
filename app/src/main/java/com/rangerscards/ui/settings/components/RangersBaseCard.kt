@@ -38,6 +38,7 @@ import com.rangerscards.ui.theme.RangersCardsTheme
 fun RangersBaseCard(
     isDarkTheme: Boolean,
     @StringRes labelIdRes: Int,
+    formatArgs: Any? = null,
     modifier: Modifier = Modifier,
     content: @Composable (ColumnScope.() -> Unit),
 ) {
@@ -62,7 +63,8 @@ fun RangersBaseCard(
                     .padding(vertical = 4.dp, horizontal = 8.dp),
             ) {
                 Text(
-                    text = stringResource(id = labelIdRes),
+                    text = if (formatArgs == null) stringResource(id = labelIdRes)
+                        else stringResource(id = labelIdRes, formatArgs),
                     color = if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30,
                     style = CustomTheme.typography.headline,
                 )

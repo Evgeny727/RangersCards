@@ -56,7 +56,7 @@ fun ImmutableList<CampaignNote>.toJsonNotes(): JsonElement =
             add(
                 buildJsonObject {
                     put("day", it.day)
-                    put("note", it.note)
+                    put("note", it.text)
                     put("crossed_out", it.crossedOut)
                 }
             )
@@ -157,7 +157,7 @@ fun ImmutableList<CampaignDeck>.toJsonDecks(): JsonElement =
                 add(it.name)
                 add(it.meta.toJsonDeckMeta())
                 add(buildJsonObject {
-                    put(it.user.userId, it.user.userName)
+                    put(it.user.id, it.user.name)
                 })
             })
         }
@@ -169,6 +169,6 @@ fun ImmutableList<CampaignDeck>.toJsonDecks(): JsonElement =
 fun ImmutableList<PlayerInfo>.toJsonAccess(): JsonElement =
     buildJsonObject {
         this@toJsonAccess.forEach {
-            put(it.userId, it.userName)
+            put(it.id, it.name)
         }
     }

@@ -32,6 +32,14 @@ mutation createCampaign(
   }
 }
 
+subscription campaign(
+  $campaignId: Int!
+) {
+  campaign: rangers_campaign_by_pk(id: $campaignId) {
+    ...Campaign
+  }
+}
+
 mutation updateUploaded(
   $campaignId: Int!,
   $currentPathTerrain: String,

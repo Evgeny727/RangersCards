@@ -18,8 +18,11 @@ import com.rangerscards.domain.model.CardListItem
 import com.rangerscards.domain.model.DeckInfo
 import com.rangerscards.domain.model.RoleCard
 import com.rangerscards.domain.repository.CardsRepository
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import java.util.Locale
 import javax.inject.Inject
 
@@ -45,16 +48,19 @@ class CardsRepositoryImpl @Inject constructor(
     }
 
     override fun getCardByCodeFlow(cardCode: String, taboo: Boolean) =
-        cardDao.getCardByCodeFlow(cardCode, taboo).map { it.toDomain() }
+        cardDao.getCardByCodeFlow(cardCode, taboo).mapNotNull { it?.toDomain() }
 
     override fun getRoleCardByCodeFlow(code: String, taboo: Boolean): Flow<RoleCard> =
-        cardDao.getRoleByCode(code, taboo).map { it.toDomain() }
+        cardDao.getRoleByCode(code, taboo).mapNotNull { it?.toDomain() }
 
     override fun getRoleCardsByIdFlow(ids: List<String>): Flow<List<RoleCard>> =
         cardDao.getRolesImages(ids).map { list -> list.map { it.toDomain() } }
 
-    override fun getRewards(taboo: Boolean, packIds: List<String>): Flow<List<CardListItem>> =
-        cardDao.getAllRewards(taboo, packIds).map { list -> list.map { it.toDomain() } }
+    override fun getRewards(query: String, taboo: Boolean, packIds: List<String>): Flow<ImmutableList<CardListItem>> =
+        cardDao.getAllRewards(taboo, packIds).map { list ->
+            list.filter { it.name?.contains(query, true) == true }
+                .map { it.toDomain() }.toImmutableList()
+        }
 
     override fun getDeckCardsByIdFlow(ids: List<String>, tabooId: String?) =
         cardDao.getCardsByCodes(ids, tabooId).map { list -> list.map { it.toDomain() } }

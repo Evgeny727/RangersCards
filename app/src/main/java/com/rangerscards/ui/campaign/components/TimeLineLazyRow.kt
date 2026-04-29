@@ -53,10 +53,11 @@ import com.rangerscards.objects.Weather
 import com.rangerscards.ui.campaign.DayInfo
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
+import kotlinx.collections.immutable.ImmutableMap
 
 @Composable
 fun TimeLineLazyRow(
-    groupedDays: Map<Weather, Map<Int, DayInfo>>,
+    groupedDays: ImmutableMap<Weather, ImmutableMap<Int, DayInfo>>,
     currentDay: Int,
     onClick: (Int) -> Unit
 ) {
@@ -79,14 +80,14 @@ fun TimeLineLazyRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        groupedDays.forEach { (weather, day) ->
+        groupedDays.forEach { (weather, days) ->
             item {
                 Column(
                     modifier = Modifier.width(IntrinsicSize.Min),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        day.forEach { (day, dayInfo) ->
+                        days.forEach { (day, dayInfo) ->
                             key(day) {
                                 Column(
                                     modifier = Modifier.sizeIn(maxWidth = 40.dp),

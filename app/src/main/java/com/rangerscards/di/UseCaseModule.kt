@@ -6,6 +6,7 @@ import com.rangerscards.domain.repository.DecksRepository
 import com.rangerscards.domain.usecase.ClearAllLocalDecksAndCampaignsUseCase
 import com.rangerscards.domain.usecase.CreateDeckUseCase
 import com.rangerscards.domain.usecase.GetAllPaginatedRoleCardsFlowUseCase
+import com.rangerscards.domain.usecase.GetCampaignRewardsUseCase
 import com.rangerscards.domain.usecase.GetRoleCardByCodeFlowUseCase
 import com.rangerscards.domain.usecase.GetRolesImagesByIdFlowUseCase
 import com.rangerscards.domain.usecase.SearchCampaignsUseCase
@@ -62,5 +63,10 @@ interface UseCaseModule {
     fun provideGetRolesImagesByIdFlowUseCase(
         cardsRepository: CardsRepository
     ) : GetRolesImagesByIdFlowUseCase = GetRolesImagesByIdFlowUseCase(cardsRepository)
+
+    @Provides
+    fun provideGetCampaignRewardsUseCase(
+        cardsRepository: CardsRepository
+    ) : GetCampaignRewardsUseCase = GetCampaignRewardsUseCase(cardsRepository)
 
 }

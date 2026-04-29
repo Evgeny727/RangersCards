@@ -74,7 +74,7 @@ interface CampaignDao {
     }
 
     @Query("SELECT * FROM campaign WHERE id = :id")
-    fun getCampaignFlowById(id: String): Flow<Campaign>
+    fun getCampaignFlowById(id: String): Flow<Campaign?>
 
     @Query("SELECT challenge_deck_ids FROM challenge_deck WHERE id = :id")
     fun getCampaignChallengeDeckFlowById(id: String): Flow<JsonElement?>

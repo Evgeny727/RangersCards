@@ -19,11 +19,11 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,29 +41,31 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rangerscards.R
+import com.rangerscards.domain.model.Campaign
+import com.rangerscards.domain.model.CampaignHistory
+import com.rangerscards.domain.model.CampaignTravelDay
 import com.rangerscards.objects.CampaignMaps
 import com.rangerscards.objects.Path
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
-import kotlin.collections.get
+import com.rangerscards.utils.applyScaffoldPaddings
+import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 fun CampaignJourneyScreen(
-    campaignViewModel: CampaignViewModel,
+    campaign: Campaign,
+    buildTravelHistory: (List<CampaignHistory>) -> ImmutableList<CampaignTravelDay>,
+    getWeatherResId: (Int) -> Int,
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
-    val campaign by campaignViewModel.campaign.collectAsState()
-    val travelHistory by remember(campaign?.history) {
-        mutableStateOf(campaignViewModel.buildTravelHistory(campaign?.history ?: emptyList()))
+    val travelHistory by remember(campaign.history) {
+        mutableStateOf(buildTravelHistory(campaign.history))
     }
     Column(
         modifier = Modifier
             .background(CustomTheme.colors.l30)
             .fillMaxSize()
-            .padding(
-                top = contentPadding.calculateTopPadding(),
-                bottom = contentPadding.calculateBottomPadding()
-            ),
+            .applyScaffoldPaddings(contentPadding),
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -78,7 +80,7 @@ fun CampaignJourneyScreen(
                         modifier = Modifier.fillMaxWidth().clickable { isExpanded = !isExpanded },
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        val weatherId = campaignViewModel.getWeatherResId(travelDay.day)
+                        val weatherId = remember { getWeatherResId(travelDay.day) }
                         Text(
                             text = stringResource(R.string.campaigns_current_day, travelDay.day) +
                                     " - ${stringResource(weatherId)}",
@@ -101,9 +103,9 @@ fun CampaignJourneyScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                     // Render travel day details
                     TravelDayRow(
-                        cycleId = campaign!!.cycleId,
+                        cycleId = campaign.cycleId,
                         travelDay = travelDay,
-                        currentDay = campaign?.currentDay ?: 1,
+                        currentDay = campaign.currentDay,
                         isExpanded = isExpanded
                     )
                 }
@@ -122,11 +124,13 @@ fun TravelDayRow(
     // Resolve starting location from locale
     val start = travelDay.startingLocation
     // Determine final location from the travel list (or fallback to startingLocation)
-    val lastEntry = travelDay.travel.lastOrNull()
+    val lastEntry = remember(travelDay.travel) { travelDay.travel.lastOrNull() }
     val finalLocation = lastEntry?.location ?: travelDay.startingLocation
     // Whether the last travel entry was camped
     val camped = lastEntry?.camped ?: false
-    val locationsMap = CampaignMaps.getMapLocations(false, cycleId, ignoreExpansions = true)
+    val locationsMap = remember {
+        CampaignMaps.getMapLocations(false, cycleId, ignoreExpansions = true)
+    }
     if (isExpanded) FlowRow(
         modifier = Modifier
             .fillMaxWidth()
@@ -142,15 +146,15 @@ fun TravelDayRow(
                 .align(Alignment.CenterVertically),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            val location = locationsMap[start]!!
+            val location = locationsMap[start]
             Icon(
-                painterResource(location.iconResId),
+                painterResource(location?.iconResId ?: R.drawable.broken_image_32dp),
                 contentDescription = null,
                 tint = Color.Unspecified,
                 modifier = Modifier.size(48.dp)
             )
             Text(
-                text = stringResource(location.nameResId),
+                text = stringResource(location?.nameResId ?: R.string.text_none),
                 color = CustomTheme.colors.d30,
                 fontFamily = Jost,
                 fontWeight = FontWeight.Normal,
@@ -230,7 +234,7 @@ fun TravelDayRow(
                     .size(24.dp)
                     .align(Alignment.CenterVertically)
             )
-            val finalLocationName = stringResource(locationsMap[finalLocation]!!.nameResId)
+            val finalLocationName = stringResource(locationsMap[finalLocation]?.nameResId ?: R.string.text_none)
             Column(
                 modifier = Modifier
                     .width(IntrinsicSize.Max)
@@ -263,7 +267,8 @@ fun TravelDayRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // Starting location icon
-        if (start != null) item { Column(
+        if (start != null) item {
+            Column(
                 modifier = Modifier
                     .width(IntrinsicSize.Max)
                     .sizeIn(maxWidth = 110.dp),
@@ -361,7 +366,7 @@ fun TravelDayRow(
                 )
             }
             item {
-                val finalLocationName = stringResource(locationsMap[finalLocation]!!.nameResId)
+                val finalLocationName = stringResource(locationsMap[finalLocation]?.nameResId ?: R.string.text_none)
                 Column(
                     modifier = Modifier
                         .width(IntrinsicSize.Max)

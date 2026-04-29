@@ -258,7 +258,7 @@ fun DeckCreationScreen(
                         value = name,
                         onValueChange = { name = it },
                         label = {
-                            Text(text = stringResource(R.string.deck_creation_name_label))
+                            Text(text = stringResource(R.string.name_label))
                         },
                         placeholder = {
                             Text(text = stringResource(R.string.deck_creation_name_placeholder))

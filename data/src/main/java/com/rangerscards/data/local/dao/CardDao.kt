@@ -52,7 +52,7 @@ interface CardDao {
                 sun_challenge, mountain_challenge, crest_challenge
             FROM card WHERE code = :cardCode AND (:taboo IS 0 AND taboo_id IS NULL)
         )""")
-    fun getCardByCodeFlow(cardCode: String, taboo: Boolean): Flow<FullCardProjection>
+    fun getCardByCodeFlow(cardCode: String, taboo: Boolean): Flow<FullCardProjection?>
 
     @Query("""SELECT * FROM (
             -- Case 1: Taboo is set – select the override card
@@ -86,7 +86,7 @@ interface CardDao {
             FROM card WHERE code = :code AND (:taboo IS 0 AND taboo_id IS NULL)
         )"""
     )
-    fun getRoleByCode(code: String, taboo: Boolean): Flow<RoleCardProjection>
+    fun getRoleByCode(code: String, taboo: Boolean): Flow<RoleCardProjection?>
 
     @Query(
         """SELECT id, code, taboo_id, set_name, aspect_id, aspect_short_name, cost, real_image_src, name, 

@@ -1,162 +1,156 @@
 package com.rangerscards.ui.campaign
 
-import android.util.Log
 import androidx.annotation.DrawableRes
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.apollographql.apollo.ApolloClient
-import com.apollographql.apollo.api.Optional
-import com.apollographql.apollo.cache.normalized.FetchPolicy
-import com.apollographql.apollo.cache.normalized.fetchPolicy
-import com.google.firebase.auth.FirebaseUser
-import com.rangerscards.AddCampaignEventMutation
-import com.rangerscards.AddCampaignMissionMutation
-import com.rangerscards.AddCampaignRemovedMutation
-import com.rangerscards.AddFriendToCampaignMutation
-import com.rangerscards.CampaignSubscription
-import com.rangerscards.CampaignTravelMutation
-import com.rangerscards.SetCampaignTravelMutation
-import com.rangerscards.CreateCampaignMutation
-import com.rangerscards.DeleteCampaignMutation
-import com.rangerscards.ExtendCampaignMutation
-import com.rangerscards.GetCampaignQuery
-import com.rangerscards.GetDeckQuery
-import com.rangerscards.GetMyDecksQuery
-import com.rangerscards.LeaveCampaignMutation
-import com.rangerscards.R
-import com.rangerscards.RemoveDeckCampaignMutation
-import com.rangerscards.RemoveFriendFromCampaignMutation
-import com.rangerscards.SetCampaignCalendarMutation
-import com.rangerscards.SetCampaignDayMutation
-import com.rangerscards.SetCampaignMissionsMutation
-import com.rangerscards.SetCampaignTitleMutation
-import com.rangerscards.SetDeckCampaignMutation
-import com.rangerscards.UpdateCampaignEventsMutation
-import com.rangerscards.UpdateCampaignExpansionsMutation
-import com.rangerscards.UpdateCampaignRemovedMutation
-import com.rangerscards.UpdateCampaignRewardsMutation
-import com.rangerscards.UpdateUploadedMutation
 import com.rangerscards.CurrentChallengeDeck
-import com.rangerscards.data.local.campaign.Campaign
-import com.rangerscards.data.local.card.CardListItemProjection
-import com.rangerscards.data.local.card.FullCardProjection
-import com.rangerscards.data.local.deck.Deck
-import com.rangerscards.data.local.deck.RoleCardProjection
+import com.rangerscards.R
+import com.rangerscards.UiErrorState
+import com.rangerscards.domain.exceptions.UploadingCampaignWithDecksException
+import com.rangerscards.domain.model.Campaign
+import com.rangerscards.domain.model.CampaignCalendar
+import com.rangerscards.domain.model.CampaignEvent
+import com.rangerscards.domain.model.CampaignHistory
+import com.rangerscards.domain.model.CampaignMission
+import com.rangerscards.domain.model.CampaignNote
+import com.rangerscards.domain.model.CampaignRemoved
+import com.rangerscards.domain.model.CampaignTravelDay
+import com.rangerscards.domain.model.CardListItem
+import com.rangerscards.domain.model.DeckCampaignInfo
+import com.rangerscards.domain.model.FullCard
+import com.rangerscards.domain.model.RoleCard
+import com.rangerscards.domain.model.UserSettings
 import com.rangerscards.domain.repository.CampaignsRepository
+import com.rangerscards.domain.repository.CardsRepository
+import com.rangerscards.domain.repository.DecksRepository
+import com.rangerscards.domain.repository.RemoteUpdateAction
+import com.rangerscards.domain.usecase.GetCampaignRewardsUseCase
 import com.rangerscards.objects.CampaignMaps
 import com.rangerscards.objects.Path
 import com.rangerscards.objects.Weather
-import com.rangerscards.ui.decks.getCurrentDateTime
-import com.rangerscards.ui.decks.toDeck
-import com.rangerscards.ui.decks.toDecks
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableMap
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.add
-import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.put
-import kotlin.collections.get
-import kotlin.collections.iterator
-import kotlin.text.get
+import javax.inject.Inject
 
 data class DayInfo(
     val guides: List<String>,
     @DrawableRes val moonIconId: Int
 )
 
-class CampaignViewModel(
-    private val apolloClient: ApolloClient,
+data class Quadruple<A, B, C, D>(
+    val first: A,
+    val second: B,
+    val third: C,
+    val fourth: D,
+)
+
+sealed interface CampaignUiState {
+    object Idle : CampaignUiState
+    object Loading : CampaignUiState
+    object Deleted : CampaignUiState
+    data class FriendDeckDownloaded(val deckId: String) : CampaignUiState
+    data class CampaignUploaded(val campaignId: String) : CampaignUiState
+}
+
+@HiltViewModel
+class CampaignViewModel @Inject constructor(
     private val campaignsRepository: CampaignsRepository,
-    private val deckRepository: DeckRepository,
+    private val decksRepository: DecksRepository,
+    private val cardsRepository: CardsRepository,
+    private val getCampaignRewardsUseCase: GetCampaignRewardsUseCase,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    fun getCampaignById(id: String) = campaignsRepository.getCampaignFlowById(id)
+    private val campaignId: String = checkNotNull(savedStateHandle["campaignId"])
 
-    fun getCampaignChallengeDeckIds(id: String) =
-        campaignsRepository.getCampaignChallengeDeckFlowById(id)
+    val campaign: StateFlow<Campaign?> =
+        campaignsRepository.getCampaignFlowById(campaignId)
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = null
+            )
 
-    var isSubscriptionStarted = MutableStateFlow(false)
-        private set
+    private var _campaignUiState = MutableStateFlow<CampaignUiState>(CampaignUiState.Idle)
+    val campaignUiState: StateFlow<CampaignUiState> = _campaignUiState.asStateFlow()
 
-    private val _campaign = MutableStateFlow<CampaignState?>(null)
-    val campaign: StateFlow<CampaignState?> = _campaign.asStateFlow()
+    private val _events = MutableSharedFlow<UiErrorState>(
+        replay = 0,
+        extraBufferCapacity = 1
+    )
+    val events: SharedFlow<UiErrorState> = _events
 
-    val uploadedCampaignIdToOpen = MutableStateFlow<String?>(null)
-
-    val friendDeckIdToOpen = MutableStateFlow<String?>(null)
-
-    var  currentChallengeDeck: CurrentChallengeDeck? = null
-        private set
-
-    fun setChallengeDeck(ids: JsonElement) {
-        val listOfIds = ids.jsonArray.map { it.jsonPrimitive.content.toInt() }
-        currentChallengeDeck = CurrentChallengeDeck(listOfIds)
+    private fun emitError(throwable: Throwable) {
+        _events.tryEmit(UiErrorState(throwable))
     }
 
-    fun startSubscription(campaignId: String) {
+    private var _currentChallengeDeck = MutableStateFlow<CurrentChallengeDeck?>(null)
+    val currentChallengeDeck: StateFlow<CurrentChallengeDeck?> = _currentChallengeDeck.asStateFlow()
+
+    init {
+        startCampaignSubscription()
+        initializeChallengeDeck()
+    }
+
+    fun startCampaignSubscription() {
         viewModelScope.launch {
-            try {
-                // Convert the Apollo subscription call to a Flow
-                apolloClient.subscription(CampaignSubscription(campaignId.toInt()))
-                    .toFlow()
-                    .collect { response ->
-                        // Check for errors or handle the data
-                        if (response.hasErrors()) {
-                            // Handle error case
-                            Log.d("SubscriptionErrors", response.errors.toString())
-                        } else {
-                            val data = response.data
-                            if (data != null) {
-                                isSubscriptionStarted.update { true }
-                                campaignsRepository.updateCampaign(data.campaign!!.campaign.toCampaign(true))
-                            }
-                        }
-                    }
-            } catch (e: Exception) {
-                // Handle cancellation or other exceptions
-                // For instance, log the error or inform the user
-                isSubscriptionStarted.update { false }
-                Log.e("SubscriptionError", e.message.toString())
+            campaignsRepository.startSubscription(campaignId).collect { response ->
+                response.onFailure { emitError(it) }
             }
         }
     }
 
-    fun parseCampaign(campaign: Campaign) {
-        _campaign.update {
-            campaign.toCampaignState()
+    fun initializeChallengeDeck() {
+        viewModelScope.launch {
+            val ids  = campaignsRepository.getCampaignChallengeDeckFlowById(campaignId).firstOrNull()
+            _currentChallengeDeck.value = CurrentChallengeDeck(ids ?: emptyList())
         }
     }
 
-    suspend fun updateCampaignName(
-        campaignId: String,
-        newName: String,
-        uploaded: Boolean,
-        user: FirebaseUser?
-    ) {
-        if (uploaded) {
-            val token = user!!.getIdToken(true).await().token
-            apolloClient.mutation(
-                SetCampaignTitleMutation(
-                name = newName,
-                campaignId = campaignId.toInt(),
-            )
-            ).addHttpHeader("Authorization", "Bearer $token").execute()
-        } else {
-            val campaign = campaignsRepository.getCampaignById(campaignId)
-            campaignsRepository.updateCampaign(campaign.copy(name = newName,
-                updatedAt = getCurrentDateTime()))
+
+
+    private var _rewardsQuery = MutableStateFlow("")
+    val rewardsQuery: StateFlow<String> = _rewardsQuery.asStateFlow()
+
+    fun onRewardsQueryChange(query: String) {
+        _rewardsQuery.value = query
+    }
+
+    fun onRewardsQueryClear() {
+        _rewardsQuery.value = ""
+    }
+
+    fun updateCampaignName(newName: String) {
+        viewModelScope.launch {
+            val campaign = campaign.value
+            campaign?.let {
+                if (campaign.uploaded) _campaignUiState.value = CampaignUiState.Loading
+                if (newName != campaign.name) campaignsRepository.updateCampaign(
+                    campaign.copy(name = newName),
+                    RemoteUpdateAction.SET_TITLE
+                ).onFailure { emitError(it) }
+                if (campaign.uploaded) _campaignUiState.value = CampaignUiState.Idle
+            }
         }
     }
 
@@ -192,17 +186,18 @@ class CampaignViewModel(
 
     // This function groups days by the corresponding Weather.
     // For extendedCalendar, days 31-60 mirror days 1-30.
-    fun groupDaysByWeather(): Map<Weather, Map<Int, DayInfo>> {
-        val campaign = campaign.value!!
+    fun groupDaysByWeather(): ImmutableMap<Weather, ImmutableMap<Int, DayInfo>> {
+        val campaign = campaign.value
+        if (campaign == null) return persistentMapOf()
         val weathers = getExtendedWeatherList(campaign.expansions)
-        val guidesMap = campaign.calendar.toMutableMap()
+        val guidesMap = campaign.calendar.associate { it.day to it.guides }.toMutableMap()
         val starterGuides = CampaignMaps.fixedGuideEntries[campaign.cycleId]!!
         for ((key, value) in starterGuides) {
             // Check if the key exists in the first map
             if (guidesMap.containsKey(key)) {
                 // If yes, merge the lists (concatenate the values)
                 // Using the plus operator to concatenate two lists
-                guidesMap[key] = value + guidesMap[key]!!
+                guidesMap[key] = (value + guidesMap[key]!!) as ImmutableList<String>
             } else {
                 // If the key does not exist, add it to the first map
                 guidesMap[key] = value
@@ -211,13 +206,13 @@ class CampaignViewModel(
         val iconsId = CampaignMaps.moonIconsMap()
         // Determine the maximum day based on calendar mode
         val maxDay = if (campaign.extendedCalendar) 60 else 30
-        val result = mutableMapOf<Weather, MutableList<Int>>()
+        val result = mutableMapOf<Weather, PersistentList<Int>>()
         val dayInfoMap = mutableMapOf<Int, DayInfo>()
         // Iterate over the days in the defined range.
         for (day in 1..maxDay) {
             val weatherForDay = weathers.firstOrNull { day in it.start..it.end }
             if (weatherForDay != null) {
-                result.getOrPut(weatherForDay) { mutableListOf() }.add(day)
+                result.getOrPut(weatherForDay) { persistentListOf() } + day
             }
             dayInfoMap[day] = DayInfo(
                 guidesMap[day] ?: emptyList(),
@@ -225,43 +220,40 @@ class CampaignViewModel(
             )
         }
         return result.mapValues { (_, days) ->
-            days.associateWith { day -> dayInfoMap[day]!! }
-        }
+            days.associateWith { day -> dayInfoMap[day]!! }.toImmutableMap()
+        }.toImmutableMap()
     }
 
-    suspend fun setCampaignCalendar(day: Int, guides: List<String>, user: FirebaseUser?) {
-        val campaign = campaign.value!!
-        val map: MutableMap<Int, List<String>> = campaign.calendar.toMutableMap()
-        if (map.containsKey(day)) {
-            if (guides.isEmpty()) map.remove(day)
-            else map[day] = guides
-        } else {
-            if (guides.isNotEmpty()) map[day] = guides
-        }
-        val newCalendar = buildJsonArray { map.forEach { add(buildJsonObject {
-            put("day", it.key)
-            put("guides", buildJsonArray { it.value.forEach { guide -> add(guide) } })
-        }) } }
-        if (campaign.uploaded) {
-            val token = user!!.getIdToken(true).await().token
-            apolloClient.mutation(
-                SetCampaignCalendarMutation(
-                    campaignId = campaign.id.toInt(),
-                    calendar = newCalendar,
-                )
-            ).addHttpHeader("Authorization", "Bearer $token").execute()
-        } else {
-            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
-            campaignsRepository.updateCampaign(campaignEntry.copy(calendar = newCalendar,
-                updatedAt = getCurrentDateTime()))
+    fun setCampaignCalendar(day: Int, guides: List<String>) {
+        viewModelScope.launch {
+            val campaign = campaign.value
+            campaign?.let {
+                if (campaign.uploaded) _campaignUiState.value = CampaignUiState.Loading
+                val map: MutableMap<Int, List<String>> = campaign.calendar
+                    .associate { it.day to it.guides }.toMutableMap()
+                if (map.containsKey(day)) {
+                    if (guides.isEmpty()) map.remove(day)
+                    else map[day] = guides
+                } else {
+                    if (guides.isNotEmpty()) map[day] = guides
+                }
+                val newCalendar = map.map { (key, value) ->
+                    CampaignCalendar(key, value.toImmutableList())
+                }.toImmutableList()
+                campaignsRepository.updateCampaign(
+                    campaign.copy(calendar = newCalendar),
+                    RemoteUpdateAction.SET_CALENDAR
+                ).onFailure { emitError(it) }
+                _campaignUiState.value = CampaignUiState.Idle
+            }
         }
     }
 
     /**
      * Computes a list of TravelDay objects based on the campaign history.
      */
-    fun buildTravelHistory(history: List<CampaignHistory>): List<CampaignTravelDay> {
-        val campaign = campaign.value ?: return emptyList()
+    fun buildTravelHistory(history: List<CampaignHistory>): ImmutableList<CampaignTravelDay> {
+        val campaign = campaign.value ?: return persistentListOf()
         // Group entries by day
         val daysMap = history.groupBy { it.day }
         val result = mutableListOf<CampaignTravelDay>()
@@ -270,595 +262,397 @@ class CampaignViewModel(
         // For each day from 1 to campaign.day, build the travel day object.
         for (day in 1..campaign.currentDay) {
             val travel = daysMap[day] ?: emptyList()
-            result.add(
-                CampaignTravelDay(
-                    day = day,
-                    startingLocation = liveLocation,
-                    travel = travel
-                )
-            )
+            result.add(CampaignTravelDay(
+                day = day,
+                startingLocation = liveLocation,
+                travel = travel.toImmutableList()
+            ))
             if (travel.isNotEmpty()) {
                 // Update liveLocation to the location from the last entry
                 liveLocation = travel.lastOrNull()?.location ?: liveLocation
             }
         }
-        return result
+        return result.toImmutableList()
     }
 
     fun getWeatherResId(day: Int): Int {
-        val campaign = campaign.value!!
-        val weatherList = CampaignMaps.weather(campaign.cycleId)
+        val campaign = campaign.value
+        val weatherList = CampaignMaps.weather(campaign?.cycleId ?: "core")
         return (weatherList.firstOrNull { day in it.start..it.end }
-            ?: weatherList.firstOrNull { day in (it.start + 30)..(it.end + 30) })?.nameResId!!
+            ?: weatherList.firstOrNull { day in (it.start + 30)..(it.end + 30) })?.nameResId ?: R.string.text_none
     }
 
-    suspend fun extendCampaign(user: FirebaseUser?) {
-        val campaign = campaign.value!!
-        if (campaign.uploaded) {
-            val token = user!!.getIdToken(true).await().token
-            apolloClient.mutation(
-                ExtendCampaignMutation(campaignId = campaign.id.toInt())
-            ).addHttpHeader("Authorization", "Bearer $token").execute()
-        } else {
-            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
-            campaignsRepository.updateCampaign(campaignEntry.copy(
-                extendedCalendar = true,
-                updatedAt = getCurrentDateTime()))
+    fun extendCampaign() {
+        viewModelScope.launch {
+            val campaign = campaign.value
+            campaign?.let {
+                if (campaign.uploaded) _campaignUiState.value = CampaignUiState.Loading
+                campaignsRepository.updateCampaign(
+                    campaign.copy(extendedCalendar = true),
+                    RemoteUpdateAction.EXTEND
+                ).onFailure { emitError(it) }
+                _campaignUiState.value = CampaignUiState.Idle
+            }
         }
     }
 
-    suspend fun setCampaignDay(user: FirebaseUser?) {
-        val campaign = campaign.value!!
-        if (campaign.uploaded) {
-            val token = user!!.getIdToken(true).await().token
-            apolloClient.mutation(
-                SetCampaignDayMutation(
-                    campaignId = campaign.id.toInt(),
-                    day = campaign.currentDay + 1
-                )
-            ).addHttpHeader("Authorization", "Bearer $token").execute()
-        } else {
-            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
-            campaignsRepository.updateCampaign(campaignEntry.copy(
-                day = campaign.currentDay + 1,
-                updatedAt = getCurrentDateTime()))
+    fun setCampaignDay() {
+        viewModelScope.launch {
+            val campaign = campaign.value
+            campaign?.let {
+                if (campaign.uploaded) _campaignUiState.value = CampaignUiState.Loading
+                reshuffleChallengeDeck()
+                campaignsRepository.updateCampaign(
+                    campaign.copy(currentDay = campaign.currentDay + 1),
+                    RemoteUpdateAction.SET_DAY
+                ).onFailure { emitError(it) }
+                _campaignUiState.value = CampaignUiState.Idle
+            }
         }
-        reshuffleChallengeDeck()
     }
 
-    suspend fun campaignTravel(
+    fun campaignTravel(
         selectedLocation: String,
         selectedPathTerrain: String,
         isCamping: Boolean,
-        user: FirebaseUser?
     ) {
-        val campaign = campaign.value!!
-        if (campaign.uploaded) {
-            val token = user!!.getIdToken(true).await().token
-            apolloClient.mutation(
-                CampaignTravelMutation(
-                    campaignId = campaign.id.toInt(),
-                    day = campaign.currentDay + if (isCamping) 1 else 0,
+        viewModelScope.launch {
+            val campaign = campaign.value
+            campaign?.let {
+                if (campaign.uploaded) _campaignUiState.value = CampaignUiState.Loading
+                val newHistory = campaign.history + CampaignHistory(
+                    campaign.currentDay,
+                    isCamping,
+                    selectedLocation,
+                    selectedPathTerrain
+                )
+                val newCampaign = campaign.copy(
+                    currentDay = campaign.currentDay + if (isCamping) 1 else 0,
                     currentLocation = selectedLocation,
                     currentPathTerrain = selectedPathTerrain,
-                    history = buildJsonObject {
-                        put("day", campaign.currentDay)
-                        put("camped", isCamping)
-                        put("location", selectedLocation)
-                        put("path_terrain", selectedPathTerrain)
-                    }
+                    history = newHistory.toImmutableList()
                 )
-            ).addHttpHeader("Authorization", "Bearer $token").execute()
-        } else {
-            val newHistory = campaign.history + CampaignHistory(
-                campaign.currentDay,
-                isCamping,
-                selectedLocation,
-                selectedPathTerrain
-            )
-            val newHistoryJson = buildJsonArray { newHistory.forEach { add(buildJsonObject {
-                put("day", it.day)
-                put("camped", it.camped)
-                put("location", it.location)
-                put("path_terrain", it.pathTerrain)
-            }) } }
-            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
-            campaignsRepository.updateCampaign(campaignEntry.copy(
-                day = campaign.currentDay + if (isCamping) 1 else 0,
-                currentLocation = selectedLocation,
-                currentPathTerrain = selectedPathTerrain,
-                history = newHistoryJson,
-                updatedAt = getCurrentDateTime()
-            ))
+                if (isCamping) reshuffleChallengeDeck()
+                campaignsRepository.updateCampaign(
+                    newCampaign,
+                    RemoteUpdateAction.SET_TRAVEL
+                ).onFailure { emitError(it) }
+                _campaignUiState.value = CampaignUiState.Idle
+            }
         }
-        if (isCamping) reshuffleChallengeDeck()
     }
 
-    suspend fun drawChallengeCard(): Int? {
-        val drawCardId = currentChallengeDeck?.draw()
-        campaignsRepository.upsertChallengeDeck(
-            campaign.value!!.id,
-            buildJsonArray { currentChallengeDeck?.getDeckAsList()?.forEach { add(it) } }
-            )
+    fun drawChallengeCard(): Int? {
+        val drawCardId = currentChallengeDeck.value?.draw()
+        viewModelScope.launch {
+            campaign.value?.id?.let {
+                campaignsRepository.upsertChallengeDeck(
+                    it,
+                    _currentChallengeDeck.value?.getDeckAsList() ?: emptyList()
+                )
+            }
+        }
         return drawCardId
     }
 
-    fun scoutChallengeCard(): Int? {
-        return currentChallengeDeck?.scout()
+    fun scoutChallengeCard(): Int? = _currentChallengeDeck.value?.scout()
+
+    fun returnChallengeCardsInAnyOrder(topList: List<Int>, bottomList: List<Int>) {
+        viewModelScope.launch {
+            val campaignId = campaign.value?.id
+            campaignId?.let { campaignId ->
+                val deck = _currentChallengeDeck.value?.getDeckAsList() ?: emptyList()
+                val exclude = (topList + bottomList).toSet()
+                val middleList = deck.filter { it !in exclude }
+                val newList = topList + middleList + bottomList
+                campaignsRepository.upsertChallengeDeck(
+                    campaignId,
+                    newList
+                )
+                _currentChallengeDeck.value?.updateDeckWithDifferentOrder(newList)
+            }
+        }
     }
 
-    suspend fun returnChallengeCardsInAnyOrder(topList: List<Int>, bottomList: List<Int>) {
-        val deck = currentChallengeDeck?.getDeckAsList() ?: emptyList()
-        val exclude = (topList + bottomList).toSet()
-        val middleList = deck.filter { it !in exclude }
-        val newList = topList + middleList + bottomList
-        campaignsRepository.upsertChallengeDeck(
-            campaign.value!!.id,
-            buildJsonArray { newList.forEach { add(it) } }
-        )
-        currentChallengeDeck?.updateDeckWithDifferentOrder(newList)
+    fun discardScoutedCards() = _currentChallengeDeck.value?.resetScoutPosition()
+
+    fun reshuffleChallengeDeck() {
+        viewModelScope.launch {
+            campaignsRepository.upsertChallengeDeck(
+                campaign.value!!.id,
+                _currentChallengeDeck.value?.reshuffle() ?: emptyList()
+            )
+        }
     }
 
-    fun discardScoutedCards() = currentChallengeDeck?.resetScoutPosition()
-
-    suspend fun reshuffleChallengeDeck() {
-        campaignsRepository.upsertChallengeDeck(
-            campaign.value!!.id,
-            buildJsonArray { currentChallengeDeck?.reshuffle()?.forEach { add(it) } }
-        )
-    }
-
-    private val _taboo = MutableStateFlow(false)
+    private val _userSettings = MutableStateFlow(UserSettings(collection = persistentListOf("core")))
     private val _packId = MutableStateFlow("core")
 
-    val showAllRewards = MutableStateFlow(false)
+    private val _showAllRewards = MutableStateFlow(false)
+    val showAllRewards: StateFlow<Boolean> = _showAllRewards.asStateFlow()
 
-    private val _collection = MutableStateFlow(listOf("core"))
+    fun getRole(id: String): Flow<RoleCard> = cardsRepository.getRoleCardByCodeFlow(id, false)
 
-    fun getRole(id: String): Flow<RoleCardProjection?> = campaignsRepository.getRole(id, _taboo.value)
-
-    fun setTaboo(taboo: Boolean?) {
-        _taboo.update { taboo ?: false }
+    fun setUserSettings(settings: UserSettings) {
+        _userSettings.value = settings
     }
 
     fun setPackId(id: String) {
-        _packId.update { id }
+        _packId.value = id
     }
 
-    fun setShowAllRewards() {
-        showAllRewards.update { !it }
-    }
-
-    fun setCollection(collection: List<String>) {
-        _collection.update { collection + "core" }
+    fun setShowAllRewards(showAll: Boolean) {
+        _showAllRewards.value = showAll
     }
 
 
-    suspend fun removeDeckCampaign(deckId: String, user: FirebaseUser?, updateCampaign: Boolean = true) {
-        val campaign = campaign.value!!
-        if (campaign.uploaded) {
-            val token = user!!.getIdToken(true).await().token
-            apolloClient.mutation(
-                RemoveDeckCampaignMutation(
-                    deckId = deckId.toInt(),
-                    campaignId = campaign.id.toInt(),
-                )
-            ).addHttpHeader("Authorization", "Bearer $token").execute()
-            val response = apolloClient.query(GetDeckQuery(deckId.toInt()))
-                .addHttpHeader("Authorization", "Bearer $token")
-                .fetchPolicy(FetchPolicy.NetworkOnly).execute()
-            if (response.data != null) deckRepository.updateDeck(response.data!!.deck!!.deck.toDeck(true))
-        } else {
-            val decks: MutableList<Deck> = mutableListOf()
-            var deck = deckRepository.getDeck(deckId)
-            if (deck != null) {
-                decks.add(deck.copy(
-                    updatedAt = getCurrentDateTime(),
-                    campaignId = null,
-                    campaignName = null
-                ))
-                while (deck!!.previousId != null) {
-                    deck = deckRepository.getDeck(deck.previousId)
-                    decks.add(deck!!.copy(
-                        updatedAt = getCurrentDateTime(),
-                        campaignId = null,
-                        campaignName = null
-                    ))
-                }
-            }
-            deckRepository.upsertDecks(decks)
-            if (updateCampaign) {
-                val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
-                campaignsRepository.updateCampaign(campaignEntry.copy(
-                    latestDecks = JsonObject(campaignEntry.latestDecks.jsonObject.filterKeys { it != deckId }),
-                    updatedAt = getCurrentDateTime()
-                ))
+    fun removeDeckCampaign(deckId: String) {
+        viewModelScope.launch {
+            val campaign = campaign.value
+            campaign?.let {
+                if (campaign.uploaded) _campaignUiState.value = CampaignUiState.Loading
+                decksRepository.removeDeckCampaign(
+                    id = deckId,
+                    campaignInfo = DeckCampaignInfo(
+                        campaignId = campaign.id,
+                        campaignName = campaign.name,
+                        campaignRewards = campaign.rewards
+                    ),
+                    uploaded = campaign.uploaded,
+                ).onFailure { emitError(it) }
+                _campaignUiState.value = CampaignUiState.Idle
             }
         }
     }
 
-    suspend fun addDeckCampaign(deckId: String, user: FirebaseUser?) {
-        val campaign = campaign.value!!
-        if (campaign.uploaded) {
-            val token = user!!.getIdToken(true).await().token
-            apolloClient.mutation(
-                SetDeckCampaignMutation(
-                    deckId = deckId.toInt(),
-                    campaignId = campaign.id.toInt(),
-                )
-            ).addHttpHeader("Authorization", "Bearer $token").execute()
-            val response = apolloClient.query(GetDeckQuery(deckId.toInt()))
-                .addHttpHeader("Authorization", "Bearer $token")
-                .fetchPolicy(FetchPolicy.NetworkOnly).execute()
-            if (response.data != null) deckRepository.updateDeck(response.data!!.deck!!.deck.toDeck(true))
-        } else {
-            val deck = deckRepository.getDeck(deckId)!!
-            deckRepository.updateDeck(deck.copy(
-                campaignId = campaign.id,
-                campaignName = campaign.name,
-                campaignRewards = buildJsonArray { campaign.rewards.forEach { add(it) } }
-            ))
-            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
-            val newDeckJson = buildJsonArray {
-                add(deck.name)
-                add(deck.meta)
-                add(buildJsonObject {
-                    put(deck.userId, deck.userHandle)
-                })
-            }
-            campaignsRepository.updateCampaign(campaignEntry.copy(
-                latestDecks = JsonObject(campaignEntry.latestDecks.jsonObject + (deckId to newDeckJson)),
-                updatedAt = getCurrentDateTime()
-            ))
-        }
-    }
-
-    suspend fun downloadFriendDeck(deckId: String, user: FirebaseUser?) {
-        val token = user!!.getIdToken(true).await().token
-        val response = apolloClient.query(GetDeckQuery(deckId.toInt()))
-            .addHttpHeader("Authorization", "Bearer $token")
-            .fetchPolicy(FetchPolicy.NetworkOnly).execute()
-        if (response.data != null) {
-            deckRepository.upsertDeck(response.data!!.deck!!.deck.toDeck(true))
-            friendDeckIdToOpen.update { response.data!!.deck!!.deck.id.toString() }
-        }
-    }
-
-    suspend fun addFriendToCampaign(user: FirebaseUser?, friendId: String) {
-        val campaign = campaign.value!!
-        val token = user!!.getIdToken(true).await().token
-        apolloClient.mutation(
-            AddFriendToCampaignMutation(
-                campaignId = campaign.id.toInt(),
-                userId = friendId
-            )
-        ).addHttpHeader("Authorization", "Bearer $token").execute()
-    }
-
-    suspend fun removeFriendFromCampaign(user: FirebaseUser?, friendId: String) {
-        val campaign = campaign.value!!
-        val token = user!!.getIdToken(true).await().token
-        apolloClient.mutation(
-            RemoveFriendFromCampaignMutation(
-                campaignId = campaign.id.toInt(),
-                userId = friendId
-            )
-        ).addHttpHeader("Authorization", "Bearer $token").execute()
-    }
-
-    suspend fun uploadCampaign(user: FirebaseUser?) {
-        val campaign = campaign.value!!
-        val token = user!!.getIdToken(true).await().token
-        val uploadedCampaign = apolloClient.mutation(
-            CreateCampaignMutation(
-                name = campaign.name,
-                cycleId = campaign.cycleId,
-                currentLocation = campaign.currentLocation,
-                expansions = buildJsonArray { campaign.expansions.forEach { add(it) } },
-                calendar = buildJsonArray { campaign.calendar.forEach { entry ->
-                    add(buildJsonObject {
-                        put("day", entry.key)
-                        put("guides", buildJsonArray { entry.value.forEach { add(it) } })
-                    })
-                } }
-            )
-        ).addHttpHeader("Authorization", "Bearer $token").execute()
-        if (uploadedCampaign.data != null) {
-            val newCampaignId = uploadedCampaign.data!!.campaign!!.campaign.id
-            apolloClient.mutation(
-                UpdateUploadedMutation(
-                    campaignId = newCampaignId,
-                    currentPathTerrain = Optional.present(campaign.currentPathTerrain),
-                    day = campaign.currentDay,
-                    extendedCalendar = Optional.present(campaign.extendedCalendar),
-                    rewards = buildJsonArray { campaign.rewards.forEach { add(it) } },
-                    missions = buildJsonArray { campaign.missions.forEach { add(buildJsonObject {
-                        put("day", it.day)
-                        put("name", it.name)
-                        put("checks", buildJsonArray { it.checks.forEach { check -> add(check) } })
-                        put("completed", it.completed)
-                    }) } },
-                    events = buildJsonArray { campaign.events.forEach { add(buildJsonObject {
-                        put("event", it.name)
-                        put("crossed_out", it.crossedOut)
-                        put("marks", it.marks)
-                    }) } },
-                    removed = buildJsonArray { campaign.removed.forEach { add(buildJsonObject {
-                        put("name", it.name)
-                        put("set_id", it.setId)
-                    }) } },
-                    history = buildJsonArray { campaign.history.forEach { add(buildJsonObject {
-                        put("day", it.day)
-                        put("camped", it.camped)
-                        put("location", it.location)
-                        put("path_terrain", it.pathTerrain)
-                    }) } },
-                    calendar = buildJsonArray { campaign.calendar.forEach { add(buildJsonObject {
-                        put("day", it.key)
-                        put("guides", buildJsonArray { it.value.forEach { guide -> add(guide) } })
-                    }) } }
-                )
-            ).addHttpHeader("Authorization", "Bearer $token").execute()
-            val newCampaign = apolloClient.query(GetCampaignQuery(newCampaignId)).fetchPolicy(FetchPolicy.NetworkOnly)
-                .addHttpHeader("Authorization", "Bearer $token").execute()
-            if (newCampaign.data != null) {
-                val uploadedData = newCampaign.data!!.campaign!!.campaign
-                campaignsRepository.insertCampaign(uploadedData.toCampaign(true))
-                uploadedCampaignIdToOpen.update { uploadedData.id.toString() }
-                campaignsRepository.deleteCampaign(campaign.id)
+    fun addDeckCampaign(deckId: String) {
+        viewModelScope.launch {
+            val campaign = campaign.value
+            campaign?.let {
+                if (campaign.uploaded) _campaignUiState.value = CampaignUiState.Loading
+                decksRepository.setDeckCampaign(
+                    id = deckId,
+                    campaignInfo = DeckCampaignInfo(
+                        campaignId = campaign.id,
+                        campaignName = campaign.name,
+                        campaignRewards = campaign.rewards
+                    ),
+                    uploaded = campaign.uploaded,
+                ).onFailure { emitError(it) }
+                _campaignUiState.value = CampaignUiState.Idle
             }
         }
     }
 
-    suspend fun deleteCampaign(user: FirebaseUser?) {
-        val campaign = campaign.value!!
-        if (campaign.uploaded) {
-            val token = user!!.getIdToken(true).await().token
-            apolloClient.mutation(
-                DeleteCampaignMutation(
-                    campaignId = campaign.id.toInt(),
-                )
-            ).addHttpHeader("Authorization", "Bearer $token").execute()
-            val response = apolloClient.query(GetMyDecksQuery(userId = user.uid))
-                .addHttpHeader("Authorization", "Bearer $token")
-                .fetchPolicy(FetchPolicy.NetworkOnly).execute()
-            if (response.data != null) deckRepository.upsertDecks(response.data!!.decks.toDecks(true))
-            if (campaign.previousCampaignId != null) {
-                val oldCampaign = apolloClient.query(
-                    GetCampaignQuery(campaignId = campaign.previousCampaignId.toInt())
-                ).addHttpHeader("Authorization", "Bearer $token")
-                    .fetchPolicy(FetchPolicy.NetworkOnly).execute()
-                campaignsRepository.updateCampaign(oldCampaign.data!!.campaign!!.campaign.toCampaign(true))
-            }
-            campaignsRepository.deleteCampaign(campaign.id)
-        } else {
-            if (campaign.previousCampaignId != null) {
-                val previousCampaign = campaignsRepository.getCampaignById(campaign.previousCampaignId)
-                val currentCampaign = campaignsRepository.getCampaignById(campaign.id)
-                campaignsRepository.updateCampaign(
-                    previousCampaign.copy(
-                        latestDecks = currentCampaign.latestDecks,
-                        updatedAt = getCurrentDateTime(),
-                        nextCampaignId = null
-                    ))
-                val decks: MutableList<Deck> = mutableListOf()
-                for (deck in currentCampaign.latestDecks.jsonObject) {
-                    var deckDb = deckRepository.getDeck(deck.key)
-                    if (deckDb != null) {
-                        decks.add(deckDb.copy(
-                            updatedAt = getCurrentDateTime(),
-                            campaignId = currentCampaign.previousCampaignId,
-                        ))
-                        while (deckDb!!.previousId != null) {
-                            deckDb = deckRepository.getDeck(deckDb.previousId)
-                            decks.add(deckDb!!.copy(
-                                updatedAt = getCurrentDateTime(),
-                                campaignId = currentCampaign.previousCampaignId,
-                            ))
-                        }
+    fun downloadFriendDeck(deckId: String) {
+        viewModelScope.launch {
+            val campaign = campaign.value
+            campaign?.let {
+                _campaignUiState.value = CampaignUiState.Loading
+                decksRepository.syncDeckById(deckId.toInt())
+                    .onFailure {
+                        emitError(it)
+                        _campaignUiState.value = CampaignUiState.Idle
                     }
-                }
-                deckRepository.upsertDecks(decks)
-            } else {
-                val deckIds = campaign.decks.map { it.id }
-                deckIds.forEach {
-                    removeDeckCampaign(it, user, false)
-                }
+                    .onSuccess {
+                        _campaignUiState.value = CampaignUiState.FriendDeckDownloaded(deckId)
+                    }
             }
-            campaignsRepository.deleteCampaign(campaign.id)
         }
     }
 
-    suspend fun leaveCampaign(user: FirebaseUser?) {
-        val campaign = campaign.value!!
-        val deckIds = campaign.decks.filter { user?.uid == it.userId }.map { it.id }
-        val token = user!!.getIdToken(true).await().token
-        apolloClient.mutation(
-            LeaveCampaignMutation(
-                campaignId = campaign.id.toInt(),
-                userId = user.uid
-            )
-        ).addHttpHeader("Authorization", "Bearer $token").execute()
-        deckIds.forEach {
-            removeDeckCampaign(it, user, false)
+    fun addFriendToCampaign(friendId: String) {
+        viewModelScope.launch {
+            val campaign = campaign.value
+            campaign?.let {
+                _campaignUiState.value = CampaignUiState.Loading
+                campaignsRepository.addFriendToCampaign(
+                    campaignId = campaign.id,
+                    friendUserId = friendId
+                ).onFailure { emitError(it) }
+                _campaignUiState.value = CampaignUiState.Idle
+            }
         }
-        campaignsRepository.deleteCampaign(campaign.id)
+    }
+
+     fun removeFriendFromCampaign(friendId: String) {
+         viewModelScope.launch {
+             val campaign = campaign.value
+             campaign?.let {
+                 _campaignUiState.value = CampaignUiState.Loading
+                 campaignsRepository.removeFriendFromCampaign(
+                     campaignId = campaign.id,
+                     friendUserId = friendId
+                 ).onFailure { emitError(it) }
+                 _campaignUiState.value = CampaignUiState.Idle
+             }
+         }
+    }
+
+    fun uploadCampaign() {
+        viewModelScope.launch {
+            val campaign = campaign.value
+            campaign?.let {
+                if (campaign.decks.isNotEmpty())
+                    emitError(UploadingCampaignWithDecksException())
+                else {
+                    _campaignUiState.value = CampaignUiState.Loading
+                    campaignsRepository.uploadCampaign(campaign)
+                        .onFailure {
+                            emitError(it)
+                            _campaignUiState.value = CampaignUiState.Idle
+                        }
+                        .onSuccess {
+                            _campaignUiState.value = CampaignUiState.CampaignUploaded(it)
+                        }
+                }
+            }
+        }
+    }
+
+    fun deleteOrLeaveCampaign(isOwner: Boolean) {
+        viewModelScope.launch {
+            val campaign = campaign.value
+            campaign?.let {
+                _campaignUiState.value = CampaignUiState.Loading
+                val result = if (isOwner)
+                    campaignsRepository.deleteCampaignById(campaign.id, campaign.uploaded)
+                else campaignsRepository.leaveCampaign(campaign.id, campaign.userId)
+                result.onFailure {
+                    emitError(it)
+                    _campaignUiState.value = CampaignUiState.Idle
+                }.onSuccess { _campaignUiState.value = CampaignUiState.Deleted }
+            }
+        }
     }
 
     fun checkIfCanUndo(): Boolean {
-        val campaign = campaign.value!!
+        val campaign = campaign.value
         // Get the last travel record (if any)
-        val lastTravel = campaign.history.lastOrNull()
+        val lastTravel = campaign?.history?.lastOrNull()
         // Compute whether we can undo an "end day"
-        val canUndoEndDay = campaign.currentDay > 1 && (
+        val canUndoEndDay = (campaign?.currentDay ?: 0) > 1 && (
                 lastTravel == null ||
                         (if (lastTravel.camped) lastTravel.day + 1 else lastTravel.day) < campaign.currentDay
                 )
         return lastTravel != null || canUndoEndDay
     }
 
-    suspend fun undoTravel(user: FirebaseUser?) {
-        val campaign = campaign.value!!
-        // Get the last travel record (if any)
-        val lastTravel = campaign.history.lastOrNull()
-        // Compute whether we can undo an "end day"
-        val canUndoEndDay = campaign.currentDay > 1 && (
-                lastTravel == null ||
-                        (if (lastTravel.camped) lastTravel.day + 1 else lastTravel.day) < campaign.currentDay
-                )
-        if (canUndoEndDay) {
-            if (campaign.uploaded) {
-                val token = user!!.getIdToken(true).await().token
-                apolloClient.mutation(
-                    SetCampaignDayMutation(
-                        campaignId = campaign.id.toInt(),
-                        day = campaign.currentDay - 1
-                    )
-                ).addHttpHeader("Authorization", "Bearer $token").execute()
-            } else {
-                val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
-                campaignsRepository.updateCampaign(campaignEntry.copy(
-                    day = campaign.currentDay - 1,
-                    updatedAt = getCurrentDateTime()
-                ))
-            }
-            reshuffleChallengeDeck()
-        } else if (lastTravel != null) {
-            var previousLocation = CampaignMaps.startingLocations[campaign.cycleId]!!
-            var previousPathTerrain: String? = null
-            if (campaign.history.size >= 2) {
-                val penultimateEntry = campaign.history[campaign.history.size - 2]
-                if (penultimateEntry.location.isNotEmpty()) {
-                    previousLocation = penultimateEntry.location
+    fun undoTravel() {
+        viewModelScope.launch {
+            val campaign = campaign.value
+            campaign?.let {
+                if (campaign.uploaded) _campaignUiState.value = CampaignUiState.Loading
+                // Get the last travel record (if any)
+                val lastTravel = campaign.history.lastOrNull()
+                // Compute whether we can undo an "end day"
+                val canUndoEndDay = campaign.currentDay > 1 && (lastTravel == null ||
+                        (if (lastTravel.camped) lastTravel.day + 1 else lastTravel.day) < campaign.currentDay)
+                val newCampaign = campaign.apply {
+                    if (canUndoEndDay) copy(
+                        currentDay = it.currentDay - 1,
+                    ) else if (lastTravel != null) {
+                        var previousLocation = CampaignMaps.startingLocations[it.cycleId]!!
+                        var previousPathTerrain: String? = null
+                        if (it.history.size >= 2) {
+                            val penultimateEntry = it.history[it.history.size - 2]
+                            if (penultimateEntry.location.isNotEmpty()) {
+                                previousLocation = penultimateEntry.location
+                            }
+                            previousPathTerrain = penultimateEntry.pathTerrain
+                        }
+                        // Adjust previous day depending on whether the last travel had 'camped'
+                        val previousDay = it.currentDay - if (lastTravel.camped) 1 else 0
+                        copy(
+                            currentDay = previousDay,
+                            currentLocation = previousLocation,
+                            currentPathTerrain = previousPathTerrain,
+                            history = it.history.dropLast(1).toImmutableList()
+                        )
+                    }
                 }
-                previousPathTerrain = penultimateEntry.pathTerrain
-            }
-            // Remove the last entry from history.
-            val newHistory = campaign.history.dropLast(1)
-            val newHistoryJson = buildJsonArray { newHistory.forEach { add(buildJsonObject {
-                put("day", it.day)
-                put("camped", it.camped)
-                put("location", it.location)
-                put("path_terrain", it.pathTerrain)
-            }) } }
-            // Adjust previous day depending on whether the last travel had 'camped'
-            val previousDay = campaign.currentDay - if (lastTravel.camped) 1 else 0
-            if (campaign.uploaded) {
-                val token = user!!.getIdToken(true).await().token
-                apolloClient.mutation(
-                    SetCampaignTravelMutation(
-                        campaignId = campaign.id.toInt(),
-                        history = newHistoryJson,
-                        previousDay = previousDay,
-                        previousLocation = previousLocation,
-                        previousPathTerrain = Optional.present(previousPathTerrain)
-                    )
-                ).addHttpHeader("Authorization", "Bearer $token").execute()
-            } else {
-                val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
-                campaignsRepository.updateCampaign(campaignEntry.copy(
-                    day = previousDay,
-                    history = newHistoryJson,
-                    currentLocation = previousLocation,
-                    currentPathTerrain = previousPathTerrain,
-                    updatedAt = getCurrentDateTime()
-                ))
+                if (canUndoEndDay) reshuffleChallengeDeck()
+                campaignsRepository.updateCampaign(
+                    newCampaign,
+                    RemoteUpdateAction.SET_TRAVEL
+                ).onFailure { error -> emitError(error) }
+                _campaignUiState.value = CampaignUiState.Idle
             }
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val rewards: StateFlow<ImmutableList<CardListItem>> =
+        combine(
+            _rewardsQuery,
+            _packId,
+            _userSettings,
+            showAllRewards
+        ) { query, packId, userSettings, showAll ->
+            Quadruple(query, packId, userSettings, showAll)
+        }.flatMapLatest { (query, packId, userSettings, showAll) ->
+            getCampaignRewardsUseCase(query, userSettings, packId, showAll)
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = persistentListOf()
+        )
 
+    fun getRewardByCode(cardCode: String): Flow<FullCard> =
+        cardsRepository.getCardByCodeFlow(cardCode, _userSettings.value.taboo)
 
-    fun getRewardsCards(query: String): Flow<List<CardListItemProjection>> {
-        val filteredCollection = _collection.value.toSet().filter { if (_packId.value == "core") it != "loa" else true }
-        val packIds = if (showAllRewards.value) filteredCollection + _packId.value
-            else setOf(_packId.value)
-        campaign.value?.id
-        return campaignRepository.getRewards(_taboo.value, packIds.toList())
-            .map { list ->
-                list.filter { it.name!!.contains(query, true)  }
+    fun addCampaignReward(id: String) {
+        viewModelScope.launch {
+            val campaign = campaign.value
+            campaign?.let {
+                if (campaign.uploaded) _campaignUiState.value = CampaignUiState.Loading
+                campaignsRepository.updateCampaign(
+                    campaign.copy(rewards = (campaign.rewards + id).toImmutableList()),
+                    RemoteUpdateAction.SET_REWARDS
+                ).onFailure { emitError(it) }
+                _campaignUiState.value = CampaignUiState.Idle
             }
-    }
-
-    fun getRewardById(cardCode: String): Flow<FullCardProjection> =
-        campaignsRepository.getCardById(cardCode, _taboo.value)
-
-    suspend fun addCampaignReward(id: String, user: FirebaseUser?) {
-        val campaign = campaign.value!!
-        val newList = campaign.rewards + id
-        val newJsonRewards = buildJsonArray { newList.forEach { add(it) } }
-        if (campaign.uploaded) {
-            val token = user!!.getIdToken(true).await().token
-            apolloClient.mutation(
-                UpdateCampaignRewardsMutation(
-                    campaignId = campaign.id.toInt(),
-                    rewards = newJsonRewards
-                )
-            ).addHttpHeader("Authorization", "Bearer $token").execute()
-        } else {
-            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
-            campaignsRepository.updateCampaign(campaignEntry.copy(
-                rewards = newJsonRewards,
-                updatedAt = getCurrentDateTime()
-            ))
         }
     }
 
-    suspend fun removeCampaignReward(id: String, user: FirebaseUser?) {
-        val campaign = campaign.value!!
-        val newList = campaign.rewards.filterNot { it == id }
-        val newJsonRewards = buildJsonArray { newList.forEach { add(it) } }
-        if (campaign.uploaded) {
-            val token = user!!.getIdToken(true).await().token
-            apolloClient.mutation(
-                UpdateCampaignRewardsMutation(
-                    campaignId = campaign.id.toInt(),
-                    rewards = newJsonRewards
-                )
-            ).addHttpHeader("Authorization", "Bearer $token").execute()
-        } else {
-            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
-            campaignsRepository.updateCampaign(campaignEntry.copy(
-                rewards = newJsonRewards,
-                updatedAt = getCurrentDateTime()
-            ))
+    fun removeCampaignReward(id: String) {
+        viewModelScope.launch {
+            val campaign = campaign.value
+            campaign?.let {
+                if (campaign.uploaded) _campaignUiState.value = CampaignUiState.Loading
+                campaignsRepository.updateCampaign(
+                    campaign.copy(rewards = campaign.rewards.filterNot { it == id }.toImmutableList()),
+                    RemoteUpdateAction.SET_REWARDS
+                ).onFailure { emitError(it) }
+                _campaignUiState.value = CampaignUiState.Idle
+            }
         }
     }
 
-    fun getRemovedSetsInfo(): Map<String, Pair<Int?, Int>> {
-        val campaign = campaign.value!!
+    fun getRemovedSetsInfo(): ImmutableMap<String, Pair<Int?, Int>> {
+        val campaign = campaign.value
         val maps = CampaignMaps.generalSetsMap() + CampaignMaps.getMapLocations(false)
         val removedSets = mutableMapOf<String, Pair<Int?, Int>>()
-        campaign.removed.forEach { removed ->
+        campaign?.removed?.forEach { removed ->
             val fromPath = Path.fromValue(removed.setId)
             val fromMaps = maps[removed.setId]
             if (fromPath != null) removedSets[removed.setId] = fromPath.iconResId to fromPath.nameResId
             else removedSets[removed.setId] = fromMaps?.iconResId to (fromMaps?.nameResId ?: R.string.text_none)
         }
-        return removedSets
+        return removedSets.toImmutableMap()
     }
 
-    suspend fun updateCampaignRemoved(name: String, user: FirebaseUser?) {
-        val campaign = campaign.value!!
-        val newList = campaign.removed.filterNot { it.name == name }
-        val newJsonRemoved = buildJsonArray { newList.forEach { add(buildJsonObject {
-            put("name", it.name)
-            put("set_id", it.setId)
-        }) } }
-        if (campaign.uploaded) {
-            val token = user!!.getIdToken(true).await().token
-            apolloClient.mutation(
-                UpdateCampaignRemovedMutation(
-                    campaignId = campaign.id.toInt(),
-                    removed = newJsonRemoved
-                )
-            ).addHttpHeader("Authorization", "Bearer $token").execute()
-        } else {
-            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
-            campaignsRepository.updateCampaign(campaignEntry.copy(
-                removed = newJsonRemoved,
-                updatedAt = getCurrentDateTime()
-            ))
+    fun updateCampaignRemoved(name: String) {
+        viewModelScope.launch {
+            val campaign = campaign.value
+            campaign?.let {
+                if (campaign.uploaded) _campaignUiState.value = CampaignUiState.Loading
+                campaignsRepository.updateCampaign(
+                    campaign.copy(removed = campaign.removed.filterNot { it.name == name }.toImmutableList()),
+                    RemoteUpdateAction.SET_REMOVED
+                ).onFailure { emitError(it) }
+                _campaignUiState.value = CampaignUiState.Idle
+            }
         }
     }
 
@@ -876,182 +670,146 @@ class CampaignViewModel(
         return sets
     }
 
-    suspend fun addCampaignRemoved(setId: String, name: String, user: FirebaseUser?) {
-        val campaign = campaign.value!!
-        val newJsonRemoved = buildJsonObject {
-            put("name", name)
-            put("set_id", setId)
-        }
-        if (campaign.uploaded) {
-            val token = user!!.getIdToken(true).await().token
-            apolloClient.mutation(
-                AddCampaignRemovedMutation(
-                    campaignId = campaign.id.toInt(),
-                    removed = newJsonRemoved
-                )
-            ).addHttpHeader("Authorization", "Bearer $token").execute()
-        } else {
-            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
-            campaignsRepository.updateCampaign(campaignEntry.copy(
-                removed = JsonArray(campaignEntry.removed.jsonArray + newJsonRemoved),
-                updatedAt = getCurrentDateTime()
-            ))
+    fun addCampaignRemoved(setId: String, name: String) {
+        viewModelScope.launch {
+            val campaign = campaign.value
+            campaign?.let {
+                if (campaign.uploaded) _campaignUiState.value = CampaignUiState.Loading
+                val newRemovedList = campaign.removed.toMutableList()
+                newRemovedList.add(CampaignRemoved(name, setId))
+                campaignsRepository.updateCampaign(
+                    campaign.copy(removed = newRemovedList.toImmutableList()),
+                    RemoteUpdateAction.SET_REMOVED
+                ).onFailure { emitError(it) }
+                _campaignUiState.value = CampaignUiState.Idle
+            }
         }
     }
 
-    suspend fun recordCampaignEvent(name: String, user: FirebaseUser?) {
-        val campaign = campaign.value!!
-        val newJsonEvent = buildJsonObject {
-            put("event", name)
-        }
-        if (campaign.uploaded) {
-            val token = user!!.getIdToken(true).await().token
-            apolloClient.mutation(
-                AddCampaignEventMutation(
-                    campaignId = campaign.id.toInt(),
-                    event = newJsonEvent
-                )
-            ).addHttpHeader("Authorization", "Bearer $token").execute()
-        } else {
-            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
-            campaignsRepository.updateCampaign(campaignEntry.copy(
-                events = JsonArray(campaignEntry.events.jsonArray + newJsonEvent),
-                updatedAt = getCurrentDateTime()
-            ))
+    fun recordCampaignEvent(name: String) {
+        viewModelScope.launch {
+            val campaign = campaign.value
+            campaign?.let {
+                if (campaign.uploaded) _campaignUiState.value = CampaignUiState.Loading
+                val newEventsList = (campaign.events + CampaignEvent(name)).toImmutableList()
+                campaignsRepository.updateCampaign(
+                    campaign.copy(events = newEventsList),
+                    RemoteUpdateAction.SET_EVENTS
+                ).onFailure { emitError(it) }
+                _campaignUiState.value = CampaignUiState.Idle
+            }
         }
     }
 
-    suspend fun updateCampaignEvents(oldName: String, newName: String, crossedOut: Boolean, marks: Int, user: FirebaseUser?) {
-        val campaign = campaign.value!!
-        val newEventsList = campaign.events.map { if (it.name == oldName) CampaignEvent(newName, crossedOut, marks) else it }
-        val newJsonList = buildJsonArray { newEventsList.forEach { add(buildJsonObject {
-            put("event", it.name)
-            put("crossed_out", it.crossedOut)
-            put("marks", it.marks)
-        }) } }
-        if (campaign.uploaded) {
-            val token = user!!.getIdToken(true).await().token
-            apolloClient.mutation(
-                UpdateCampaignEventsMutation(
-                    campaignId = campaign.id.toInt(),
-                    events = newJsonList
-                )
-            ).addHttpHeader("Authorization", "Bearer $token").execute()
-        } else {
-            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
-            campaignsRepository.updateCampaign(campaignEntry.copy(
-                events = newJsonList,
-                updatedAt = getCurrentDateTime()
-            ))
+    fun updateCampaignEvents(oldName: String, event: CampaignEvent) {
+        viewModelScope.launch {
+            val campaign = campaign.value
+            campaign?.let {
+                if (campaign.uploaded) _campaignUiState.value = CampaignUiState.Loading
+                val newEventsList = if (event.name.isNotBlank()) campaign.events.map {
+                    if (it.name == oldName) event else it
+                } else campaign.events.filterNot { it.name == oldName }
+                campaignsRepository.updateCampaign(
+                    campaign.copy(events = newEventsList.toImmutableList()),
+                    RemoteUpdateAction.SET_EVENTS
+                ).onFailure { emitError(it) }
+                _campaignUiState.value = CampaignUiState.Idle
+            }
         }
     }
 
-    suspend fun addCampaignMission(day: Int, name: String, user: FirebaseUser?) {
-        val campaign = campaign.value!!
-        val newJsonMission = buildJsonObject {
-            put("day", day)
-            put("name", name)
-        }
-        if (campaign.uploaded) {
-            val token = user!!.getIdToken(true).await().token
-            apolloClient.mutation(
-                AddCampaignMissionMutation(
-                    campaignId = campaign.id.toInt(),
-                    mission = newJsonMission
-                )
-            ).addHttpHeader("Authorization", "Bearer $token").execute()
-        } else {
-            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
-            campaignsRepository.updateCampaign(campaignEntry.copy(
-                missions = JsonArray(campaignEntry.missions.jsonArray + newJsonMission),
-                updatedAt = getCurrentDateTime()
-            ))
+    fun addCampaignNote(day: Int, text: String) {
+        viewModelScope.launch {
+            val campaign = campaign.value
+            campaign?.let {
+                if (campaign.uploaded) _campaignUiState.value = CampaignUiState.Loading
+                val newNotesList = (campaign.notes + CampaignNote(day, text)).toImmutableList()
+                campaignsRepository.updateCampaign(
+                    campaign.copy(notes = newNotesList),
+                    RemoteUpdateAction.SET_NOTES
+                ).onFailure { emitError(it) }
+                _campaignUiState.value = CampaignUiState.Idle
+            }
         }
     }
 
-    suspend fun setCampaignMissions(
-        oldName: String,
-        newName: String,
-        day: Int,
-        checks: List<Boolean>,
-        completed: Boolean,
-        user: FirebaseUser?
-    ) {
-        val campaign = campaign.value!!
-        val newMissionsList = campaign.missions.map { if (it.name == oldName)
-            CampaignMission(
-                day,
-                newName,
-                checks,
-                completed
-            ) else it }
-        val newJsonList = buildJsonArray { newMissionsList.forEach { add(buildJsonObject {
-            put("day", it.day)
-            put("name", it.name)
-            put("checks", buildJsonArray { it.checks.forEach { check -> add(check) } })
-            put("completed", it.completed)
-        }) } }
-        if (campaign.uploaded) {
-            val token = user!!.getIdToken(true).await().token
-            apolloClient.mutation(
-                SetCampaignMissionsMutation(
-                    campaignId = campaign.id.toInt(),
-                    missions = newJsonList
-                )
-            ).addHttpHeader("Authorization", "Bearer $token").execute()
-        } else {
-            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
-            campaignsRepository.updateCampaign(campaignEntry.copy(
-                missions = newJsonList,
-                updatedAt = getCurrentDateTime()
-            ))
+    fun updateCampaignNotes(oldIndex: Int, note: CampaignNote) {
+        viewModelScope.launch {
+            val campaign = campaign.value
+            campaign?.let {
+                if (campaign.uploaded) _campaignUiState.value = CampaignUiState.Loading
+                val newNotesList = if (note.text.isNotBlank()) campaign.notes.mapIndexed { index, value ->
+                    if (index == oldIndex) note else value
+                } else campaign.notes.filterIndexed { index, _ -> index != oldIndex }
+                campaignsRepository.updateCampaign(
+                    campaign.copy(notes = newNotesList.toImmutableList()),
+                    RemoteUpdateAction.SET_NOTES
+                ).onFailure { emitError(it) }
+                _campaignUiState.value = CampaignUiState.Idle
+            }
         }
     }
 
-    suspend fun deleteCampaignMission(name: String, user: FirebaseUser?) {
-        val campaign = campaign.value!!
-        val newMissionsList = campaign.missions.filterNot { it.name == name }
-        val newJsonList = buildJsonArray { newMissionsList.forEach { add(buildJsonObject {
-            put("day", it.day)
-            put("name", it.name)
-            put("checks", buildJsonArray { it.checks.forEach { check -> add(check) } })
-            put("completed", it.completed)
-        }) } }
-        if (campaign.uploaded) {
-            val token = user!!.getIdToken(true).await().token
-            apolloClient.mutation(
-                SetCampaignMissionsMutation(
-                    campaignId = campaign.id.toInt(),
-                    missions = newJsonList
-                )
-            ).addHttpHeader("Authorization", "Bearer $token").execute()
-        } else {
-            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
-            campaignsRepository.updateCampaign(campaignEntry.copy(
-                missions = newJsonList,
-                updatedAt = getCurrentDateTime()
-            ))
+    fun addCampaignMission(day: Int, name: String) {
+        viewModelScope.launch {
+            val campaign = campaign.value
+            campaign?.let {
+                if (campaign.uploaded) _campaignUiState.value = CampaignUiState.Loading
+                val newMissionsList = (campaign.missions + CampaignMission(day, name)).toImmutableList()
+                campaignsRepository.updateCampaign(
+                    campaign.copy(missions = newMissionsList),
+                    RemoteUpdateAction.SET_MISSION
+                ).onFailure { emitError(it) }
+                _campaignUiState.value = CampaignUiState.Idle
+            }
         }
     }
 
-    suspend fun updateCampaignExpansions(expansions: List<String>, user: FirebaseUser?) {
-        val campaign = campaign.value!!
-        if (expansions.toSet() == campaign.expansions.toSet()) return
-        val newJsonExpansions = buildJsonArray { expansions.forEach { add(it) } }
-        if (campaign.uploaded) {
-            val token = user!!.getIdToken(true).await().token
-            apolloClient.mutation(
-                UpdateCampaignExpansionsMutation(
-                    campaignId = campaign.id.toInt(),
-                    expansions = newJsonExpansions
-                )
-            ).addHttpHeader("Authorization", "Bearer $token").execute()
-        } else {
-            val campaignEntry = campaignsRepository.getCampaignById(campaign.id)
-            campaignsRepository.updateCampaign(campaignEntry.copy(
-                expansions = newJsonExpansions,
-                updatedAt = getCurrentDateTime()
-            ))
+    fun setCampaignMissions(oldName: String, mission: CampaignMission) {
+        viewModelScope.launch {
+            val campaign = campaign.value
+            campaign?.let {
+                if (campaign.uploaded) _campaignUiState.value = CampaignUiState.Loading
+                val newMissionsList = campaign.missions.map {
+                    if (it.name == oldName) mission else it
+                }.toImmutableList()
+                campaignsRepository.updateCampaign(
+                    campaign.copy(missions = newMissionsList),
+                    RemoteUpdateAction.SET_MISSION
+                ).onFailure { emitError(it) }
+                _campaignUiState.value = CampaignUiState.Idle
+            }
+        }
+    }
+
+    fun deleteCampaignMission(name: String) {
+        viewModelScope.launch {
+            val campaign = campaign.value
+            campaign?.let {
+                if (campaign.uploaded) _campaignUiState.value = CampaignUiState.Loading
+                val newMissionsList = campaign.missions.filterNot { it.name == name }.toImmutableList()
+                campaignsRepository.updateCampaign(
+                    campaign.copy(missions = newMissionsList),
+                    RemoteUpdateAction.SET_MISSION
+                ).onFailure { emitError(it) }
+                _campaignUiState.value = CampaignUiState.Idle
+            }
+        }
+    }
+
+    fun updateCampaignExpansions(expansions: List<String>) {
+        viewModelScope.launch {
+            val campaign = campaign.value
+            campaign?.let {
+                if (expansions.toSet() != campaign.expansions.toSet()) {
+                    if (campaign.uploaded) _campaignUiState.value = CampaignUiState.Loading
+                    campaignsRepository.updateCampaign(
+                        campaign.copy(expansions = expansions.toImmutableList()),
+                        RemoteUpdateAction.SET_EXPANSIONS
+                    ).onFailure { emitError(it) }
+                    _campaignUiState.value = CampaignUiState.Idle
+                }
+            }
         }
     }
 }

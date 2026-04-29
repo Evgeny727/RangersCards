@@ -24,16 +24,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rangerscards.R
-import com.rangerscards.ui.campaigns.CampaignRemoved
+import com.rangerscards.domain.model.CampaignRemoved
 import com.rangerscards.ui.components.SquareButton
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
 
 @Composable
 fun CampaignRemovedCards(
     onAdd: () -> Unit,
-    removedSets: Map<String, Pair<Int?, Int>>,
-    removed: List<CampaignRemoved>,
+    removedSets: ImmutableMap<String, Pair<Int?, Int>>,
+    removed: ImmutableList<CampaignRemoved>,
     onRemove: (String) -> Unit,
     state: LazyListState,
     nestedConnectionModifier: Modifier

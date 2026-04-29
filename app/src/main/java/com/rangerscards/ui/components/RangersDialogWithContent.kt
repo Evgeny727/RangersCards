@@ -11,6 +11,7 @@ import com.rangerscards.ui.settings.components.RangersBaseCard
 @Composable
 fun RangersDialogWithContent(
     @StringRes headerId: Int,
+    formatArgs: Any? = null,
     isDarkTheme: Boolean,
     onBack: () -> Unit,
     content: @Composable (ColumnScope.() -> Unit)
@@ -26,6 +27,7 @@ fun RangersDialogWithContent(
         RangersBaseCard(
             isDarkTheme = isDarkTheme,
             labelIdRes = headerId,
+            formatArgs = formatArgs,
             modifier = Modifier,
             content = content
         )

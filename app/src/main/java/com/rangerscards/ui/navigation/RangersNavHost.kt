@@ -61,21 +61,26 @@ import com.rangerscards.domain.exceptions.HandleAlreadyTakenException
 import com.rangerscards.domain.exceptions.InvalidEmailException
 import com.rangerscards.domain.exceptions.InvalidHandleSizeException
 import com.rangerscards.domain.exceptions.InvalidPasswordException
+import com.rangerscards.domain.exceptions.NoSuchCampaignEventException
+import com.rangerscards.domain.exceptions.NoSuchCampaignMissionException
+import com.rangerscards.domain.exceptions.NoSuchCampaignNoteException
+import com.rangerscards.domain.exceptions.UploadingCampaignWithDecksException
 import com.rangerscards.objects.CampaignMaps
 import com.rangerscards.ui.CardsSyncState
 import com.rangerscards.ui.campaign.AddDeckToCampaignScreen
 import com.rangerscards.ui.campaign.AddPlayersToCampaign
 import com.rangerscards.ui.campaign.CampaignChallengeDeckScreen
-import com.rangerscards.ui.campaign.CampaignDecksViewModel
 import com.rangerscards.ui.campaign.CampaignJourneyScreen
 import com.rangerscards.ui.campaign.CampaignRewardFullScreen
 import com.rangerscards.ui.campaign.CampaignScreen
 import com.rangerscards.ui.campaign.CampaignViewModel
 import com.rangerscards.ui.campaign.dialogs.AddMissionDialog
+import com.rangerscards.ui.campaign.dialogs.AddNoteDialog
 import com.rangerscards.ui.campaign.dialogs.AddRemovedDialog
 import com.rangerscards.ui.campaign.dialogs.CampaignEventDialog
 import com.rangerscards.ui.campaign.dialogs.CampaignExpansionsDialog
 import com.rangerscards.ui.campaign.dialogs.CampaignMissionDialog
+import com.rangerscards.ui.campaign.dialogs.CampaignNoteDialog
 import com.rangerscards.ui.campaign.dialogs.DayInfoDialog
 import com.rangerscards.ui.campaign.dialogs.EndTheDayDialog
 import com.rangerscards.ui.campaign.dialogs.RecordEventDialog
@@ -125,7 +130,7 @@ fun RangersNavHost(
     val currentRoute = navBackStackEntry?.destination?.route
     val showBars = currentRoute?.let { route ->
         // Hide the topBar and bottomBar when in the full-screen flow.
-        !route.startsWith("deck/")
+        !route.startsWith("deck/") && !route.contains("Options")
     } ?: true
     val context = LocalContext.current.applicationContext
     var title by rememberSaveable { mutableStateOf(context.getString(BottomNavScreen.Settings.label)) }
@@ -136,7 +141,7 @@ fun RangersNavHost(
     Scaffold(
         modifier = Modifier.safeDrawingPadding(),
         topBar = {
-            AnimatedVisibility(showBars && currentRoute?.let { !it.contains("Options") } == true) {
+            AnimatedVisibility(showBars) {
                 RangersTopAppBar(
                     title = title,
                     canNavigateBack = bottomNavItems.none { it.startDestination == currentRoute },
@@ -168,6 +173,7 @@ fun RangersNavHost(
                     is InvalidPasswordException -> context.getString(R.string.invalid_password_text)
                     is HandleAlreadyTakenException -> context.getString(R.string.handle_already_taken_text)
                     is InvalidHandleSizeException -> context.getString(R.string.invalid_handle_text)
+                    is UploadingCampaignWithDecksException -> context.getString(R.string.upload_campaign_warning)
                     else -> error.exception.localizedMessage ?:
                     context.getString(R.string.something_went_wrong)
                 }
@@ -538,8 +544,7 @@ fun RangersNavHost(
             navigation(
                 startDestination = "deck/{$deckIdArgument}",
                 route = "deck",
-            )
-            {
+            ) {
                 composable(
                     route = "deck/{$deckIdArgument}",
                     enterTransition = {
@@ -856,18 +861,14 @@ fun RangersNavHost(
                     arguments = listOf(navArgument(campaignIdArgument) { type = NavType.StringType }))
                     { backStackEntry ->
                         val campaignViewModel: CampaignViewModel = hiltViewModel(backStackEntry)
-                        val campaignId = backStackEntry.arguments?.getString(campaignIdArgument)
-                            ?: error("campaignIdArgument cannot be null")
                         val user by appViewModel.userUiState.collectAsState()
-                        val campaign = campaignViewModel.getCampaignById(campaignId).collectAsState(null)
-                        val challengeDeck = campaignViewModel.getCampaignChallengeDeckIds(campaignId)
-                            .collectAsState(emptyList())
+                        val campaign by campaignViewModel.campaign.collectAsState()
                         if (cardsState !is CardsSyncState.Loading) {
                             CampaignScreen(
+                                emitError = appViewModel::emitError,
                                 campaignViewModel = campaignViewModel,
-                                campaign = campaign.value,
-                                challengeDeck = challengeDeck.value,
-                                userUIState = user,
+                                campaign = campaign,
+                                user = user,
                                 isDarkTheme = isDarkTheme,
                                 navController = navController,
                                 contentPadding = innerPadding
@@ -875,7 +876,7 @@ fun RangersNavHost(
                         } else {
                             CardsDownloadingCircularProgressIndicator()
                         }
-                        title = if (campaign.value != null) stringResource(CampaignMaps.campaignCyclesMap[campaign.value!!.cycleId] ?: R.string.core_cycle)
+                        title = if (campaign != null) stringResource(CampaignMaps.campaignCyclesMap[campaign!!.cycleId] ?: R.string.core_cycle)
                         else ""
                         actions = {
                             IconButton(
@@ -906,13 +907,15 @@ fun RangersNavHost(
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
                     val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
-                    val user by appViewModel.userUiState.collectAsState()
-                    CampaignExpansionsDialog(
-                        campaignViewModel = campaignViewModel,
-                        isDarkTheme = isDarkTheme,
-                        onBack = { navController.popBackStack(destinationId = parentEntry.destination.id, inclusive = false) },
-                        user = user
-                    )
+                    val campaign by campaignViewModel.campaign.collectAsState()
+                    if (campaign != null) {
+                        CampaignExpansionsDialog(
+                            campaign = campaign!!,
+                            updateCampaignExpansions = campaignViewModel::updateCampaignExpansions,
+                            isDarkTheme = isDarkTheme,
+                            onBack = navController::navigateUp
+                        )
+                    } else navController.navigateUp()
                 }
                 val dayInfoIdArgument = "dayInfoId"
                 dialog("${BottomNavScreen.Campaigns.route}/campaign/dayInfo/{$dayInfoIdArgument}",
@@ -923,117 +926,153 @@ fun RangersNavHost(
                     }
                     val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
                     val dayInfoId = backStackEntry.arguments?.getInt(dayInfoIdArgument)
-                        ?: error("dayInfoId cannot be null")
-                    val user by appViewModel.userUiState.collectAsState()
-                    DayInfoDialog(
-                        campaignViewModel = campaignViewModel,
-                        dayId = dayInfoId,
-                        isDarkTheme = isDarkTheme,
-                        onBack = { navController.popBackStack(destinationId = parentEntry.destination.id, inclusive = false) },
-                        user = user
-                    )
+                    if (dayInfoId != null) {
+                        val campaign by campaignViewModel.campaign.collectAsState()
+                        if (campaign != null) {
+                            DayInfoDialog(
+                                campaign = campaign!!,
+                                groupDaysByWeather = campaignViewModel::groupDaysByWeather,
+                                setCampaignCalendar = campaignViewModel::setCampaignCalendar,
+                                dayId = dayInfoId,
+                                isDarkTheme = isDarkTheme,
+                                onBack = navController::navigateUp,
+                            )
+                        } else navController.navigateUp()
+                    } else {
+                        appViewModel.emitError(IllegalStateException("dayInfoId cannot be null"))
+                        navController.navigateUp()
+                    }
                 }
                 composable(route = "${BottomNavScreen.Campaigns.route}/campaign/journey") { backStackEntry ->
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
                     val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
-                    CampaignJourneyScreen(
-                        campaignViewModel = campaignViewModel,
-                        contentPadding = innerPadding
-                    )
-                    title = stringResource(R.string.journey_title)
-                    actions = null
-                    switch = null
+                    val campaign by campaignViewModel.campaign.collectAsState()
+                    if (campaign != null) {
+                        CampaignJourneyScreen(
+                            campaign = campaign!!,
+                            buildTravelHistory = campaignViewModel::buildTravelHistory,
+                            getWeatherResId = campaignViewModel::getWeatherResId,
+                            contentPadding = innerPadding
+                        )
+                        title = stringResource(R.string.journey_title)
+                        actions = null
+                        switch = null
+                    } else navController.navigateUp()
                 }
                 dialog("${BottomNavScreen.Campaigns.route}/campaign/endDay") { backStackEntry ->
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
                     val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
-                    val user by appViewModel.userUiState.collectAsState()
-                    EndTheDayDialog(
-                        campaignViewModel = campaignViewModel,
-                        isDarkTheme = isDarkTheme,
-                        onBack = { navController.popBackStack(destinationId = parentEntry.destination.id, inclusive = false) },
-                        user = user
-                    )
+                    val campaign by campaignViewModel.campaign.collectAsState()
+                    if (campaign != null) {
+                        EndTheDayDialog(
+                            campaign = campaign!!,
+                            setCampaignDay = campaignViewModel::setCampaignDay,
+                            isDarkTheme = isDarkTheme,
+                            onBack = navController::navigateUp,
+                        )
+                    } else navController.navigateUp()
                 }
                 dialog("${BottomNavScreen.Campaigns.route}/campaign/travel") { backStackEntry ->
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
                     val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
-                    val user by appViewModel.userUiState.collectAsState()
-                    TravelDialog(
-                        campaignViewModel = campaignViewModel,
-                        isDarkTheme = isDarkTheme,
-                        onBack = { navController.popBackStack(destinationId = parentEntry.destination.id, inclusive = false) },
-                        user = user
-                    )
+                    val campaign by campaignViewModel.campaign.collectAsState()
+                    if (campaign != null) {
+                        TravelDialog(
+                            campaign = campaign!!,
+                            campaignTravel = campaignViewModel::campaignTravel,
+                            isDarkTheme = isDarkTheme,
+                            onBack = navController::navigateUp,
+                        )
+                    } else navController.navigateUp()
                 }
-                composable(route = "${BottomNavScreen.Campaigns.route}/campaign/challengeDeck") { backStackEntry ->
+                composable(
+                    route = "${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}/challengeDeck",
+                    arguments = listOf(navArgument(campaignIdArgument) { type = NavType.StringType })
+                ) { backStackEntry ->
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
                     val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
-                    CampaignChallengeDeckScreen(
-                        campaignViewModel = campaignViewModel,
-                        navigateBack = { navController.navigateUp() },
-                        isDarkTheme = isDarkTheme,
-                        contentPadding = innerPadding
-                    )
-                    title = stringResource(R.string.challenge_deck_title)
-                    actions = null
-                    switch = null
+                    val currentChallengeDeck by campaignViewModel.currentChallengeDeck.collectAsState()
+                    if (currentChallengeDeck != null) {
+                        CampaignChallengeDeckScreen(
+                            challengeDeck = currentChallengeDeck!!,
+                            discardScoutedCards = campaignViewModel::discardScoutedCards,
+                            returnChallengeCardsInAnyOrder = campaignViewModel::returnChallengeCardsInAnyOrder,
+                            reshuffleChallengeDeck = campaignViewModel::reshuffleChallengeDeck,
+                            drawChallengeCard = campaignViewModel::drawChallengeCard,
+                            scoutChallengeCard = campaignViewModel::scoutChallengeCard,
+                            isDarkTheme = isDarkTheme,
+                            contentPadding = innerPadding
+                        )
+                        title = stringResource(R.string.challenge_deck_title)
+                        actions = null
+                        switch = null
+                    } else navController.navigateUp()
                 }
                 composable(route = "${BottomNavScreen.Campaigns.route}/campaign/addRanger") { backStackEntry ->
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
                     val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
-                    val campaignDecksViewModel: CampaignDecksViewModel = hiltViewModel(backStackEntry)
-                    val user by appViewModel.userUiState.collectAsState()
-                    AddDeckToCampaignScreen(
-                        navController = navController,
-                        campaignViewModel = campaignViewModel,
-                        campaignDecksViewModel = campaignDecksViewModel,
-                        user = user,
-                        isDarkTheme = isDarkTheme,
-                        contentPadding = innerPadding,
-                    )
-                    title = stringResource(R.string.add_ranger_button)
-                    actions = null
-                    switch = null
+                    val campaign by campaignViewModel.campaign.collectAsState()
+                    if (campaign != null) {
+                        val campaignUiState by campaignViewModel.campaignUiState.collectAsState()
+                        val user by appViewModel.userUiState.collectAsState()
+                        AddDeckToCampaignScreen(
+                            navigateBack = navController::navigateUp,
+                            campaign = campaign!!,
+                            campaignUiState = campaignUiState,
+                            addDeck = campaignViewModel::addDeckCampaign,
+                            getRole = campaignViewModel::getRole,
+                            userInfo = user.userInfo,
+                            isDarkTheme = isDarkTheme,
+                            contentPadding = innerPadding,
+                        )
+                        title = stringResource(R.string.add_ranger_button)
+                        actions = null
+                        switch = null
+                    } else navController.navigateUp()
                 }
                 composable(route = "${BottomNavScreen.Campaigns.route}/campaign/addPlayer") { backStackEntry ->
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
                     val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
-                    val user by appViewModel.userUiState.collectAsState()
-                    AddPlayersToCampaign(
-                        navigateBack = { navController.navigateUp() },
-                        campaignViewModel = campaignViewModel,
-                        userState = user,
-                        isDarkTheme = isDarkTheme,
-                        contentPadding = innerPadding,
-                    )
-                    title = stringResource(R.string.your_friends)
-                    actions = null
-                    switch = null
+                    val campaign by campaignViewModel.campaign.collectAsState()
+                    if (campaign != null) {
+                        val campaignUiState by campaignViewModel.campaignUiState.collectAsState()
+                        val user by appViewModel.userUiState.collectAsState()
+                        AddPlayersToCampaign(
+                            campaign = campaign!!,
+                            campaignUiState = campaignUiState,
+                            addFriend = campaignViewModel::addFriendToCampaign,
+                            removeFriend = campaignViewModel::removeFriendFromCampaign,
+                            user = user,
+                            isDarkTheme = isDarkTheme,
+                            contentPadding = innerPadding,
+                        )
+                        title = stringResource(R.string.your_friends)
+                        actions = null
+                        switch = null
+                    } else navController.navigateUp()
                 }
                 dialog("${BottomNavScreen.Campaigns.route}/campaign/undo") { backStackEntry ->
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
                     val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
-                    val user by appViewModel.userUiState.collectAsState()
                     UndoTravelDialog(
-                        campaignViewModel = campaignViewModel,
+                        checkIfCanUndo = campaignViewModel::checkIfCanUndo,
+                        undoTravel = campaignViewModel::undoTravel,
                         isDarkTheme = isDarkTheme,
-                        onBack = { navController.popBackStack(destinationId = parentEntry.destination.id, inclusive = false) },
-                        user = user
+                        onBack = navController::navigateUp,
                     )
                 }
                 dialog("${BottomNavScreen.Campaigns.route}/campaign/removeCard") { backStackEntry ->
@@ -1054,91 +1093,147 @@ fun RangersNavHost(
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
                     val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
-                    val user by appViewModel.userUiState.collectAsState()
-                    RecordEventDialog(
-                        campaignViewModel = campaignViewModel,
-                        isDarkTheme = isDarkTheme,
-                        onBack = { navController.popBackStack(destinationId = parentEntry.destination.id, inclusive = false) },
-                        user = user
-                    )
+                    val campaign by campaignViewModel.campaign.collectAsState()
+                    if (campaign != null) {
+                        RecordEventDialog(
+                            recordCampaignEvent = campaignViewModel::recordCampaignEvent,
+                            isDarkTheme = isDarkTheme,
+                            onBack = navController::navigateUp,
+                        )
+                    } else navController.navigateUp()
                 }
                 val eventNameArgument = "eventNameArgument"
                 dialog("${BottomNavScreen.Campaigns.route}/campaign/event/{$eventNameArgument}",
                     arguments = listOf(navArgument(eventNameArgument) { type = NavType.StringType }))
                 { backStackEntry ->
+                    val eventName = backStackEntry.arguments?.getString(eventNameArgument)
+                    if (eventName != null) {
+                        val parentEntry = remember(backStackEntry) {
+                            navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
+                        }
+                        val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
+                        val campaign by campaignViewModel.campaign.collectAsState()
+                        val event = campaign?.events?.firstOrNull { it.name == eventName }
+                        if (event != null) CampaignEventDialog(
+                            event = event,
+                            updateCampaignEvents = campaignViewModel::updateCampaignEvents,
+                            isDarkTheme = isDarkTheme,
+                            onBack = navController::navigateUp,
+                        ) else {
+                            appViewModel.emitError(NoSuchCampaignEventException())
+                            navController.navigateUp()
+                        }
+                    } else {
+                        appViewModel.emitError(IllegalStateException("eventNameArgument cannot be null"))
+                        navController.navigateUp()
+                    }
+                }
+                dialog("${BottomNavScreen.Campaigns.route}/campaign/addNote") { backStackEntry ->
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
                     val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
-                    val eventName = backStackEntry.arguments?.getString(eventNameArgument)
-                        ?: error("eventNameArgument cannot be null")
-                    val user by appViewModel.userUiState.collectAsState()
-                    CampaignEventDialog(
-                        campaignViewModel = campaignViewModel,
-                        eventName = eventName,
-                        isDarkTheme = isDarkTheme,
-                        onBack = { navController.popBackStack(destinationId = parentEntry.destination.id, inclusive = false) },
-                        user = user
-                    )
+                    val campaign by campaignViewModel.campaign.collectAsState()
+                    if (campaign != null) {
+                        AddNoteDialog(
+                            addCampaignNote = campaignViewModel::addCampaignNote,
+                            currentDay = campaign!!.currentDay,
+                            isDarkTheme = isDarkTheme,
+                            onBack = navController::navigateUp,
+                        )
+                    } else navController.navigateUp()
+                }
+                val noteIndexArgument = "noteIndexArgument"
+                dialog("${BottomNavScreen.Campaigns.route}/campaign/note/{$noteIndexArgument}",
+                    arguments = listOf(navArgument(noteIndexArgument) { type = NavType.IntType }))
+                { backStackEntry ->
+                    val noteIndex = backStackEntry.arguments?.getInt(noteIndexArgument)
+                    if (noteIndex != null) {
+                        val parentEntry = remember(backStackEntry) {
+                            navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
+                        }
+                        val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
+                        val campaign by campaignViewModel.campaign.collectAsState()
+                        val note = campaign?.notes[noteIndex]
+                        if (note != null) CampaignNoteDialog(
+                            index = noteIndex,
+                            note = note,
+                            updateCampaignNotes = campaignViewModel::updateCampaignNotes,
+                            isDarkTheme = isDarkTheme,
+                            onBack = navController::navigateUp,
+                        ) else {
+                            appViewModel.emitError(NoSuchCampaignNoteException())
+                            navController.navigateUp()
+                        }
+                    } else {
+                        appViewModel.emitError(IllegalStateException("noteIndexArgument cannot be null"))
+                        navController.navigateUp()
+                    }
                 }
                 dialog("${BottomNavScreen.Campaigns.route}/campaign/addMission") { backStackEntry ->
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
                     val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
-                    val user by appViewModel.userUiState.collectAsState()
-                    AddMissionDialog(
-                        campaignViewModel = campaignViewModel,
-                        isDarkTheme = isDarkTheme,
-                        onBack = { navController.popBackStack(destinationId = parentEntry.destination.id, inclusive = false) },
-                        user = user
-                    )
+                    val campaign by campaignViewModel.campaign.collectAsState()
+                    if (campaign != null) {
+                        AddMissionDialog(
+                            addCampaignMission = campaignViewModel::addCampaignMission,
+                            currentDay = campaign!!.currentDay,
+                            isDarkTheme = isDarkTheme,
+                            onBack = navController::navigateUp,
+                        )
+                    } else navController.navigateUp()
                 }
                 val missionNameArgument = "missionNameArgument"
                 dialog("${BottomNavScreen.Campaigns.route}/campaign/mission/{$missionNameArgument}",
-                    arguments = listOf(navArgument(missionNameArgument) { type = NavType.StringType }))
-                { backStackEntry ->
-                    val parentEntry = remember(backStackEntry) {
-                        navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
-                    }
-                    val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
+                    arguments = listOf(navArgument(missionNameArgument) { type = NavType.StringType })
+                ) { backStackEntry ->
                     val missionName = backStackEntry.arguments?.getString(missionNameArgument)
-                        ?: error("missionNameArgument cannot be null")
-                    val user by appViewModel.userUiState.collectAsState()
-                    CampaignMissionDialog(
-                        campaignViewModel = campaignViewModel,
-                        missionName = missionName,
-                        isDarkTheme = isDarkTheme,
-                        onBack = { navController.popBackStack(destinationId = parentEntry.destination.id, inclusive = false) },
-                        user = user
-                    )
+                    if (missionName != null) {
+                        val parentEntry = remember(backStackEntry) {
+                            navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
+                        }
+                        val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
+                        val campaign by campaignViewModel.campaign.collectAsState()
+                        val mission = campaign?.missions?.firstOrNull { it.name == missionName }
+                        if (mission != null) CampaignMissionDialog(
+                            campaignMission = mission,
+                            deleteCampaignMission = campaignViewModel::deleteCampaignMission,
+                            setCampaignMissions = campaignViewModel::setCampaignMissions,
+                            isDarkTheme = isDarkTheme,
+                            onBack = navController::navigateUp,
+                        ) else {
+                            appViewModel.emitError(NoSuchCampaignMissionException())
+                            navController.navigateUp()
+                        }
+                    } else {
+                        appViewModel.emitError(IllegalStateException("missionNameArgument cannot be null"))
+                        navController.navigateUp()
+                    }
                 }
                 val cardIndexArgument = "cardIndex"
-                val cardQueryArgument = "cardQuery"
                 composable(
-                    route = "${BottomNavScreen.Campaigns.route}/campaign/reward/{$cardIndexArgument}?$cardQueryArgument={$cardQueryArgument}",
-                    arguments = listOf(
-                        navArgument(cardIndexArgument) { type = NavType.IntType },
-                        navArgument(cardQueryArgument) { type = NavType.StringType }
-                    )
+                    route = "${BottomNavScreen.Campaigns.route}/campaign/reward/{$cardIndexArgument}",
+                    arguments = listOf(navArgument(cardIndexArgument) { type = NavType.IntType })
                 ) { backStackEntry ->
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry("${BottomNavScreen.Campaigns.route}/campaign/{$campaignIdArgument}")
                     }
                     val campaignViewModel: CampaignViewModel = hiltViewModel(parentEntry)
-                    val user by appViewModel.userUiState.collectAsState()
                     val cardIndex = backStackEntry.arguments?.getInt(cardIndexArgument)
-                        ?: error("cardIndexArgument cannot be null")
-                    val query = backStackEntry.arguments?.getString(cardQueryArgument).orEmpty()
-                    CampaignRewardFullScreen(
-                        campaignViewModel = campaignViewModel,
-                        cardIndex = cardIndex,
-                        query = query,
-                        user = user,
-                        isDarkTheme = isDarkTheme,
-                        contentPadding = innerPadding,
-                    )
-                    actions = null
+                    if (cardIndex != null) {
+                        CampaignRewardFullScreen(
+                            campaignViewModel = campaignViewModel,
+                            cardIndex = cardIndex,
+                            isDarkTheme = isDarkTheme,
+                            contentPadding = innerPadding,
+                        )
+                        actions = null
+                    } else {
+                        appViewModel.emitError(IllegalStateException("cardIndexArgument cannot be null"))
+                        navController.navigateUp()
+                    }
                 }
             }
         }

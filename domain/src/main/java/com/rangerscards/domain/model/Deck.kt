@@ -22,8 +22,8 @@ data class Deck(
 )
 
 data class PlayerInfo(
-    val userId: String,
-    val userName: String,
+    val id: String,
+    val name: String,
 )
 
 data class DeckMeta(

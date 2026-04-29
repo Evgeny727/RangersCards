@@ -1,7 +1,6 @@
 package com.rangerscards.ui.campaign
 
 import android.net.Uri
-import android.widget.Toast
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -37,7 +36,6 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -47,7 +45,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -57,64 +54,57 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavHostController
 import com.rangerscards.R
-import com.rangerscards.data.local.campaign.Campaign
+import com.rangerscards.domain.model.Campaign
+import com.rangerscards.domain.model.User
 import com.rangerscards.objects.CampaignMaps
 import com.rangerscards.ui.campaign.components.CampaignCurrentPositionCard
-import com.rangerscards.ui.components.RangersDialogWithContent
 import com.rangerscards.ui.campaign.components.CampaignEvents
 import com.rangerscards.ui.campaign.components.CampaignMissions
+import com.rangerscards.ui.campaign.components.CampaignNotes
 import com.rangerscards.ui.campaign.components.CampaignRemovedCards
 import com.rangerscards.ui.campaign.components.CampaignSettingsSection
 import com.rangerscards.ui.campaign.components.CampaignTitleRow
 import com.rangerscards.ui.campaign.components.TimeLineLazyRow
 import com.rangerscards.ui.cards.components.CardListItem
+import com.rangerscards.ui.components.RangersDialogWithContent
+import com.rangerscards.ui.components.RangersLoadingDialog
 import com.rangerscards.ui.components.RangersSearchOutlinedField
 import com.rangerscards.ui.components.ScrollableRangersTabs
 import com.rangerscards.ui.components.SquareButton
 import com.rangerscards.ui.decks.components.DeckListItem
 import com.rangerscards.ui.navigation.BottomNavScreen
-import com.rangerscards.ui.settings.UserUIState
-import com.rangerscards.ui.settings.components.RangersBaseCard
-import com.rangerscards.ui.settings.components.SettingsInputField
 import com.rangerscards.ui.settings.components.RangersRadioButtonRow
+import com.rangerscards.ui.settings.components.SettingsInputField
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
+import com.rangerscards.utils.applyScaffoldPaddings
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.launch
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.jsonArray
 
 @Composable
 fun CampaignScreen(
+    emitError: (Throwable) -> Unit,
     campaignViewModel: CampaignViewModel,
     campaign: Campaign?,
-    challengeDeck: JsonElement?,
-    userUIState: UserUIState,
+    user: User,
     isDarkTheme: Boolean,
     navController: NavHostController,
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
-    val isSubscriptionStarted by campaignViewModel.isSubscriptionStarted.collectAsState()
-    val campaignState by campaignViewModel.campaign.collectAsState()
-    var showLoadingDialog by rememberSaveable { mutableStateOf(false) }
+    val campaignUiState by campaignViewModel.campaignUiState.collectAsState()
     var showNameDialog by rememberSaveable { mutableStateOf(false) }
     var campaignNameEditing by rememberSaveable { mutableStateOf("") }
     var showConfirmationDialog by rememberSaveable { mutableStateOf(false) }
-    val coroutine = rememberCoroutineScope()
-    val context = LocalContext.current.applicationContext
     val isOwner by remember { derivedStateOf {
-        campaignState!!.userId == userUIState.currentUser?.uid || campaignState!!.userId.isEmpty()
+        campaign?.userId == user.userInfo?.id || campaign?.userId?.isEmpty() == true
     } }
     var isCampaignLogExpanded by rememberSaveable { mutableStateOf(false) }
     var campaignLogTypeIndex by rememberSaveable { mutableIntStateOf(0) }
     var isCampaignMissionsOnlyActive by rememberSaveable { mutableStateOf(false) }
     // one state + connection per tab:
-    val innerStates = List(4) { rememberLazyListState() }
+    val innerStates = List(5) { rememberLazyListState() }
     val innerConnections = innerStates.map { _ ->
         remember {
             object : NestedScrollConnection {
@@ -128,7 +118,9 @@ fun CampaignScreen(
             }
         }
     }
-    var rewardsQuery by remember { mutableStateOf("") }
+    val rewardsQuery by campaignViewModel.rewardsQuery.collectAsState()
+    val isShowAllRewards by campaignViewModel.showAllRewards.collectAsState()
+
     LaunchedEffect(Unit) {
         snapshotFlow { rewardsQuery }
             .drop(1)
@@ -137,178 +129,135 @@ fun CampaignScreen(
                 innerStates[1].animateScrollToItem(0)
             }
     }
-    LaunchedEffect(campaign, campaign?.id != campaignState?.id) {
-        if (userUIState.currentUser != null && !isSubscriptionStarted && campaign?.uploaded == true)
-            campaignViewModel.startSubscription(campaign.id)
-        if (campaign != null) campaignViewModel.parseCampaign(campaign)
+    LaunchedEffect(user.settings, campaign?.cycleId) {
+        campaignViewModel.setUserSettings(user.settings)
+        campaignViewModel.setPackId(campaign?.cycleId ?: "core")
     }
-    LaunchedEffect(challengeDeck, campaignViewModel.currentChallengeDeck) {
-        if (campaignViewModel.currentChallengeDeck == null && challengeDeck?.jsonArray?.isNotEmpty() ?: true) {
-            campaignViewModel.setChallengeDeck(challengeDeck ?: JsonArray(emptyList()))
+    LaunchedEffect(Unit) {
+        campaignViewModel.events.collect {
+            emitError(it.exception)
         }
     }
-    LaunchedEffect(userUIState.userInfo, campaignState) {
-        val settings = userUIState.settings
-        campaignViewModel.setTaboo(settings.taboo)
-        campaignViewModel.setPackId(campaignState?.cycleId ?: "core")
-        campaignViewModel.setCollection(settings.collection)
+    LaunchedEffect(campaignUiState) {
+        when (val state = campaignUiState) {
+            CampaignUiState.Deleted -> navController.navigateUp()
+            is CampaignUiState.FriendDeckDownloaded -> navController.navigate(
+                "deck/${state.deckId}"
+            ) { launchSingleTop = true }
+            is CampaignUiState.CampaignUploaded -> navController.navigate(
+                "${BottomNavScreen.Campaigns.route}/campaign/${state.campaignId}"
+            ) {
+                popUpTo(BottomNavScreen.Campaigns.startDestination) { inclusive = false }
+                launchSingleTop = true
+            }
+            else -> Unit
+        }
     }
+
+    if (campaignUiState is CampaignUiState.Loading) RangersLoadingDialog(isDarkTheme = isDarkTheme)
+
+    if (showNameDialog) RangersDialogWithContent(
+        headerId = R.string.name_label,
+        isDarkTheme = isDarkTheme,
+        onBack = { showNameDialog = false },
+    ) {
+        SettingsInputField(
+            leadingIcon = R.drawable.badge_32dp,
+            placeholder = null,
+            textValue = campaignNameEditing,
+            onValueChange = { campaignNameEditing = it },
+            KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Done,
+            )
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            SquareButton(
+                stringId = R.string.cancel_button,
+                leadingIcon = R.drawable.close_32dp,
+                onClick = { showNameDialog = false
+                    campaignNameEditing = ""
+                },
+                buttonColor = ButtonDefaults.buttonColors().copy(
+                    CustomTheme.colors.d30,
+                    disabledContainerColor = CustomTheme.colors.m
+                ),
+                iconColor = CustomTheme.colors.warn,
+                textColor = CustomTheme.colors.l30,
+                modifier = Modifier.weight(0.5f),
+            )
+            SquareButton(
+                stringId = R.string.done_button,
+                leadingIcon = R.drawable.done_32dp,
+                onClick = {
+                    showNameDialog = false
+                    campaignViewModel.updateCampaignName(campaignNameEditing)
+                    campaignNameEditing = ""
+                },
+                buttonColor = ButtonDefaults.buttonColors().copy(
+                    CustomTheme.colors.d10,
+                    disabledContainerColor = CustomTheme.colors.m
+                ),
+                iconColor = CustomTheme.colors.l15,
+                textColor = CustomTheme.colors.l30,
+                modifier = Modifier.weight(0.5f),
+            )
+        }
+    }
+    if (showConfirmationDialog) RangersDialogWithContent(
+        headerId = if (isOwner) R.string.delete_campaign_button else R.string.leave_campaign_button,
+        isDarkTheme = isDarkTheme,
+        onBack = { showConfirmationDialog = false }
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = stringResource(if (isOwner) R.string.delete_campaign_confirmation
+                else R.string.leave_campaign_confirmation),
+                color = CustomTheme.colors.d30,
+                fontFamily = Jost,
+                fontWeight = FontWeight.Normal,
+                fontSize = 18.sp,
+                lineHeight = 20.sp,
+                modifier = Modifier.padding(horizontal = 8.dp),
+            )
+            SquareButton(
+                stringId = R.string.cancel_button,
+                leadingIcon = R.drawable.close_32dp,
+                iconColor = CustomTheme.colors.warn,
+                buttonColor = ButtonDefaults.buttonColors().copy(
+                    containerColor = CustomTheme.colors.d30
+                ),
+                onClick = { showConfirmationDialog = false },
+            )
+            SquareButton(
+                stringId = if (isOwner) R.string.delete_campaign_button else R.string.leave_campaign_button,
+                leadingIcon = R.drawable.delete_32dp,
+                iconColor = if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30,
+                textColor = if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30,
+                buttonColor = ButtonDefaults.buttonColors().copy(
+                    containerColor = CustomTheme.colors.warn
+                ),
+                onClick = {
+                    showConfirmationDialog = false
+                    campaignViewModel.deleteOrLeaveCampaign(isOwner)
+                },
+            )
+        }
+    }
+
     Column(
         modifier = Modifier
             .background(CustomTheme.colors.l30)
             .fillMaxSize()
-            .padding(
-                top = contentPadding.calculateTopPadding(),
-                bottom = contentPadding.calculateBottomPadding()
-            ),
+            .applyScaffoldPaddings(contentPadding),
     ) {
-        if (showLoadingDialog) Dialog(
-            onDismissRequest = { showLoadingDialog = false },
-            properties = DialogProperties(
-                dismissOnBackPress = false,
-                dismissOnClickOutside = false,
-                usePlatformDefaultWidth = false
-            )
-        ) {
-            RangersBaseCard(
-                isDarkTheme = isDarkTheme,
-                labelIdRes = R.string.saving_changes_header
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    CircularProgressIndicator(modifier = Modifier.size(32.dp), color = CustomTheme.colors.m)
-                }
-            }
-        }
-        if (showNameDialog) Dialog(
-            onDismissRequest = { showNameDialog = false },
-            properties = DialogProperties(
-                dismissOnBackPress = false,
-                dismissOnClickOutside = false,
-                usePlatformDefaultWidth = false
-            )
-        ) {
-            RangersBaseCard(
-                isDarkTheme = isDarkTheme,
-                labelIdRes = R.string.deck_creation_name_label
-            ) {
-                SettingsInputField(
-                    leadingIcon = R.drawable.badge_32dp,
-                    placeholder = null,
-                    textValue = campaignNameEditing,
-                    onValueChange = { campaignNameEditing = it },
-                    KeyboardOptions.Default.copy(
-                        keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Done,
-                    )
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    SquareButton(
-                        stringId = R.string.cancel_button,
-                        leadingIcon = R.drawable.close_32dp,
-                        onClick = { showNameDialog = false
-                            campaignNameEditing = ""
-                        },
-                        buttonColor = ButtonDefaults.buttonColors().copy(
-                            CustomTheme.colors.d30,
-                            disabledContainerColor = CustomTheme.colors.m
-                        ),
-                        iconColor = CustomTheme.colors.warn,
-                        textColor = CustomTheme.colors.l30,
-                        modifier = Modifier.weight(0.5f),
-                    )
-                    SquareButton(
-                        stringId = R.string.done_button,
-                        leadingIcon = R.drawable.done_32dp,
-                        onClick = {
-                            if (campaignNameEditing != campaignState!!.name) coroutine.launch {
-                                showNameDialog = false
-                                showLoadingDialog = true
-                                campaignViewModel.updateCampaignName(
-                                    campaignState!!.id,
-                                    campaignNameEditing,
-                                    campaignState!!.uploaded,
-                                    userUIState.currentUser
-                                )
-                            }.invokeOnCompletion {
-                                campaignNameEditing = ""
-                                showLoadingDialog = false
-                            } else {
-                                campaignNameEditing = ""
-                                showNameDialog = false
-                            }
-                        },
-                        buttonColor = ButtonDefaults.buttonColors().copy(
-                            CustomTheme.colors.d10,
-                            disabledContainerColor = CustomTheme.colors.m
-                        ),
-                        iconColor = CustomTheme.colors.l15,
-                        textColor = CustomTheme.colors.l30,
-                        modifier = Modifier.weight(0.5f),
-                    )
-                }
-            }
-        }
-        if (showConfirmationDialog) RangersDialogWithContent(
-            header = stringResource(id = R.string.delete_campaign_button),
-            isDarkTheme = isDarkTheme,
-            onBack = { showConfirmationDialog = false }
-        ) {
-            Column(
-                modifier = Modifier.padding(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = stringResource(if (isOwner) R.string.delete_campaign_confirmation
-                    else R.string.leave_campaign_confirmation),
-                    color = CustomTheme.colors.d30,
-                    fontFamily = Jost,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 18.sp,
-                    lineHeight = 20.sp,
-                    modifier = Modifier.padding(horizontal = 8.dp),
-                )
-                SquareButton(
-                    stringId = R.string.cancel_button,
-                    leadingIcon = R.drawable.close_32dp,
-                    iconColor = CustomTheme.colors.warn,
-                    buttonColor = ButtonDefaults.buttonColors().copy(
-                        containerColor = CustomTheme.colors.d30
-                    ),
-                    onClick = { showConfirmationDialog = false },
-                )
-                SquareButton(
-                    stringId = if (isOwner) R.string.delete_campaign_button else R.string.leave_campaign_button,
-                    leadingIcon = R.drawable.delete_32dp,
-                    iconColor = if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30,
-                    textColor = if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30,
-                    buttonColor = ButtonDefaults.buttonColors().copy(
-                        containerColor = CustomTheme.colors.warn
-                    ),
-                    onClick = if (isOwner) { { coroutine.launch {
-                        showLoadingDialog = true
-                        showConfirmationDialog = false
-                        campaignViewModel.deleteCampaign(userUIState.currentUser)
-                    }.invokeOnCompletion {
-                        showLoadingDialog = false
-                        navController.navigateUp()
-                    } } } else { { coroutine.launch { showLoadingDialog = true
-                        showConfirmationDialog = false
-                        campaignViewModel.leaveCampaign(userUIState.currentUser)
-                    }.invokeOnCompletion { showLoadingDialog = false
-                        navController.navigateUp()
-                    } } },
-                )
-            }
-        }
-        if (campaignState == null) {
+        if (campaign == null) {
             Column(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.Center,
@@ -325,35 +274,40 @@ fun CampaignScreen(
                 contentPadding = PaddingValues(8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                item {
-                    CampaignTitleRow(campaignState!!.name) { campaignNameEditing = campaignState?.name ?: ""
+                item("campaign_title") {
+                    CampaignTitleRow(campaign.name) { campaignNameEditing = campaign.name
                         showNameDialog = true
                     }
                 }
-                item {
+                item("timeline") {
+                    val groupedDays = remember(
+                        campaign.calendar,
+                        campaign.expansions,
+                        campaign.extendedCalendar
+                    ) { campaignViewModel.groupDaysByWeather() }
                     TimeLineLazyRow(
-                        campaignViewModel.groupDaysByWeather(),
-                        campaignState!!.currentDay
+                        groupedDays,
+                        campaign.currentDay
                     ) { navController.navigate(
                         "${BottomNavScreen.Campaigns.route}/campaign/dayInfo/$it"
                     ) {
                         launchSingleTop = true
                     } }
                 }
-                if (campaignState!!.currentDay >= 30 && !campaignState!!.extendedCalendar) item {
+                if (campaign.currentDay >= 30 && !campaign.extendedCalendar) item("extend_button") {
                     SquareButton(
                         stringId = R.string.extend_campaign_button,
                         leadingIcon = R.drawable.add_32dp,
-                        onClick = { coroutine.launch { campaignViewModel.extendCampaign(userUIState.currentUser) } },
+                        onClick = campaignViewModel::extendCampaign,
                         modifier = Modifier.padding(8.dp)
                     )
                 }
-                item {
+                item("current_position") {
                     CampaignCurrentPositionCard(
-                        campaignState!!.cycleId,
-                        campaignState!!.currentLocation,
-                        campaignState!!.currentPathTerrain,
-                        campaignState!!.expansions
+                        campaign.cycleId,
+                        campaign.currentLocation,
+                        campaign.currentPathTerrain,
+                        campaign.expansions
                     ) { navController.navigate(
                         "${BottomNavScreen.Campaigns.route}/campaign/journey"
                     ) {
@@ -386,8 +340,8 @@ fun CampaignScreen(
                                     .fillMaxHeight()
                             )
                         }
-                        if ((campaignState!!.currentDay != 30 || campaignState!!.extendedCalendar)
-                            && campaignState!!.currentDay != 60) key("endDayButton") {
+                        if ((campaign.currentDay != 30 || campaign.extendedCalendar)
+                            && campaign.currentDay != 60) key("endDayButton") {
                             SquareButton(
                                 stringId = R.string.end_the_day,
                                 leadingIcon = R.drawable.camp_32dp,
@@ -408,33 +362,31 @@ fun CampaignScreen(
                         }
                     }
                 }
-                item {
+                item("challengeDeckButton") {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        key("challengeDeckButton") {
-                            SquareButton(
-                                stringId = R.string.challenge_deck_title,
-                                leadingIcon = R.drawable.cards_32dp,
-                                iconColor = CustomTheme.colors.m,
-                                textColor = CustomTheme.colors.d30,
-                                buttonColor = ButtonDefaults.buttonColors().copy(
-                                    containerColor = CustomTheme.colors.l20
-                                ),
-                                onClick = {
-                                    navController.navigate(
-                                        "${BottomNavScreen.Campaigns.route}/campaign/challengeDeck"
-                                    ) {
-                                        launchSingleTop = true
-                                    }
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
+                        SquareButton(
+                            stringId = R.string.challenge_deck_title,
+                            leadingIcon = R.drawable.cards_32dp,
+                            iconColor = CustomTheme.colors.m,
+                            textColor = CustomTheme.colors.d30,
+                            buttonColor = ButtonDefaults.buttonColors().copy(
+                                containerColor = CustomTheme.colors.l20
+                            ),
+                            onClick = {
+                                navController.navigate(
+                                    "${BottomNavScreen.Campaigns.route}/campaign/${campaign.id}/challengeDeck"
+                                ) {
+                                    launchSingleTop = true
+                                }
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
                     }
                 }
-                item {
+                item("campaign_log") {
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -485,6 +437,7 @@ fun CampaignScreen(
                                         R.string.missions_campaign_log_tab,
                                         R.string.rewards_search_tab,
                                         R.string.events_campaign_log_tab,
+                                        R.string.section_notes,
                                         R.string.removed_campaign_log_tab
                                     ),
                                     campaignLogTypeIndex,
@@ -496,25 +449,28 @@ fun CampaignScreen(
                                         ) {
                                             launchSingleTop = true
                                         } },
-                                        missions = campaignState!!.missions.distinctBy { it.name },
+                                        missions = remember(campaign.missions, isCampaignMissionsOnlyActive) {
+                                            campaign.missions.filter {
+                                                mission -> !isCampaignMissionsOnlyActive || !mission.completed
+                                            }.distinctBy { it.name }.sortedBy { it.day }.toImmutableList()
+                                        },
                                         onClick = { navController.navigate(
                                             "${BottomNavScreen.Campaigns.route}/campaign/mission/${Uri.encode(it)}")
                                         {
                                             launchSingleTop = true
                                         } },
                                         isOnlyActive = isCampaignMissionsOnlyActive,
-                                        onActiveClick = { isCampaignMissionsOnlyActive = !isCampaignMissionsOnlyActive },
+                                        onActiveClick = { value -> isCampaignMissionsOnlyActive = value },
                                         state = innerStates[campaignLogTypeIndex],
-                                        nestedConnectionModifier = Modifier.nestedScroll(innerConnections[campaignLogTypeIndex]),
+                                        modifier = Modifier.nestedScroll(innerConnections[campaignLogTypeIndex]),
                                     )
                                     1 -> {
                                         val innerState = innerStates[campaignLogTypeIndex]
-                                        val isShowAllRewards by campaignViewModel.showAllRewards.collectAsState()
                                         RangersSearchOutlinedField(
                                             query = rewardsQuery,
                                             R.string.search_for_card,
-                                            onQueryChanged = { newQuery -> rewardsQuery = newQuery },
-                                            onClearClicked = { rewardsQuery = "" }
+                                            onQueryChanged = campaignViewModel::onRewardsQueryChange,
+                                            onClearClicked = campaignViewModel::onRewardsQueryClear,
                                         )
                                         RangersRadioButtonRow(
                                             text = stringResource(R.string.show_all_rewards_in_collection),
@@ -522,7 +478,7 @@ fun CampaignScreen(
                                             modifier = Modifier,
                                             isSelected = isShowAllRewards
                                         )
-                                        val rewards by campaignViewModel.getRewardsCards(rewardsQuery).collectAsState(emptyList())
+                                        val rewards by campaignViewModel.rewards.collectAsState()
                                         LazyColumn(
                                             state = innerState,
                                             modifier = Modifier
@@ -530,35 +486,31 @@ fun CampaignScreen(
                                                 .nestedScroll(innerConnections[campaignLogTypeIndex])
                                         ) {
                                             rewards.forEachIndexed { index, reward ->
-                                                val isAdded = campaignState!!.rewards.contains(reward.id)
+                                                val isAdded = campaign.rewards.contains(reward.id)
                                                 item(reward.id) {
                                                     CardListItem(
                                                         tabooId = reward.tabooId,
-                                                        aspectId = reward.aspectId,
-                                                        aspectShortName = reward.aspectShortName,
+                                                        aspect = reward.aspect,
                                                         cost = reward.cost,
                                                         imageSrc = reward.realImageSrc,
-                                                        approachConflict = reward.approachConflict,
-                                                        approachConnection = reward.approachConnection,
-                                                        approachReason = reward.approachReason,
-                                                        approachExploration = reward.approachExploration,
+                                                        approaches = reward.approaches,
                                                         name = reward.name.toString(),
                                                         typeName = reward.typeName,
                                                         traits = reward.traits,
                                                         level = reward.level,
                                                         isDarkTheme = isDarkTheme,
                                                         currentAmount = if (isAdded) 2 else 0,
-                                                        onRemoveClick = { coroutine.launch { showLoadingDialog = true
-                                                            campaignViewModel.removeCampaignReward(reward.id, userUIState.currentUser)
-                                                        }.invokeOnCompletion { showLoadingDialog = false }  },
+                                                        onRemoveClick = {
+                                                            campaignViewModel.removeCampaignReward(reward.id)
+                                                        },
                                                         onRemoveEnabled = isAdded,
-                                                        onAddClick = { coroutine.launch { showLoadingDialog = true
-                                                            campaignViewModel.addCampaignReward(reward.id, userUIState.currentUser)
-                                                        }.invokeOnCompletion { showLoadingDialog = false }  },
+                                                        onAddClick = {
+                                                            campaignViewModel.addCampaignReward(reward.id)
+                                                        },
                                                         onAddEnabled = !isAdded,
                                                         onClick = {
                                                             navController.navigate(
-                                                                "${BottomNavScreen.Campaigns.route}/campaign/reward/$index?cardQuery=${Uri.encode(rewardsQuery)}"
+                                                                "${BottomNavScreen.Campaigns.route}/campaign/reward/$index"
                                                             ) {
                                                                 launchSingleTop = true
                                                             }
@@ -574,7 +526,9 @@ fun CampaignScreen(
                                         ) {
                                             launchSingleTop = true
                                         } },
-                                        events = campaignState!!.events.distinctBy { it.name }.sortedBy { it.name },
+                                        events = remember(campaign.events) {
+                                            campaign.events.distinctBy { it.name }.sortedBy { it.name }.toImmutableList()
+                                        },
                                         onClick = { navController.navigate(
                                             "${BottomNavScreen.Campaigns.route}/campaign/event/${Uri.encode(it)}"
                                         ) {
@@ -583,17 +537,34 @@ fun CampaignScreen(
                                         state = innerStates[campaignLogTypeIndex],
                                         modifier = Modifier.nestedScroll(innerConnections[campaignLogTypeIndex]),
                                     )
-                                    3 -> CampaignRemovedCards(
+                                    3 -> CampaignNotes(
+                                        onAdd = { navController.navigate(
+                                            "${BottomNavScreen.Campaigns.route}/campaign/recordEvent"
+                                        ) {
+                                            launchSingleTop = true
+                                        } },
+                                        notes = campaign.notes.toImmutableList(),
+                                        onClick = { navController.navigate(
+                                            "${BottomNavScreen.Campaigns.route}/campaign/note/$it"
+                                        ) {
+                                            launchSingleTop = true
+                                        } },
+                                        state = innerStates[campaignLogTypeIndex],
+                                        modifier = Modifier.nestedScroll(innerConnections[campaignLogTypeIndex]),
+                                    )
+                                    4 -> CampaignRemovedCards(
                                         onAdd = { navController.navigate(
                                             "${BottomNavScreen.Campaigns.route}/campaign/removeCard"
                                         ) {
                                             launchSingleTop = true
                                         } },
                                         removedSets = campaignViewModel.getRemovedSetsInfo(),
-                                        removed = campaignState!!.removed.distinctBy { it.name },
-                                        onRemove = { removedName -> coroutine.launch { showLoadingDialog = true
-                                            campaignViewModel.updateCampaignRemoved(removedName, userUIState.currentUser)
-                                        }.invokeOnCompletion { showLoadingDialog = false }},
+                                        removed = remember(campaign.removed) {
+                                            campaign.removed.distinctBy { it.name }.toImmutableList()
+                                        },
+                                        onRemove = { removedName ->
+                                            campaignViewModel.updateCampaignRemoved(removedName)
+                                        },
                                         state = innerStates[campaignLogTypeIndex],
                                         nestedConnectionModifier = Modifier.nestedScroll(innerConnections[campaignLogTypeIndex]),
                                     )
@@ -602,7 +573,7 @@ fun CampaignScreen(
                         }
                     }
                 }
-                item {
+                item("rangers_section") {
                     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                             Text(
@@ -614,40 +585,22 @@ fun CampaignScreen(
                                 lineHeight = 20.sp,
                             )
                         }
-                        if (campaignState!!.decks.isNotEmpty()) campaignState!!.decks.forEach { deck ->
-                            val role = campaignViewModel.getRole(deck.role).collectAsState(null).value
+                        campaign.decks.forEach { deck ->
+                            val role by campaignViewModel.getRole(deck.meta.roleId).collectAsState(null)
                             DeckListItem(
                                 meta = deck.meta,
                                 imageSrc = role?.realImageSrc,
                                 name = deck.name,
                                 roleName = role?.name,
-                                onClick = { if (!campaignState!!.uploaded || userUIState.currentUser?.uid == deck.userId)
-                                    navController.navigate(
-                                        "deck/${deck.id}"
-                                    ) {
-                                        launchSingleTop = true
-                                    }
-                                    else coroutine.launch { showLoadingDialog = true
-                                        campaignViewModel.downloadFriendDeck(deck.id, userUIState.currentUser)
-                                    }.invokeOnCompletion { showLoadingDialog = false
-                                        if (campaignViewModel.friendDeckIdToOpen.value != null)
-                                            navController.navigate(
-                                                "deck/${campaignViewModel.friendDeckIdToOpen.value}"
-                                            ) { launchSingleTop = true }
-                                        else Toast.makeText(
-                                            context,
-                                            context.getString(R.string.something_went_wrong),
-                                            Toast.LENGTH_SHORT,
-                                        ).show()
-                                    }
-                                } ,
+                                onClick = { if (!campaign.uploaded || user.userInfo?.id == deck.user.id)
+                                        navController.navigate("deck/${deck.id}") { launchSingleTop = true }
+                                    else campaignViewModel.downloadFriendDeck(deck.id)
+                                },
                                 isCampaign = false,
-                                userName = if (deck.userName == "null") "" else deck.userName,
-                                onRemoveDeck = if (!campaignState!!.uploaded || userUIState.currentUser?.uid == deck.userId) {
-                                    { coroutine.launch { showLoadingDialog = true
-                                        campaignViewModel.removeDeckCampaign(deck.id, userUIState.currentUser)
-                                    }.invokeOnCompletion { showLoadingDialog = false } }
-                                } else null
+                                userName = if (deck.user.name == "null") "" else deck.user.name,
+                                onRemoveDeck = if (!campaign.uploaded || user.userInfo?.id == deck.user.id) { {
+                                    campaignViewModel.removeDeckCampaign(deck.id)
+                                } } else null
                             )
                         }
                         SquareButton(
@@ -666,41 +619,24 @@ fun CampaignScreen(
                         )
                     }
                 }
-                item {
+                item("settings_section") {
                     CampaignSettingsSection(
                         onAddOrRemovePlayers = { navController.navigate(
                             "${BottomNavScreen.Campaigns.route}/campaign/addPlayer"
                         ) {
                             launchSingleTop = true
                         } },
-                        onUploadCampaign = if (!campaignState!!.uploaded && userUIState.currentUser != null)
-                        { { if (campaignState!!.decks.isNotEmpty())
-                            Toast.makeText(
-                                context,
-                                context.getString(R.string.upload_campaign_warning),
-                                Toast.LENGTH_SHORT,
-                            ).show()
-                            else coroutine.launch {
-                            showLoadingDialog = true
-                            campaignViewModel.uploadCampaign(userUIState.currentUser)
-                        }.invokeOnCompletion { showLoadingDialog = false
-                            if (campaignViewModel.uploadedCampaignIdToOpen.value != null) navController.navigate(
-                                "${BottomNavScreen.Campaigns.route}/campaign/${campaignViewModel.uploadedCampaignIdToOpen.value}"
-                            ) {
-                                popUpTo(BottomNavScreen.Campaigns.startDestination) {
-                                    inclusive = false
-                                }
-                                launchSingleTop = true
-                            } else navController.navigateUp()
-                        } } } else null,
+                        onUploadCampaign = if (!campaign.uploaded && user.userInfo != null) { {
+                            campaignViewModel.uploadCampaign()
+                        } } else null,
                         onDeleteOrLeaveCampaign = { showConfirmationDialog = true },
-                        onCampaignExpansions = if (CampaignMaps.campaignExpansionsMap[campaignState!!.cycleId]?.isNotEmpty() == true) {
+                        onCampaignExpansions = if (CampaignMaps.campaignExpansionsMap[campaign.cycleId]?.isNotEmpty() == true) {
                             { navController.navigate(
                                 "${BottomNavScreen.Campaigns.route}/campaign/expansions"
                             ) { launchSingleTop = true } }
                         } else null,
                         isOwner = isOwner,
-                        isUploaded = campaignState!!.uploaded
+                        isUploaded = campaign.uploaded
                     )
                 }
             }

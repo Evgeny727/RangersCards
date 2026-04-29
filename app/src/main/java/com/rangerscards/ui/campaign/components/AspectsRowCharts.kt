@@ -63,41 +63,43 @@ fun AspectsRowCharts(
     val spiColor = CustomTheme.colors.orange
     val fitColor = CustomTheme.colors.red
     val focColor = CustomTheme.colors.blue
-    val challengeCardsList = ChallengeDeck.challengeDeck.filter { deckList.contains(it.key) }.values.toList()
-    val awaCounts = listOf(
+    val challengeCardsList = remember(deckList) {
+        ChallengeDeck.challengeDeck.filter { deckList.contains(it.key) }.values.toList()
+    }
+    val awaCounts = remember(challengeCardsList) { listOf(
         challengeCardsList.count { it.awa == -2 }.toDouble(),
         challengeCardsList.count { it.awa == -1 }.toDouble(),
         challengeCardsList.count { it.awa == 0 }.toDouble(),
         challengeCardsList.count { it.awa == 1 }.toDouble()
-    )
-    val spiCounts = listOf(
+    ) }
+    val spiCounts = remember(challengeCardsList) { listOf(
         challengeCardsList.count { it.spi == -2 }.toDouble(),
         challengeCardsList.count { it.spi == -1 }.toDouble(),
         challengeCardsList.count { it.spi == 0 }.toDouble(),
         challengeCardsList.count { it.spi == 1 }.toDouble()
-    )
-    val fitCounts = listOf(
+    ) }
+    val fitCounts = remember(challengeCardsList) { listOf(
         challengeCardsList.count { it.fit == -2 }.toDouble(),
         challengeCardsList.count { it.fit == -1 }.toDouble(),
         challengeCardsList.count { it.fit == 0 }.toDouble(),
         challengeCardsList.count { it.fit == 1 }.toDouble()
-    )
-    val focCounts = listOf(
+    ) }
+    val focCounts = remember(challengeCardsList) { listOf(
         challengeCardsList.count { it.foc == -2 }.toDouble(),
         challengeCardsList.count { it.foc == -1 }.toDouble(),
         challengeCardsList.count { it.foc == 0 }.toDouble(),
         challengeCardsList.count { it.foc == 1 }.toDouble()
-    )
+    ) }
     val icons = listOf(
         R.drawable.sun,
         R.drawable.mountain,
         R.drawable.crest
     )
-    val effectCounts = listOf(
+    val effectCounts = remember(challengeCardsList) { listOf(
         challengeCardsList.count { it.challengeIcon == R.drawable.sun }.toDouble(),
         challengeCardsList.count { it.challengeIcon == R.drawable.mountain }.toDouble(),
         challengeCardsList.count { it.challengeIcon == R.drawable.crest }.toDouble()
-    )
+    ) }
     Column(
         modifier = Modifier.fillMaxWidth().animateContentSize(tween(300)),
         verticalArrangement = Arrangement.spacedBy(16.dp)

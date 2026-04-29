@@ -107,7 +107,7 @@
     <string name="new_deck">Neues Deck</string>
     <string name="custom_deck_tab">Eigenes Deck</string>
     <string name="starter_deck_tab">Einsteigerdeck</string>
-    <string name="deck_creation_name_label">Name</string>
+    <string name="name_label">Name</string>
     <string name="deck_creation_name_placeholder">Gib diesem Deck einen Namen.</string>
     <string name="starter_deck_title">Wähle ein Einsteigerdeck:</string>
     <string name="upload_to_rangersdb">Auf RangersDB erstellen</string>
@@ -192,7 +192,7 @@
     //Deck Side Drawer
     <string name="deck_section_header">Deck</string>
     <string name="deck_section_deck_id">Deck #%s</string>
-    <string name="deck_section_notes">Notes</string>
+    <string name="section_notes">Notes</string>
     <string name="tools_section_header">Tools</string>
     <string name="tools_section_charts">Charts</string>
     <string name="campaign_section_header">Kampagne</string>
@@ -318,7 +318,6 @@
     //Rangers section
     <string name="rangers_section_header">— Ranger —</string>
     <string name="add_ranger_button">Ranger hinzufügen</string>
-    <string name="no_decks_for_add">Keine geeigneten Decks.</string>
 
     //Settings section
     <string name="settings_section_header">— Einstellungen —</string>

@@ -27,8 +27,8 @@ fun DbDeck.toDomain(): Deck =
         id = id,
         uploaded = uploaded,
         playerInfo = PlayerInfo(
-            userId = userId,
-            userName = userHandle ?: ""
+            id = userId,
+            name = userHandle ?: ""
         ),
         tabooSetId = tabooSetId,
         version = version,

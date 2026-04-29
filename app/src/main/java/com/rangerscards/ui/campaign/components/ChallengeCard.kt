@@ -17,6 +17,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,7 +38,7 @@ fun ChallengeCard(
     isSmall: Boolean = false,
     onClick: ((Int) -> Unit)?
 ) {
-    val revealedCard = ChallengeDeck.challengeDeck.getValue(cardId)
+    val revealedCard = remember { ChallengeDeck.challengeDeck.getValue(cardId) }
     val width = if (isSmall) 110.dp else 220.dp
     Surface(
         modifier = Modifier.width(width).clickable(onClick != null) { onClick?.invoke(cardId) },

@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -20,12 +19,10 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -38,19 +35,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.google.firebase.auth.FirebaseUser
 import com.rangerscards.R
+import com.rangerscards.domain.model.Campaign
 import com.rangerscards.objects.CampaignMaps
 import com.rangerscards.objects.ConnectionRestriction
 import com.rangerscards.objects.Path
-import com.rangerscards.ui.campaign.CampaignViewModel
 import com.rangerscards.ui.components.RangersDialogWithContent
-import com.rangerscards.ui.components.RangersRadioButton
 import com.rangerscards.ui.components.SquareButton
 import com.rangerscards.ui.settings.components.RangersBaseCard
+import com.rangerscards.ui.settings.components.RangersRadioButtonRow
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
-import kotlinx.coroutines.launch
 
 enum class TravelDataDialog {
     Location,
@@ -59,28 +54,25 @@ enum class TravelDataDialog {
 
 @Composable
 fun TravelDialog(
-    campaignViewModel: CampaignViewModel,
+    campaign: Campaign,
+    campaignTravel: (String, String, Boolean) -> Unit,
     isDarkTheme: Boolean,
     onBack: () -> Unit,
-    user: FirebaseUser?
 ) {
-    val campaign by campaignViewModel.campaign.collectAsState()
-    var showLoadingDialog by rememberSaveable { mutableStateOf(false) }
     var showDialogPicker by rememberSaveable { mutableStateOf<TravelDataDialog?>(null) }
     var showAllLocations by rememberSaveable { mutableStateOf(false) }
     var isCamping by rememberSaveable { mutableStateOf(false) }
     var selectedLocation by rememberSaveable { mutableStateOf("") }
     var selectedPathTerrain by rememberSaveable { mutableStateOf("") }
     var selectedConnectionRestriction by rememberSaveable { mutableStateOf("") }
-    val coroutine = rememberCoroutineScope()
     val locationsMap by remember(campaign) {
         mutableStateOf(CampaignMaps.getMapLocations(
             true,
-            campaign!!.cycleId,
-            campaign!!.expansions
+            campaign.cycleId,
+            campaign.expansions
         ))
     }
-    val currentLocation by remember { derivedStateOf { locationsMap[campaign!!.currentLocation] } }
+    val currentLocation by remember { derivedStateOf { locationsMap[campaign.currentLocation] } }
     val isLegitTravel by remember { derivedStateOf {
         selectedLocation.isNotEmpty() && selectedPathTerrain.isNotEmpty()
     } }
@@ -88,10 +80,8 @@ fun TravelDialog(
         if (currentLocation == null) showAllLocations = true
     }
     RangersDialogWithContent(
-        header = stringResource(
-            id = R.string.travel_header,
-            stringResource(currentLocation?.nameResId ?: R.string.text_none)
-        ),
+        headerId = R.string.travel_header,
+        formatArgs = stringResource(currentLocation?.nameResId ?: R.string.text_none),
         isDarkTheme = isDarkTheme,
         onBack = onBack
     ) {
@@ -99,28 +89,12 @@ fun TravelDialog(
             modifier = Modifier.fillMaxWidth().padding(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 8.dp).clickable {
-                    showAllLocations = !showAllLocations
-                },
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.show_all_locations_radio_button),
-                    color = CustomTheme.colors.d30,
-                    fontFamily = Jost,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 20.sp,
-                    lineHeight = 22.sp,
-                    modifier = Modifier.weight(1f)
-                )
-                RangersRadioButton(
-                    selected = showAllLocations,
-                    onClick = { showAllLocations = !showAllLocations },
-                    modifier = Modifier.size(32.dp),
-                    enabled = currentLocation != null
-                )
+            RangersRadioButtonRow(
+                text = stringResource(R.string.show_all_locations_radio_button),
+                isSelected = showAllLocations,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+            ) { value ->
+                showAllLocations = value
             }
             Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
                 Text(
@@ -272,31 +246,16 @@ fun TravelDialog(
                         )
                     }
             }
-            Row(
-                modifier = Modifier.padding(horizontal = 8.dp).clickable {
-                    isCamping = !isCamping
-                },
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.camp_radio_button),
-                    color = CustomTheme.colors.d30,
-                    fontFamily = Jost,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 20.sp,
-                    lineHeight = 22.sp,
-                    modifier = Modifier.weight(1f)
-                )
-                RangersRadioButton(
-                    selected = isCamping,
-                    onClick = { isCamping = !isCamping },
-                    modifier = Modifier.size(32.dp)
-                )
+            RangersRadioButtonRow(
+                text = stringResource(R.string.camp_radio_button),
+                isSelected = isCamping,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+            ) { value ->
+                isCamping = value
             }
             Text(
                 text = stringResource(if (isCamping) R.string.travel_with_camp
-                else R.string.travel_without_camp_text, campaign!!.currentDay),
+                else R.string.travel_without_camp_text, campaign.currentDay),
                 color = CustomTheme.colors.d30,
                 fontFamily = Jost,
                 fontWeight = FontWeight.Normal,
@@ -312,36 +271,10 @@ fun TravelDialog(
                 containerColor = CustomTheme.colors.d10,
                 disabledContainerColor = CustomTheme.colors.d10.copy(alpha = 0.3f)
             ),
-            onClick = { coroutine.launch { showLoadingDialog = true
-                campaignViewModel.campaignTravel(selectedLocation, selectedPathTerrain, isCamping, user)
-            }.invokeOnCompletion { showLoadingDialog = false
-                onBack.invoke()
-            } },
+            onClick = { campaignTravel(selectedLocation, selectedPathTerrain, isCamping); onBack() },
             isEnabled = isLegitTravel,
             modifier = Modifier.padding(8.dp)
         )
-    }
-    if (showLoadingDialog) Dialog(
-        onDismissRequest = { showLoadingDialog = false },
-        properties = DialogProperties(
-            dismissOnBackPress = false,
-            dismissOnClickOutside = false,
-            usePlatformDefaultWidth = false
-        )
-    ) {
-        RangersBaseCard(
-            isDarkTheme = isDarkTheme,
-            labelIdRes = R.string.saving_changes_header
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                CircularProgressIndicator(modifier = Modifier.size(32.dp), color = CustomTheme.colors.m)
-            }
-        }
     }
     if (showDialogPicker != null) Dialog(
         onDismissRequest = { showDialogPicker = null },
@@ -426,7 +359,7 @@ fun TravelDialog(
                                 HorizontalDivider(color = CustomTheme.colors.l10)
                             }
                         }
-                        else -> Path.entries.filter { it.cycles.contains(campaign!!.cycleId) }.forEach { path ->
+                        else -> Path.entries.filter { it.cycles.contains(campaign.cycleId) }.forEach { path ->
                             item(path.value) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth().clickable {

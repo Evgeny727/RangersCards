@@ -148,14 +148,10 @@ fun CardsScreen(
                     })
                     is CardListUiModel.CardItem -> CardListItem(
                         tabooId = item.card.tabooId,
-                        aspectId = item.card.aspect?.id,
-                        aspectShortName = item.card.aspect?.shortName,
+                        aspect = item.card.aspect,
                         cost = item.card.cost,
                         imageSrc = item.card.realImageSrc,
-                        approachConflict = item.card.approaches?.conflict,
-                        approachConnection = item.card.approaches?.connection,
-                        approachReason = item.card.approaches?.reason,
-                        approachExploration = item.card.approaches?.exploration,
+                        approaches = item.card.approaches,
                         name = item.card.name.toString(),
                         typeName = item.card.typeName,
                         traits = item.card.traits,

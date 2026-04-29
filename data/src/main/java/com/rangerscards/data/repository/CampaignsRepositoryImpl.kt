@@ -25,7 +25,11 @@ import com.rangerscards.domain.model.CampaignListItem
 import com.rangerscards.domain.repository.CampaignsRepository
 import com.rangerscards.domain.repository.RemoteUpdateAction
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
@@ -102,7 +106,7 @@ class CampaignsRepositoryImpl @Inject constructor(
         }
 
     override fun getCampaignFlowById(id: String) =
-        campaignDao.getCampaignFlowById(id).map { it.toDomain() }
+        campaignDao.getCampaignFlowById(id).mapNotNull { it?.toDomain() }
 
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun createCampaign(
@@ -338,7 +342,7 @@ class CampaignsRepositoryImpl @Inject constructor(
         ))
     }
 
-    override suspend fun removeFriendToCampaign(campaignId: String, friendUserId: String) = runCatching {
+    override suspend fun removeFriendFromCampaign(campaignId: String, friendUserId: String) = runCatching {
         val newAccess = campaignsRemoteDataSource
             .removeFriendFromCampaign(campaignId.toInt(), friendUserId)
             .dataAssertNoErrors.access!!.campaign.access.mapNotNull { it.user?.userInfo?.toDomain() }
@@ -400,7 +404,7 @@ class CampaignsRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun upsertChallengeDeck(campaignId: String, challengeDeckIds: List<String>) =
+    override suspend fun upsertChallengeDeck(campaignId: String, challengeDeckIds: List<Int>) =
         campaignDao.upsertChallengeDeck(
             ChallengeDeck(
                 campaignId,
@@ -412,6 +416,23 @@ class CampaignsRepositoryImpl @Inject constructor(
 
     override fun getCampaignChallengeDeckFlowById(campaignId: String) =
         campaignDao.getCampaignChallengeDeckFlowById(campaignId).map {
-            it?.jsonArray?.map { id -> id.jsonPrimitive.content } ?: emptyList()
+            it?.jsonArray?.map { id -> id.jsonPrimitive.content.toInt() } ?: emptyList()
         }
+
+    override fun startSubscription(campaignId: String): Flow<Result<Unit>> {
+        val id = campaignId.toIntOrNull() ?: return flowOf(Result.success(Unit))
+        return campaignsRemoteDataSource.startSubscription(id)
+            .onEach { response ->
+                response.dataAssertNoErrors.campaign?.campaign?.let { remoteCampaign ->
+                    val localCampaign = campaignDao.getCampaignById(campaignId)
+                    localCampaign?.let {
+                        val dbCampaign = remoteCampaign.toDbCampaign()
+                        if (localCampaign.updatedAt != dbCampaign.updatedAt)
+                            campaignDao.updateCampaign(dbCampaign)
+                    }
+                }
+            }
+            .map { Result.success(Unit) }
+            .catch { throwable -> emit(Result.failure(throwable)) }
+    }
 }

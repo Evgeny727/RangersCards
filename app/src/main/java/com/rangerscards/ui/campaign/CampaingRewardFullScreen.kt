@@ -13,9 +13,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,11 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,40 +34,37 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.firebase.auth.FirebaseUser
 import com.rangerscards.R
 import com.rangerscards.ui.cards.components.FullCard
+import com.rangerscards.ui.components.RangersLoadingDialog
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
-import kotlinx.coroutines.launch
+import com.rangerscards.utils.applyScaffoldPaddings
 
 @Composable
 fun CampaignRewardFullScreen(
     campaignViewModel: CampaignViewModel,
     cardIndex: Int,
-    query: String,
-    user: FirebaseUser?,
     isDarkTheme: Boolean,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
+    val campaignUiState by campaignViewModel.campaignUiState.collectAsState()
     val campaignState by campaignViewModel.campaign.collectAsState()
-    val rewards = campaignViewModel.getRewardsCards(query).collectAsState(emptyList())
-    val pagerState = rememberPagerState(initialPage = cardIndex) { rewards.value.size }
-    val coroutine = rememberCoroutineScope()
+    val rewards by campaignViewModel.rewards.collectAsState()
+    val pagerState = rememberPagerState(initialPage = cardIndex) { rewards.size }
     HorizontalPager(
         state = pagerState,
         modifier = Modifier
             .background(CustomTheme.colors.l30)
             .fillMaxSize()
-            .padding(
-                top = contentPadding.calculateTopPadding(),
-                bottom = contentPadding.calculateBottomPadding()
-            ),
+            .applyScaffoldPaddings(contentPadding),
+        key = { page -> rewards[page].id }
     ) { page ->
-        val cardCode = rewards.value[page].code
-        var isAdded by remember { mutableStateOf(campaignState?.rewards?.contains(cardCode) ?: false) }
-        var currentIsAdded by remember { mutableIntStateOf(if (isAdded) 2 else 0) }
-        val fullCard by campaignViewModel.getRewardById(cardCode).collectAsState(null)
+        if (campaignUiState is CampaignUiState.Loading) RangersLoadingDialog(isDarkTheme = isDarkTheme)
+        val cardCode = rewards[page].code
+        val isAdded = remember(campaignState?.rewards) { campaignState?.rewards?.contains(cardCode) ?: false }
+        val currentIsAdded = remember(isAdded) { if (isAdded) 2 else 0 }
+        val fullCard by campaignViewModel.getRewardByCode(cardCode).collectAsState(null)
         Box(modifier = Modifier.fillMaxSize()) {
             if (fullCard == null) Column(
                 verticalArrangement = Arrangement.Center,
@@ -84,44 +78,34 @@ fun CampaignRewardFullScreen(
                     color = CustomTheme.colors.m
                 )
             } else {
-                LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
-                    item {
-                        FullCard(
-                            tabooId = fullCard!!.tabooId,
-                            aspectId = fullCard!!.aspectId,
-                            aspectShortName = fullCard!!.aspectShortName,
-                            cost = fullCard!!.cost,
-                            imageSrc = fullCard!!.imageSrc,
-                            realImageSrc = fullCard!!.realImageSrc,
-                            name = fullCard!!.name,
-                            presence = fullCard!!.presence,
-                            approachConflict = fullCard!!.approachConflict,
-                            approachReason = fullCard!!.approachReason,
-                            approachExploration = fullCard!!.approachExploration,
-                            approachConnection = fullCard!!.approachConnection,
-                            typeName = fullCard!!.typeName,
-                            typeId = fullCard!!.typeId,
-                            traits = fullCard!!.traits,
-                            equip = fullCard!!.equip,
-                            harm = fullCard!!.harm,
-                            progress = fullCard!!.progress,
-                            tokenPlurals = fullCard!!.tokenPlurals,
-                            tokenCount = fullCard!!.tokenCount,
-                            text = fullCard!!.text,
-                            flavor = fullCard!!.flavor,
-                            level = fullCard!!.level,
-                            setName = fullCard!!.setName,
-                            setSize = fullCard!!.setSize,
-                            setPosition = fullCard!!.setPosition,
-                            subsetSize = fullCard!!.subsetSize,
-                            subsetPosition = fullCard!!.subsetPosition,
-                            packShortName = fullCard!!.packShortName,
-                            sunChallenge = fullCard!!.sunChallenge,
-                            mountainChallenge = fullCard!!.mountainChallenge,
-                            crestChallenge = fullCard!!.crestChallenge,
-                            isDarkTheme = isDarkTheme
-                        )
-                    }
+                Column(
+                    modifier = Modifier
+                        .verticalScroll(rememberScrollState())
+                        .padding(bottom = 80.dp)
+                ) {
+                    FullCard(
+                        tabooId = fullCard!!.tabooId,
+                        aspect = fullCard!!.aspect,
+                        cost = fullCard!!.cost,
+                        image = fullCard!!.image,
+                        name = fullCard!!.name,
+                        presence = fullCard!!.presence,
+                        approaches = fullCard!!.approaches,
+                        type = fullCard!!.type,
+                        traits = fullCard!!.traits,
+                        equip = fullCard!!.equip,
+                        harm = fullCard!!.harm,
+                        progress = fullCard!!.progress,
+                        tokens = fullCard!!.tokens,
+                        text = fullCard!!.text,
+                        flavor = fullCard!!.flavor,
+                        level = fullCard!!.level,
+                        set = fullCard!!.set,
+                        subset = fullCard!!.subset,
+                        packShortName = fullCard!!.packShortName,
+                        challenges = fullCard!!.challenges,
+                        isDarkTheme = isDarkTheme
+                    )
                 }
                 // Overlay custom FABs in the bottom-end corner
                 Row(
@@ -138,11 +122,7 @@ fun CampaignRewardFullScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         IconButton(
-                            onClick = { coroutine.launch {
-                                campaignViewModel.removeCampaignReward(cardCode, user)
-                            }.invokeOnCompletion { currentIsAdded = 0
-                                isAdded = !isAdded
-                            } },
+                            onClick = { campaignViewModel.removeCampaignReward(cardCode) },
                             colors = IconButtonDefaults.iconButtonColors()
                                 .copy(containerColor = Color.Transparent),
                             modifier = Modifier.size(32.dp),
@@ -176,11 +156,7 @@ fun CampaignRewardFullScreen(
                             }
                         }
                         IconButton(
-                            onClick = { coroutine.launch { currentIsAdded = 2
-                                campaignViewModel.addCampaignReward(cardCode, user)
-                            }.invokeOnCompletion { currentIsAdded = 2
-                                isAdded = !isAdded
-                            } },
+                            onClick = { campaignViewModel.addCampaignReward(cardCode) },
                             colors = IconButtonDefaults.iconButtonColors()
                                 .copy(containerColor = Color.Transparent),
                             modifier = Modifier.size(32.dp),

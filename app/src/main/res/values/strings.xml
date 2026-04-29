@@ -121,7 +121,7 @@
     <string name="new_deck">New deck</string>
     <string name="custom_deck_tab">Custom deck</string>
     <string name="starter_deck_tab">Starter deck</string>
-    <string name="deck_creation_name_label">Name</string>
+    <string name="name_label">Name</string>
     <string name="deck_creation_name_placeholder">Enter a name for this deck.</string>
     <string name="starter_deck_title">Choose starter deck:</string>
     <string name="upload_to_rangersdb">Upload to RangersDB</string>
@@ -212,7 +212,7 @@
     //Deck Side Drawer
     <string name="deck_section_header">Deck</string>
     <string name="deck_section_deck_id">Deck #%s</string>
-    <string name="deck_section_notes">Notes</string>
+    <string name="section_notes">Notes</string>
     <string name="tools_section_header">Tools</string>
     <string name="tools_section_charts">Charts</string>
     <string name="campaign_section_header">Campaign</string>
@@ -247,6 +247,7 @@
     <string name="campaign">Campaign</string>
     <string name="campaign_placeholder">Choose campaign</string>
     <string name="transfer_campaign">Transfer campaign</string>
+    <string name="transfer_campaign_no_results">No campaigns available for transfer.</string>
     <string name="core_cycle">Core</string>
     <string name="general_set_general">General</string>
     <string name="general_set_the_valley">The Valley</string>
@@ -342,7 +343,10 @@
     //Rangers section
     <string name="rangers_section_header">— Rangers —</string>
     <string name="add_ranger_button">Add ranger</string>
-    <string name="no_decks_for_add">No eligible decks.</string>
+    <string name="no_local_decks_for_add">No eligible local decks.</string>
+    <string name="no_uploaded_decks_for_add">No eligible uploaded decks.</string>
+    <string name="search_local_decks">Search local decks</string>
+    <string name="search_uploaded_decks">Search uploaded decks</string>
 
     //Settings section
     <string name="settings_section_header">— Settings —</string>
@@ -376,6 +380,9 @@
     <string name="event_header">Notable event</string>
     <string name="event_crossed_out">Crossed-out</string>
     <string name="event_marks">Marks</string>
+    <string name="add_note_button">Add note</string>
+    <string name="note_text">Note</string>
+    <string name="delete_note_button">Delete note</string>
     <string name="removed_campaign_log_tab">Removed cards</string>
     <string name="remove_card_button">Remove card</string>
     <string name="removed_set_header">Set</string>
@@ -546,6 +553,5 @@
     <string name="nimbus_facility">Nimbus Facility</string>
     <string name="arbor_mists">Arbor Mists</string>
     <string name="the_undergrove">The Undergrove</string>
-    <string name="transfer_campaign_no_results">No campaigns available for transfer.</string>
 
 </resources>

@@ -2,8 +2,6 @@ package com.rangerscards.ui.cards.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,28 +37,24 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import com.rangerscards.R
+import com.rangerscards.domain.model.CardApproaches
+import com.rangerscards.domain.model.CardAspect
 import com.rangerscards.objects.ImageSrc
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
-import com.rangerscards.ui.theme.RangersCardsTheme
 
 @Composable
 fun CardListItem(
     tabooId: String?,
-    aspectId: String?,
-    aspectShortName: String?,
+    aspect: CardAspect?,
     cost: Int?,
     imageSrc: String?,
-    approachConflict: Int?,
-    approachReason: Int?,
-    approachExploration: Int?,
-    approachConnection: Int?,
+    approaches: CardApproaches,
     name: String,
     typeName: String?,
     traits: String?,
@@ -91,8 +85,7 @@ fun CardListItem(
                 verticalAlignment = Alignment.Top
             ) {
                 CardListItemImageContainer(
-                    aspectId,
-                    aspectShortName,
+                    aspect,
                     cost,
                     imageSrc,
                     name,
@@ -108,14 +101,11 @@ fun CardListItem(
                 )
                 Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     CardListItemApproachContainer(
-                        approachConflict,
-                        approachReason,
-                        approachExploration,
-                        approachConnection,
+                        approaches,
                         isDarkTheme
                     )
                     if (level != null)
-                        CardListItemLevelContainer(tabooId, aspectId, aspectShortName, level, isDarkTheme)
+                        CardListItemLevelContainer(tabooId, aspect, level, isDarkTheme)
                 }
                 CardListItemDeckInfo(
                     charForAmount,
@@ -135,8 +125,7 @@ fun CardListItem(
 
 @Composable
 fun CardListItemImageContainer(
-    aspectId: String?,
-    aspectShortName: String?,
+    aspect: CardAspect?,
     cost: Int?,
     imageSrc: String?,
     name: String,
@@ -148,7 +137,7 @@ fun CardListItemImageContainer(
             .sizeIn(maxHeight = 40.dp)
             .aspectRatio(1f),
         shape = CustomTheme.shapes.small,
-        color = when (aspectId) {
+        color = when (aspect?.id) {
             "AWA" -> CustomTheme.colors.green
             "FIT" -> CustomTheme.colors.red
             "FOC" -> CustomTheme.colors.blue
@@ -157,14 +146,14 @@ fun CardListItemImageContainer(
         },
         border = BorderStroke(
             1.dp,
-            if (aspectId != null) Color.Transparent else CustomTheme.colors.d10),
+            if (aspect != null) Color.Transparent else CustomTheme.colors.d10),
     ) {
-        if (aspectId != null) {
+        if (aspect != null) {
             Box(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    painterResource(when(aspectId) {
+                    painterResource(when(aspect.id) {
                         "AWA" -> R.drawable.awa_chakra
                         "FIT" -> R.drawable.fit_chakra
                         "FOC" -> R.drawable.foc_chakra
@@ -188,7 +177,7 @@ fun CardListItemImageContainer(
                         lineHeight = 22.sp,
                     )
                     Text(
-                        text = aspectShortName.toString(),
+                        text = aspect.shortName,
                         color = if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30,
                         fontFamily = Jost,
                         fontWeight = FontWeight.Bold,
@@ -267,17 +256,14 @@ fun CardListItemTextContainer(
 
 @Composable
 fun CardListItemApproachContainer(
-    approachConflict: Int?,
-    approachReason: Int?,
-    approachExploration: Int?,
-    approachConnection: Int?,
+    approaches: CardApproaches,
     isDarkTheme: Boolean
 ) {
     val approachMap = mapOf(
-        R.drawable.connection to approachConnection,
-        R.drawable.exploration to approachExploration,
-        R.drawable.reason to approachReason,
-        R.drawable.conflict to approachConflict,
+        R.drawable.connection to approaches.connection,
+        R.drawable.exploration to approaches.exploration,
+        R.drawable.reason to approaches.reason,
+        R.drawable.conflict to approaches.conflict,
     ).mapNotNull { (res, value) ->
         value?.let { res to it }
     }.toMap()
@@ -311,14 +297,13 @@ fun CardListItemApproachContainer(
 @Composable
 fun CardListItemLevelContainer(
     tabooId: String?,
-    aspectId: String?,
-    aspectShortName: String?,
+    aspect: CardAspect?,
     level: Int?,
     isDarkTheme: Boolean
 ) {
     Surface(
         shape = CustomTheme.shapes.small,
-        color = when (aspectId) {
+        color = when (aspect?.id) {
             "AWA" -> CustomTheme.colors.green
             "FIT" -> CustomTheme.colors.red
             "FOC" -> CustomTheme.colors.blue
@@ -333,7 +318,7 @@ fun CardListItemLevelContainer(
             modifier = Modifier.padding(horizontal = 4.dp)
         ) {
             Text(
-                text = (level ?: 0).toString() + " " + aspectShortName.toString(),
+                text = (level ?: 0).toString() + " " + aspect?.shortName.toString(),
                 color = if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30,
                 fontFamily = Jost,
                 fontWeight = FontWeight.Medium,
@@ -408,40 +393,6 @@ fun CardListItemDeckInfo(
                 contentDescription = null,
                 tint = CustomTheme.colors.m,
                 modifier = Modifier.size(24.dp)
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun CardListItemScreenPreview() {
-    RangersCardsTheme {
-        Column(
-            modifier = Modifier
-                .background(CustomTheme.colors.l30)
-                .fillMaxSize()
-        ) {
-            CardListItem(
-                tabooId = "",
-                aspectId = "AWA",
-                aspectShortName = "AWA",
-                cost = 2,
-                imageSrc = null,
-                approachConflict = 1,
-                approachReason = 1,
-                approachExploration = 1,
-                approachConnection = 1,
-                name = "Scuttler g Tunnel",
-                typeName = "Attachment",
-                traits = "Being / Companion / Mammal",
-                level = 2,
-                isDarkTheme = isSystemInDarkTheme(),
-                onClick = {},
-                charForAmount = "×",
-                currentAmount = 2,
-                onAddClick = {},
-                onRemoveClick = {}
             )
         }
     }

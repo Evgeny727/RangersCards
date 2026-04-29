@@ -26,21 +26,22 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rangerscards.R
-import com.rangerscards.ui.campaigns.CampaignMission
+import com.rangerscards.domain.model.CampaignMission
 import com.rangerscards.ui.components.SquareButton
 import com.rangerscards.ui.settings.components.RangersRadioButtonRow
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
+import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 fun CampaignMissions(
     onAdd: () -> Unit,
-    missions: List<CampaignMission>,
+    missions: ImmutableList<CampaignMission>,
     onClick: (String) -> Unit,
     isOnlyActive: Boolean = false,
-    onActiveClick: () -> Unit,
+    onActiveClick: (Boolean) -> Unit,
     state: LazyListState,
-    nestedConnectionModifier: Modifier
+    modifier: Modifier
 ) {
     Column {
         RangersRadioButtonRow(
@@ -62,14 +63,14 @@ fun CampaignMissions(
         )
         LazyColumn(
             state = state,
-            modifier = nestedConnectionModifier.fillMaxWidth(),
+            modifier = modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(8.dp)
         ) {
-            missions.filter { mission -> !isOnlyActive || !mission.completed }.forEach { mission ->
+            missions.forEach { mission ->
                 item(mission.name) {
                     Column(
-                        modifier = Modifier.fillMaxWidth().clickable { onClick.invoke(mission.name) },
+                        modifier = Modifier.fillMaxWidth().clickable { onClick(mission.name) },
                     ) {
                         Text(
                             text = stringResource(R.string.campaigns_current_day, mission.day),

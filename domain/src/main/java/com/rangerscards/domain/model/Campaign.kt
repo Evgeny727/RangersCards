@@ -30,20 +30,20 @@ data class Campaign(
 
 data class CampaignNote(
     val day: Int,
-    val note: String,
-    val crossedOut: Boolean,
+    val text: String,
+    val crossedOut: Boolean = false,
 )
 
 data class CampaignMission(
     val day: Int,
     val name: String,
-    val checks: List<Boolean>,
-    val completed: Boolean,
+    val checks: List<Boolean> = emptyList(),
+    val completed: Boolean = false,
 )
 
 data class CampaignEvent(
     val name: String,
-    val crossedOut: Boolean,
+    val crossedOut: Boolean = false,
     val marks: Int = 0,
 )
 

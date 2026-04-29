@@ -85,7 +85,6 @@ fun DeckVersionsScreen(
         }
         else LazyColumn(
             modifier = modifier
-                .background(CustomTheme.colors.l20)
                 .fillMaxSize()
                 .padding(
                     top = innerPadding.calculateTopPadding(),

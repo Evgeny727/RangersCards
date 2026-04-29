@@ -15,28 +15,29 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rangerscards.R
-import com.rangerscards.domain.model.CampaignEvent
+import com.rangerscards.domain.model.CampaignNote
 import com.rangerscards.ui.components.SquareButton
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
-fun CampaignEvents(
+fun CampaignNotes(
     onAdd: () -> Unit,
-    events: ImmutableList<CampaignEvent>,
-    onClick: (String) -> Unit,
+    notes: ImmutableList<CampaignNote>,
+    onClick: (Int) -> Unit,
     state: LazyListState,
     modifier: Modifier
 ) {
     Column {
         SquareButton(
-            stringId = R.string.record_event_button,
+            stringId = R.string.add_note_button,
             leadingIcon = R.drawable.add_circle_32dp,
             iconColor = CustomTheme.colors.m,
             textColor = CustomTheme.colors.d30,
@@ -52,20 +53,27 @@ fun CampaignEvents(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(8.dp)
         ) {
-            events.forEach { event ->
-                item(event.name) {
-                    val checks = "\u2713".repeat(event.marks)
+            notes.forEachIndexed { index, note ->
+                item("${note.day} - ${note.text}") {
                     Column(
-                        modifier = Modifier.fillMaxWidth().clickable { onClick.invoke(event.name) }
+                        modifier = Modifier.fillMaxWidth().clickable { onClick(index) },
                     ) {
                         Text(
-                            text = if (checks.isNotEmpty()) "${event.name} $checks" else event.name,
+                            text = stringResource(R.string.campaigns_current_day, note.day),
                             color = CustomTheme.colors.d30,
                             fontFamily = Jost,
                             fontWeight = FontWeight.Medium,
                             fontSize = 16.sp,
                             lineHeight = 18.sp,
-                            textDecoration = if (event.crossedOut) TextDecoration.LineThrough else TextDecoration.None
+                        )
+                        Text(
+                            text = note.text,
+                            color = CustomTheme.colors.d30,
+                            fontFamily = Jost,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 18.sp,
+                            lineHeight = 20.sp,
+                            textDecoration = if (note.crossedOut) TextDecoration.LineThrough else TextDecoration.None
                         )
                         Spacer(Modifier.height(8.dp))
                         HorizontalDivider(color = CustomTheme.colors.l10)

@@ -5,7 +5,7 @@ data class CardListItem(
     val code: String,
     val tabooId: String?,
     val name: String?,
-    val approaches: CardApproaches?,
+    val approaches: CardApproaches,
     val traits: String?,
     val equip: Int?,
     val setName: String?,

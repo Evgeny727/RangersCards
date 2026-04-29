@@ -34,19 +34,19 @@ import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 
 @Composable
-fun AddMissionDialog(
-    addCampaignMission: (Int, String) -> Unit,
+fun AddNoteDialog(
+    addCampaignNote: (Int, String) -> Unit,
     currentDay: Int,
     isDarkTheme: Boolean,
     onBack: () -> Unit,
 ) {
     var day by rememberSaveable(currentDay) { mutableStateOf("$currentDay") }
-    var name by rememberSaveable { mutableStateOf("") }
+    var text by rememberSaveable { mutableStateOf("") }
     val isLegitAdding by remember { derivedStateOf {
-        day.isNotEmpty() && name.isNotEmpty()
+        day.isNotEmpty() && text.isNotEmpty()
     } }
     RangersDialogWithContent(
-        headerId = R.string.add_mission_button,
+        headerId = R.string.add_note_button,
         isDarkTheme = isDarkTheme,
         onBack = onBack
     ) {
@@ -89,11 +89,11 @@ fun AddMissionDialog(
             )
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                value = name,
-                onValueChange = { name = it },
+                value = text,
+                onValueChange = { text = it },
                 label = {
                     Text(text = buildAnnotatedString {
-                        append(stringResource(R.string.name_label))
+                        append(stringResource(R.string.note_text))
                         withStyle(style = SpanStyle(color = CustomTheme.colors.warn)) {
                             append("*")
                         }
@@ -121,13 +121,13 @@ fun AddMissionDialog(
             )
         }
         SquareButton(
-            stringId = R.string.add_mission_button,
+            stringId = R.string.add_note_button,
             leadingIcon = R.drawable.add_circle_32dp,
             buttonColor = ButtonDefaults.buttonColors().copy(
                 containerColor = CustomTheme.colors.d10,
                 disabledContainerColor = CustomTheme.colors.d10.copy(alpha = 0.3f)
             ),
-            onClick = { addCampaignMission(day.toInt(), name); onBack() },
+            onClick = { addCampaignNote(day.toInt(), text); onBack() },
             isEnabled = isLegitAdding,
             modifier = Modifier.padding(8.dp)
         )

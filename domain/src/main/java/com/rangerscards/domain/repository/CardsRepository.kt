@@ -7,6 +7,7 @@ import com.rangerscards.domain.model.CardListItem
 import com.rangerscards.domain.model.DeckInfo
 import com.rangerscards.domain.model.FullCard
 import com.rangerscards.domain.model.RoleCard
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.Flow
 
 interface CardsRepository {
@@ -46,5 +47,5 @@ interface CardsRepository {
         includeEnglish: Boolean? = null,
     ): Flow<PagingData<CardDeckListItem>>
 
-    fun getRewards(taboo: Boolean, packIds: List<String>): Flow<List<CardListItem>>
+    fun getRewards(query: String, taboo: Boolean, packIds: List<String>): Flow<ImmutableList<CardListItem>>
 }

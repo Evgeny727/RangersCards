@@ -16,10 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,39 +24,37 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import androidx.navigation.NavHostController
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
-import com.google.firebase.auth.FirebaseUser
 import com.rangerscards.R
-import com.rangerscards.data.local.deck.DeckListItemProjection
+import com.rangerscards.domain.model.Campaign
+import com.rangerscards.domain.model.RoleCard
+import com.rangerscards.domain.model.UserInfo
+import com.rangerscards.ui.components.RangersLoadingDialog
 import com.rangerscards.ui.components.RangersSearchOutlinedField
 import com.rangerscards.ui.decks.components.DeckListItem
-import com.rangerscards.ui.settings.components.RangersBaseCard
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
+import com.rangerscards.utils.applyScaffoldPaddings
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.launch
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import kotlin.text.get
+import com.rangerscards.domain.model.DeckListItem as DeckListItemModel
 
 @Composable
 fun AddDeckToCampaignScreen(
-    navController: NavHostController,
-    campaignViewModel: CampaignViewModel,
-    campaignDecksViewModel: CampaignDecksViewModel,
-    user: FirebaseUser?,
+    navigateBack: () -> Unit,
+    campaign: Campaign,
+    campaignUiState: CampaignUiState,
+    addDeck: (String) -> Unit,
+    getRole: (String) -> Flow<RoleCard>,
+    userInfo: UserInfo?,
     isDarkTheme: Boolean,
     contentPadding: PaddingValues = PaddingValues(0.dp),
+    campaignDecksViewModel: CampaignDecksViewModel = hiltViewModel(),
 ) {
-    val campaign = campaignViewModel.campaign.collectAsState()
-    var showLoadingDialog by rememberSaveable { mutableStateOf(false) }
-    val coroutine = rememberCoroutineScope()
     val decksLazyItems = campaignDecksViewModel.searchResults.collectAsLazyPagingItems()
 
     val searchQuery by campaignDecksViewModel.searchQuery.collectAsState()
@@ -75,45 +69,24 @@ fun AddDeckToCampaignScreen(
                 listState.animateScrollToItem(0)
             }
     }
-
-    LaunchedEffect(campaign) {
-        campaignDecksViewModel.setUploaded(campaign.value?.uploaded ?: false)
+    LaunchedEffect(campaign.uploaded) {
+        campaignDecksViewModel.setUploaded(campaign.uploaded)
     }
+    LaunchedEffect(userInfo?.id) {
+        campaignDecksViewModel.setUserId(userInfo?.id ?: "")
+    }
+
+    if (campaignUiState is CampaignUiState.Loading) RangersLoadingDialog(isDarkTheme = isDarkTheme)
 
     Column(
         modifier = Modifier
             .background(CustomTheme.colors.l20)
             .fillMaxSize()
-            .padding(
-                top = contentPadding.calculateTopPadding(),
-                bottom = contentPadding.calculateBottomPadding()
-            ),
+            .applyScaffoldPaddings(contentPadding),
     ) {
-        if (showLoadingDialog) Dialog(
-            onDismissRequest = { showLoadingDialog = false },
-            properties = DialogProperties(
-                dismissOnBackPress = false,
-                dismissOnClickOutside = false,
-                usePlatformDefaultWidth = false
-            )
-        ) {
-            RangersBaseCard(
-                isDarkTheme = isDarkTheme,
-                labelIdRes = R.string.saving_changes_header
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    CircularProgressIndicator(modifier = Modifier.size(32.dp), color = CustomTheme.colors.m)
-                }
-            }
-        }
         RangersSearchOutlinedField(
             query = searchQuery,
-            placeholder = R.string.search_decks,
+            placeholder = if (campaign.uploaded) R.string.search_uploaded_decks else R.string.search_local_decks,
             onQueryChanged = campaignDecksViewModel::onSearchQueryChanged,
             onClearClicked = campaignDecksViewModel::clearSearchQuery
         )
@@ -133,9 +106,10 @@ fun AddDeckToCampaignScreen(
                         .fillMaxWidth()
                 ) {
                     Text(
-                        text = if (searchQuery.isEmpty())
-                            stringResource(R.string.no_decks_for_add)
-                        else stringResource(id = R.string.no_matching_decks, searchQuery),
+                        text = if (searchQuery.isEmpty()) stringResource(
+                            if (campaign.uploaded) R.string.no_uploaded_decks_for_add
+                            else R.string.no_local_decks_for_add
+                        ) else stringResource(id = R.string.no_matching_decks, searchQuery),
                         color = CustomTheme.colors.d30,
                         fontFamily = Jost,
                         fontWeight = FontWeight.Normal,
@@ -148,22 +122,17 @@ fun AddDeckToCampaignScreen(
             }
             items(
                 count = decksLazyItems.itemCount,
-                key = decksLazyItems.itemKey(DeckListItemProjection::id),
+                key = decksLazyItems.itemKey(DeckListItemModel::id),
                 contentType = decksLazyItems.itemContentType { it }
             ) { index ->
                 val item = decksLazyItems[index] ?: return@items
-                val role by campaignViewModel.getRole(
-                    item.meta.jsonObject["role"]?.jsonPrimitive?.content.toString()
-                ).collectAsState(null)
+                val role by getRole(item.meta.roleId).collectAsState(null)
                 DeckListItem(
                     meta = item.meta,
                     imageSrc = role?.realImageSrc,
                     name = item.name,
                     roleName = role?.name,
-                    onClick = { coroutine.launch { showLoadingDialog = true
-                        campaignViewModel.addDeckCampaign(item.id, user)
-                    }.invokeOnCompletion { showLoadingDialog = false
-                        navController.navigateUp() } },
+                    onClick = { addDeck(item.id); navigateBack() },
                     isCampaign = if (item.campaignName != null) true else null,
                     campaignName = item.campaignName,
                 )

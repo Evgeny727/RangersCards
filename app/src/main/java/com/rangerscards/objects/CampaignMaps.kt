@@ -3,6 +3,8 @@ package com.rangerscards.objects
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.rangerscards.R
+import com.rangerscards.domain.model.CampaignCalendar
+import kotlinx.collections.immutable.persistentListOf
 
 object CampaignMaps {
 
@@ -367,14 +369,14 @@ object CampaignMaps {
 
     val fixedGuideEntries by lazy {
         mapOf(
-            "core" to mapOf(
-                1 to listOf("1"),
-                3 to listOf("94.1"),
-                4 to listOf("1.04"),
+            "core" to listOf(
+                CampaignCalendar(1, persistentListOf("1")),
+                CampaignCalendar(3, persistentListOf("94.1")),
+                CampaignCalendar(4, persistentListOf("1.04")),
             ),
-            "loa" to mapOf(
-                1 to listOf("1"),
-                4 to listOf("199.2"),
+            "loa" to listOf(
+                CampaignCalendar(1, persistentListOf("1")),
+                CampaignCalendar(4, persistentListOf("199.2")),
             )
         )
     }
