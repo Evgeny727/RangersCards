@@ -167,6 +167,17 @@ fun CampaignEventDialog(
             }
         }
         SquareButton(
+            stringId = R.string.delete_event_button,
+            leadingIcon = R.drawable.delete_32dp,
+            iconColor = if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30,
+            textColor = if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30,
+            buttonColor = ButtonDefaults.buttonColors().copy(
+                containerColor = CustomTheme.colors.warn,
+            ),
+            onClick = { updateCampaignEvents(event.name, CampaignEvent("", crossedOut, marks)); onBack() },
+            modifier = Modifier.padding(horizontal = 8.dp)
+        )
+        SquareButton(
             stringId = R.string.save_deck_changes_button,
             leadingIcon = R.drawable.done_32dp,
             buttonColor = ButtonDefaults.buttonColors().copy(

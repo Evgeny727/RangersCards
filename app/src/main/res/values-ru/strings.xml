@@ -320,6 +320,7 @@
     <string name="event_header">Важное событие</string>
     <string name="event_crossed_out">Зачёркнуто</string>
     <string name="event_marks">Отметки</string>
+    <string name="delete_event_button">Удалить событие</string>
     <string name="add_note_button">Добавить заметку</string>
     <string name="note_text">Заметка</string>
     <string name="delete_note_button">Удалить заметку</string>

@@ -380,6 +380,7 @@
     <string name="event_header">Notable event</string>
     <string name="event_crossed_out">Crossed-out</string>
     <string name="event_marks">Marks</string>
+    <string name="delete_event_button">Delete event</string>
     <string name="add_note_button">Add note</string>
     <string name="note_text">Note</string>
     <string name="delete_note_button">Delete note</string>
