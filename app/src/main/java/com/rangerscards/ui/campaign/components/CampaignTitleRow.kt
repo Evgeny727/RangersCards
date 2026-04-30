@@ -21,9 +21,9 @@ import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 
 @Composable
-fun CampaignTitleRow(title: String, onClick: () -> Unit) {
+fun CampaignTitleRow(title: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

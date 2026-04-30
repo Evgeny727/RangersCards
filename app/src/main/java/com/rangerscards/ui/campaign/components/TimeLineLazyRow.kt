@@ -59,6 +59,7 @@ import kotlinx.collections.immutable.ImmutableMap
 fun TimeLineLazyRow(
     groupedDays: ImmutableMap<Weather, ImmutableMap<Int, DayInfo>>,
     currentDay: Int,
+    modifier: Modifier = Modifier,
     onClick: (Int) -> Unit
 ) {
     val listState = rememberLazyListState()
@@ -77,7 +78,7 @@ fun TimeLineLazyRow(
     }
     LazyRow(
         state = listState,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         groupedDays.forEach { (weather, days) ->

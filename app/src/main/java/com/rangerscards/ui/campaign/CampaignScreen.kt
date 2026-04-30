@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -272,12 +273,13 @@ fun CampaignScreen(
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(8.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 item("campaign_title") {
-                    CampaignTitleRow(campaign.name) { campaignNameEditing = campaign.name
-                        showNameDialog = true
-                    }
+                    CampaignTitleRow(
+                        campaign.name,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    ) { campaignNameEditing = campaign.name; showNameDialog = true }
                 }
                 item("timeline") {
                     val groupedDays = remember(
@@ -287,19 +289,19 @@ fun CampaignScreen(
                     ) { campaignViewModel.groupDaysByWeather() }
                     TimeLineLazyRow(
                         groupedDays,
-                        campaign.currentDay
+                        campaign.currentDay,
+                        modifier = Modifier.padding(bottom = 8.dp)
                     ) { navController.navigate(
                         "${BottomNavScreen.Campaigns.route}/campaign/dayInfo/$it"
-                    ) {
-                        launchSingleTop = true
-                    } }
+                        ) { launchSingleTop = true }
+                    }
                 }
                 if (campaign.currentDay >= 30 && !campaign.extendedCalendar) item("extend_button") {
                     SquareButton(
                         stringId = R.string.extend_campaign_button,
                         leadingIcon = R.drawable.add_32dp,
                         onClick = campaignViewModel::extendCampaign,
-                        modifier = Modifier.padding(8.dp)
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
                     )
                 }
                 item("current_position") {
@@ -307,18 +309,16 @@ fun CampaignScreen(
                         campaign.cycleId,
                         campaign.currentLocation,
                         campaign.currentPathTerrain,
-                        campaign.expansions
+                        campaign.expansions,
+                        modifier = Modifier.padding(bottom = 8.dp)
                     ) { navController.navigate(
                         "${BottomNavScreen.Campaigns.route}/campaign/journey"
-                    ) {
-                        launchSingleTop = true
-                    } }
+                        ) { launchSingleTop = true }
+                    }
                 }
-                item {
+                item("travel_section") {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(IntrinsicSize.Max),
+                        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max).padding(bottom = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         key("travelButton") {
@@ -363,34 +363,28 @@ fun CampaignScreen(
                     }
                 }
                 item("challengeDeckButton") {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        SquareButton(
-                            stringId = R.string.challenge_deck_title,
-                            leadingIcon = R.drawable.cards_32dp,
-                            iconColor = CustomTheme.colors.m,
-                            textColor = CustomTheme.colors.d30,
-                            buttonColor = ButtonDefaults.buttonColors().copy(
-                                containerColor = CustomTheme.colors.l20
-                            ),
-                            onClick = {
-                                navController.navigate(
-                                    "${BottomNavScreen.Campaigns.route}/campaign/${campaign.id}/challengeDeck"
-                                ) {
-                                    launchSingleTop = true
-                                }
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+                    SquareButton(
+                        stringId = R.string.challenge_deck_title,
+                        leadingIcon = R.drawable.cards_32dp,
+                        iconColor = CustomTheme.colors.m,
+                        textColor = CustomTheme.colors.d30,
+                        buttonColor = ButtonDefaults.buttonColors().copy(
+                            containerColor = CustomTheme.colors.l20
+                        ),
+                        onClick = {
+                            navController.navigate(
+                                "${BottomNavScreen.Campaigns.route}/campaign/${campaign.id}/challengeDeck"
+                            ) { launchSingleTop = true }
+                        },
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                    )
                 }
                 item("campaign_log") {
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .animateContentSize(),
+                            .animateContentSize()
+                            .padding(bottom = 8.dp),
                         border = BorderStroke(1.dp, CustomTheme.colors.d15),
                         color = CustomTheme.colors.l30,
                         shape = CustomTheme.shapes.large
@@ -574,50 +568,55 @@ fun CampaignScreen(
                     }
                 }
                 item("rangers_section") {
-                    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                            Text(
-                                text = stringResource(R.string.rangers_section_header),
-                                color = CustomTheme.colors.d10,
-                                fontFamily = Jost,
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 18.sp,
-                                lineHeight = 20.sp,
-                            )
-                        }
-                        campaign.decks.forEach { deck ->
-                            val role by campaignViewModel.getRole(deck.meta.roleId).collectAsState(null)
-                            DeckListItem(
-                                meta = deck.meta,
-                                imageSrc = role?.realImageSrc,
-                                name = deck.name,
-                                roleName = role?.name,
-                                onClick = { if (!campaign.uploaded || user.userInfo?.id == deck.user.id)
-                                        navController.navigate("deck/${deck.id}") { launchSingleTop = true }
-                                    else campaignViewModel.downloadFriendDeck(deck.id)
-                                },
-                                isCampaign = false,
-                                userName = if (deck.user.name == "null") "" else deck.user.name,
-                                onRemoveDeck = if (!campaign.uploaded || user.userInfo?.id == deck.user.id) { {
-                                    campaignViewModel.removeDeckCampaign(deck.id)
-                                } } else null
-                            )
-                        }
-                        SquareButton(
-                            stringId = R.string.add_ranger_button,
-                            leadingIcon = R.drawable.add_32dp,
-                            iconColor = CustomTheme.colors.m,
-                            textColor = CustomTheme.colors.d30,
-                            buttonColor = ButtonDefaults.buttonColors().copy(
-                                containerColor = CustomTheme.colors.l20
-                            ),
-                            onClick = { navController.navigate(
-                                "${BottomNavScreen.Campaigns.route}/campaign/addRanger"
-                            ) {
-                                launchSingleTop = true
-                            } },
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.rangers_section_header),
+                            color = CustomTheme.colors.d10,
+                            fontFamily = Jost,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 18.sp,
+                            lineHeight = 20.sp,
                         )
                     }
+                }
+                items(campaign.decks, { deck -> deck.id }) { deck ->
+                    val role by campaignViewModel.getRole(deck.meta.roleId).collectAsState(null)
+                    DeckListItem(
+                        meta = deck.meta,
+                        imageSrc = role?.realImageSrc,
+                        name = deck.name,
+                        roleName = role?.name,
+                        onClick = {
+                            if (!campaign.uploaded || user.userInfo?.id == deck.user.id)
+                                navController.navigate("deck/${deck.id}") { launchSingleTop = true }
+                            else campaignViewModel.downloadFriendDeck(deck.id)
+                        },
+                        isCampaign = false,
+                        userName = if (deck.user.name == "null") "" else deck.user.name,
+                        onRemoveDeck = if (!campaign.uploaded || user.userInfo?.id == deck.user.id) {
+                            { campaignViewModel.removeDeckCampaign(deck.id) }
+                        } else null
+                    )
+                }
+                item("add_ranger_button") {
+                    SquareButton(
+                        stringId = R.string.add_ranger_button,
+                        leadingIcon = R.drawable.add_32dp,
+                        iconColor = CustomTheme.colors.m,
+                        textColor = CustomTheme.colors.d30,
+                        buttonColor = ButtonDefaults.buttonColors().copy(
+                            containerColor = CustomTheme.colors.l20
+                        ),
+                        onClick = {
+                            navController.navigate(
+                            "${BottomNavScreen.Campaigns.route}/campaign/addRanger"
+                            ) { launchSingleTop = true }
+                        },
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                    )
                 }
                 item("settings_section") {
                     CampaignSettingsSection(

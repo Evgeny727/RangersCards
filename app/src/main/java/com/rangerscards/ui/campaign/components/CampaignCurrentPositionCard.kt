@@ -35,10 +35,11 @@ fun CampaignCurrentPositionCard(
     location: String,
     pathTerrain: String?,
     expansions: ImmutableList<String>,
+    modifier: Modifier = Modifier,
     onRecordedJourney: () -> Unit
 ) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         color = CustomTheme.colors.l30,
         shape = CustomTheme.shapes.large,
         border = BorderStroke(1.dp, CustomTheme.colors.m),

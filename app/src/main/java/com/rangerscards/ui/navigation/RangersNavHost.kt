@@ -128,10 +128,12 @@ fun RangersNavHost(
         BottomNavScreen.Campaigns, BottomNavScreen.Settings)
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    val showBars = currentRoute?.let { route ->
-        // Hide the topBar and bottomBar when in the full-screen flow.
-        !route.startsWith("deck/") && !route.contains("Options")
-    } ?: true
+    val showBars = remember(currentRoute) {
+        currentRoute?.let { route ->
+            // Hide the topBar and bottomBar when in the full-screen flow.
+            !route.startsWith("deck/") && !route.contains("Options")
+        } ?: true
+    }
     val context = LocalContext.current.applicationContext
     var title by rememberSaveable { mutableStateOf(context.getString(BottomNavScreen.Settings.label)) }
     var actions: @Composable (RowScope.() -> Unit)? by remember { mutableStateOf(null) }
