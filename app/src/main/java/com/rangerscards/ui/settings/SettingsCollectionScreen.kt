@@ -15,6 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.rangerscards.R
 import com.rangerscards.domain.model.User
+import com.rangerscards.ui.components.RangersLoadingDialog
 import com.rangerscards.ui.settings.components.RangersRadioButtonRow
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.utils.applyScaffoldPaddings
@@ -23,9 +24,12 @@ import com.rangerscards.utils.applyScaffoldPaddings
 fun SettingsCollectionScreen(
     user: User,
     setCollection: (String?, List<String>) -> Unit,
+    isLoading: Boolean,
+    isDarkTheme: Boolean,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
+    if (isLoading) RangersLoadingDialog(isDarkTheme = isDarkTheme)
     val userCollection = user.settings.collection
     LazyColumn(
         modifier = modifier

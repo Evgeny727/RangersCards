@@ -49,6 +49,7 @@ class CardsSyncManager @Inject constructor(
     }
 
     suspend fun updateCardsIfUpdateAvailable(language: String) {
+        _state.value = CardsSyncState.Loading
         fetchCardsUpdate(language) { isAvailable ->
             if (isAvailable) {
                 cardsRepository.downloadAllCards(language)
@@ -70,7 +71,6 @@ class CardsSyncManager @Inject constructor(
         language: String,
         block: suspend (Boolean) -> Unit
     ): Result<Boolean> {
-        _state.value = CardsSyncState.Loading
         return cardsRepository.isCardsUpdateAvailable(
             language,
             cardsUpdatedAt.first()

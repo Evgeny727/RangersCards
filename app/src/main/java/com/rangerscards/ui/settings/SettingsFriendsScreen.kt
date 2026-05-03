@@ -55,13 +55,9 @@ fun SettingsFriendsScreen(
             .debounce(400)
             .distinctUntilChanged()
             .collectLatest { query ->
-                if (query.trim().length >= 2) friendsViewModel.getUsersByHandle(query.trim())
+                if (query.trim().length >= 2) friendsViewModel.getUsersByHandle(query.trim(), user)
                 else if (query.trim().isEmpty()) friendsViewModel.getUsersByHandle("")
             }
-
-        snapshotFlow { user }
-            .distinctUntilChanged()
-            .collectLatest { friendsViewModel.filterUsers(it) }
 
         friendsViewModel.events.collect { error ->
             appViewModel.emitError(error.exception)
@@ -102,7 +98,7 @@ fun SettingsFriendsScreen(
             if (user.friends.isNotEmpty()) {
                 items(
                     items = user.friends,
-                    key = { it.id }
+                    key = { "friend_" + it.id }
                 ) { friend ->
                     FriendListItem(
                         handle = friend.handle ?: "",
@@ -120,7 +116,7 @@ fun SettingsFriendsScreen(
             if (user.sentRequests.isNotEmpty()) {
                 items(
                     items = user.sentRequests,
-                    key = { it.id }
+                    key = { "sentRequests_" + it.id }
                 ) { friend ->
                     FriendListItem(
                         handle = friend.handle ?: "",
@@ -138,7 +134,7 @@ fun SettingsFriendsScreen(
             if (user.receivedRequests.isNotEmpty()) {
                 items(
                     items = user.receivedRequests,
-                    key = { it.id }
+                    key = { "receivedRequests_" + it.id }
                 ) { friend ->
                     FriendListItem(
                         handle = friend.handle ?: "",
@@ -158,7 +154,7 @@ fun SettingsFriendsScreen(
             if (searchResults.isNotEmpty()) {
                 items(
                     items = searchResults,
-                    key = { it.id }
+                    key = { "searchResults_" + it.id }
                 ) { result ->
                     FriendListItem(
                         handle = result.handle ?: "",

@@ -9,6 +9,7 @@ import com.rangerscards.UiErrorState
 import com.rangerscards.domain.model.CardDeckListItem
 import com.rangerscards.domain.model.CardWithCount
 import com.rangerscards.domain.model.Deck
+import com.rangerscards.domain.model.DeckMeta
 import com.rangerscards.domain.model.FullCard
 import com.rangerscards.domain.model.OftenUpdatableDeckValues
 import com.rangerscards.domain.model.RoleCard
@@ -143,14 +144,15 @@ class DeckViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val slotsCards: StateFlow<ImmutableList<CardDeckListItem>> =
-        _updatableValues.map { values -> values?.slots?.keys?.toList().orEmpty() }
-            .distinctUntilChanged().flatMapLatest { ids ->
-                cardsRepository.getDeckCardsByIdFlow(ids, deck.value?.tabooSetId)
-            }.stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
-                initialValue = persistentListOf()
-            )
+        combine(_updatableValues, deck) { values, deck ->
+            values?.slots?.keys?.toList().orEmpty() to deck?.tabooSetId
+        }.distinctUntilChanged().flatMapLatest { (ids, taboo) ->
+            cardsRepository.getDeckCardsByIdFlow(ids, taboo)
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = persistentListOf()
+        )
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val orderedSlotsCards: StateFlow<ImmutableMap<String, ImmutableList<CardWithCount>>> =
@@ -168,27 +170,29 @@ class DeckViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val extraSlotsCards: StateFlow<ImmutableList<CardWithCount>> =
-        _updatableValues.map { values -> values?.extraSlots?.keys?.toList().orEmpty() }
-            .distinctUntilChanged().flatMapLatest { ids ->
-                cardsRepository.getDeckCardsByIdFlow(ids, deck.value?.tabooSetId)
-            }.map { slots ->
-                buildExtraSlotsUseCase(slots, _updatableValues.value?.extraSlots.orEmpty())
-            }.stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
-                initialValue = persistentListOf()
-            )
+        combine(_updatableValues, deck) { values, deck ->
+            values?.extraSlots?.keys?.toList().orEmpty() to deck?.tabooSetId
+        }.distinctUntilChanged().flatMapLatest { (ids, taboo) ->
+            cardsRepository.getDeckCardsByIdFlow(ids, taboo)
+        }.map { slots ->
+            buildExtraSlotsUseCase(slots, _updatableValues.value?.extraSlots.orEmpty())
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = persistentListOf()
+        )
 
     @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
     val deckProblems: StateFlow<DeckErrors> =
-        combine(slotsCards, _updatableValues) { slots, values ->
-            slots to values
-        }.debounce(1_000L).mapLatest { (slots, values) ->
-            parseDeckForErrors(
+        combine(slotsCards, _updatableValues, deck) { slots, values, deck ->
+            Triple(slots, values, deck?.deckMeta)
+        }.debounce(1_000L).mapLatest { (slots, values, deckMeta) ->
+            if (deckMeta != null) parseDeckForErrors(
                 listOf(values?.awa, values?.spi, values?.fit, values?.foc),
                 slots,
-                values?.slots ?: emptyMap()
-            )
+                values?.slots ?: emptyMap(),
+                deckMeta
+            ) else DeckErrors(persistentListOf(), null)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -267,6 +271,7 @@ class DeckViewModel @Inject constructor(
         statsList: List<Int?>,
         cards: List<CardDeckListItem>,
         slots: Map<String, Int>,
+        deckMeta: DeckMeta,
     ): DeckErrors {
         val isUpgrade = deck.value?.previousDeck != null
         val problems = mutableSetOf<String>()
@@ -306,10 +311,10 @@ class DeckViewModel @Inject constructor(
             // Additional rules for starting decks:
             var backgroundNonExpert = 0
             var backgroundCount = 0
-            val background = deck.value?.deckMeta?.background ?: ""
+            val background = deckMeta.background
             var specialtyNonExpert = 0
             var specialtyCount = 0
-            val specialty = deck.value?.deckMeta?.specialty ?: ""
+            val specialty = deckMeta.specialty
             val personalityCount = mutableMapOf(
                 "AWA" to 0,
                 "FIT" to 0,
@@ -318,6 +323,7 @@ class DeckViewModel @Inject constructor(
             )
             cards.forEach { card ->
                 val cardCount = slots[card.code] ?: 0
+                val isExpert = card.realTraits?.contains("Expert") == true
                 when(card.setId) {
                     "personality" -> {
                         when (card.aspect?.id) {
@@ -343,7 +349,7 @@ class DeckViewModel @Inject constructor(
                         "background" -> if (card.setId == background) {
                             backgroundCount += cardCount
 
-                            if (card.realTraits == null || !(card.realTraits?.contains("Expert") ?: false))
+                            if (card.realTraits == null || !isExpert)
                                 backgroundNonExpert += cardCount
 
                             if (backgroundCount > 10) {
@@ -357,7 +363,7 @@ class DeckViewModel @Inject constructor(
                                 }
                             }
                         } else {
-                            if (card.realTraits != null && !(card.realTraits?.contains("Expert") ?: false))
+                            if (card.realTraits != null && isExpert)
                                 problems.add("invalid_outside_interest")
                             else {
                                 splashCount += cardCount
@@ -369,7 +375,7 @@ class DeckViewModel @Inject constructor(
                         "specialty" -> if (card.setId == specialty) {
                             specialtyCount += cardCount
 
-                            if (card.realTraits == null || !(card.realTraits?.contains("Expert") ?: false))
+                            if (card.realTraits == null || !isExpert)
                                 specialtyNonExpert += cardCount
 
                             if (specialtyCount > 10) {
@@ -383,7 +389,7 @@ class DeckViewModel @Inject constructor(
                                 }
                             }
                         } else {
-                            if (card.realTraits != null && !(card.realTraits?.contains("Expert") ?: false)) {
+                            if (card.realTraits != null && isExpert) {
                                 problems.add("invalid_outside_interest")
                             } else {
                                 splashCount += cardCount
@@ -418,16 +424,16 @@ class DeckViewModel @Inject constructor(
     fun addCard(id: String) {
         val previousDeck = deck.value?.previousDeck
         _updatableValues.update { values ->
-            values?.apply {
-                if (previousDeck == null) copy(slots = slots.put(id, 2))
-                else sideSlots[id]?.let { sideSlot ->
-                    copy(
-                        slots = slots.put(id, (slots[id] ?: 0) + 1),
+            values?.let {
+                if (previousDeck == null) it.copy(slots = it.slots.put(id, 2))
+                else it.sideSlots[id]?.let { sideSlot ->
+                    it.copy(
+                        slots = it.slots.put(id, (it.slots[id] ?: 0) + 1),
                         sideSlots = if (sideSlot > 1)
-                            sideSlots.put(id, sideSlot - 1)
-                        else sideSlots.remove(id)
+                            it.sideSlots.put(id, sideSlot - 1)
+                        else it.sideSlots.remove(id)
                     )
-                } ?: copy(slots = slots.put(id, (slots[id] ?: 0) + 1))
+                } ?: it.copy(slots = it.slots.put(id, (it.slots[id] ?: 0) + 1))
             }
         }
     }
@@ -435,16 +441,16 @@ class DeckViewModel @Inject constructor(
     fun removeCard(id: String, setId: String?) {
         val previousDeck = deck.value?.previousDeck
         _updatableValues.update { values ->
-            values?.apply {
-                if (previousDeck == null) copy(slots = slots.remove(id))
-                else if ((slots[id] ?: 0) > 1) copy(
-                    slots = slots.put(id, slots[id]!! - 1),
-                    sideSlots = if (setId == "reward" || setId == "malady") sideSlots
-                        else sideSlots.put(id, (sideSlots[id] ?: 0) + 1)
-                ) else copy(
-                    slots = slots.remove(id),
-                    sideSlots = if (setId == "reward" || setId == "malady") sideSlots
-                    else sideSlots.put(id, (sideSlots[id] ?: 0) + 1)
+            values?.let {
+                if (previousDeck == null) it.copy(slots = it.slots.remove(id))
+                else if ((it.slots[id] ?: 0) > 1) it.copy(
+                    slots = it.slots.put(id, it.slots[id]!! - 1),
+                    sideSlots = if (setId == "reward" || setId == "malady") it.sideSlots
+                        else it.sideSlots.put(id, (it.sideSlots[id] ?: 0) + 1)
+                ) else it.copy(
+                    slots = it.slots.remove(id),
+                    sideSlots = if (setId == "reward" || setId == "malady") it.sideSlots
+                    else it.sideSlots.put(id, (it.sideSlots[id] ?: 0) + 1)
                 )
             }
         }
@@ -479,7 +485,7 @@ class DeckViewModel @Inject constructor(
                     }
                 }
             }
-        }
+        } else _deckUiState.value = DeckUiState.Idle
     }
 
     fun discardChanges() {
@@ -489,12 +495,13 @@ class DeckViewModel @Inject constructor(
 
     fun changeStat(index: Int, newValue: Int) {
         _updatableValues.update {
-            it?.apply {
+            it.apply {  }
+            it?.let {
                 when(index) {
-                    0 -> copy(awa = newValue)
-                    1 -> copy(spi = newValue)
-                    2 -> copy(fit = newValue)
-                    else -> copy(foc = newValue)
+                    0 -> it.copy(awa = newValue)
+                    1 -> it.copy(spi = newValue)
+                    2 -> it.copy(fit = newValue)
+                    else -> it.copy(foc = newValue)
                 }
             }
         }
@@ -580,7 +587,7 @@ class DeckViewModel @Inject constructor(
                 viewModelScope.launch {
                     _deckUiState.value = DeckUiState.Loading
                     decksRepository.createDeck(
-                        uploaded = deck.uploaded,
+                        uploaded = true,
                         name = deck.name,
                         slots = values.slots,
                         extraSlots = values.extraSlots,

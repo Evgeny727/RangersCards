@@ -120,8 +120,7 @@ fun CardsScreen(
                 key = { index ->
                     when (val item = cardsLazyItems.peek(index)) {
                         is CardListUiModel.CardItem -> item.card.id
-                        is CardListUiModel.CategoryHeader -> "header-${item.category?.name}"
-                        null -> index
+                        else -> index
                     }
                 },
                 contentType = cardsLazyItems.itemContentType { it }

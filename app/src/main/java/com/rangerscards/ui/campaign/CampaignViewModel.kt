@@ -32,7 +32,6 @@ import com.rangerscards.objects.Weather
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
-import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
@@ -155,15 +154,14 @@ class CampaignViewModel @Inject constructor(
     }
 
     // This function creates an extended weather list when needed.
-    private fun getExtendedWeatherList(expansions: List<String>): List<Weather> {
-        val campaignValue = campaign.value ?: return emptyList()
-        val weathers = CampaignMaps.weather(campaignValue.cycleId)
+    private fun getExtendedWeatherList(campaign: Campaign): List<Weather> {
+        val weathers = CampaignMaps.weather(campaign.cycleId)
 
-        if (!campaignValue.extendedCalendar) return weathers
+        if (!campaign.extendedCalendar) return weathers
 
         val weatherList = weathers.toMutableList()
 
-        if (expansions.isEmpty()) {
+        if (campaign.expansions.isEmpty()) {
             // no expansions -> add shifted copy of the base weathers
             weatherList += weathers.map { original ->
                 original.copy(start = original.start + 30, end = original.end + 30)
@@ -172,7 +170,7 @@ class CampaignViewModel @Inject constructor(
         }
 
         // Find the first expansion that yields a non-empty list and append it (only one)
-        val firstNonEmpty = expansions
+        val firstNonEmpty = campaign.expansions
             .asSequence()
             .map { CampaignMaps.expansionsWeather(it) }
             .firstOrNull { it.isNotEmpty() }
@@ -189,7 +187,7 @@ class CampaignViewModel @Inject constructor(
     fun groupDaysByWeather(): ImmutableMap<Weather, ImmutableMap<Int, DayInfo>> {
         val campaign = campaign.value
         if (campaign == null) return persistentMapOf()
-        val weathers = getExtendedWeatherList(campaign.expansions)
+        val weathers = getExtendedWeatherList(campaign)
         val guidesMap = campaign.calendar.associate { it.day to it.guides }.toMutableMap()
         val starterGuides = CampaignMaps.fixedGuideEntries[campaign.cycleId]!!
         for ((key, value) in starterGuides) {
@@ -197,7 +195,7 @@ class CampaignViewModel @Inject constructor(
             if (guidesMap.containsKey(key)) {
                 // If yes, merge the lists (concatenate the values)
                 // Using the plus operator to concatenate two lists
-                guidesMap[key] = (value + guidesMap[key]!!) as ImmutableList<String>
+                guidesMap[key] = (value + guidesMap[key]!!).toImmutableList()
             } else {
                 // If the key does not exist, add it to the first map
                 guidesMap[key] = value
@@ -206,13 +204,13 @@ class CampaignViewModel @Inject constructor(
         val iconsId = CampaignMaps.moonIconsMap()
         // Determine the maximum day based on calendar mode
         val maxDay = if (campaign.extendedCalendar) 60 else 30
-        val result = mutableMapOf<Weather, PersistentList<Int>>()
+        val result = mutableMapOf<Weather, MutableList<Int>>()
         val dayInfoMap = mutableMapOf<Int, DayInfo>()
         // Iterate over the days in the defined range.
         for (day in 1..maxDay) {
             val weatherForDay = weathers.firstOrNull { day in it.start..it.end }
             if (weatherForDay != null) {
-                result.getOrPut(weatherForDay) { persistentListOf() } + day
+                result.getOrPut(weatherForDay) { mutableListOf() }.add(day)
             }
             dayInfoMap[day] = DayInfo(
                 guidesMap[day] ?: emptyList(),
@@ -548,28 +546,29 @@ class CampaignViewModel @Inject constructor(
                 // Compute whether we can undo an "end day"
                 val canUndoEndDay = campaign.currentDay > 1 && (lastTravel == null ||
                         (if (lastTravel.camped) lastTravel.day + 1 else lastTravel.day) < campaign.currentDay)
-                val newCampaign = campaign.apply {
-                    if (canUndoEndDay) copy(
-                        currentDay = it.currentDay - 1,
+                val newCampaign = campaign.let { campaign ->
+                    if (canUndoEndDay) campaign.copy(
+                        currentDay = campaign.currentDay - 1,
                     ) else if (lastTravel != null) {
-                        var previousLocation = CampaignMaps.startingLocations[it.cycleId]!!
+                        var previousLocation = CampaignMaps.startingLocations[campaign.cycleId]!!
                         var previousPathTerrain: String? = null
-                        if (it.history.size >= 2) {
-                            val penultimateEntry = it.history[it.history.size - 2]
+                        if (campaign.history.size >= 2) {
+                            val penultimateEntry = campaign.history[campaign.history.size - 2]
                             if (penultimateEntry.location.isNotEmpty()) {
                                 previousLocation = penultimateEntry.location
                             }
                             previousPathTerrain = penultimateEntry.pathTerrain
                         }
                         // Adjust previous day depending on whether the last travel had 'camped'
-                        val previousDay = it.currentDay - if (lastTravel.camped) 1 else 0
-                        copy(
+                        val previousDay = campaign.currentDay - if (lastTravel.camped) 1 else 0
+                        campaign.copy(
                             currentDay = previousDay,
                             currentLocation = previousLocation,
                             currentPathTerrain = previousPathTerrain,
                             history = it.history.dropLast(1).toImmutableList()
                         )
                     }
+                    else campaign
                 }
                 if (canUndoEndDay) reshuffleChallengeDeck()
                 campaignsRepository.updateCampaign(

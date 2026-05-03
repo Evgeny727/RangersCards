@@ -78,8 +78,9 @@ class CardsViewModel @Inject constructor(
             )
         }.cachedIn(viewModelScope)
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     val searchResultsWithHeaders: Flow<PagingData<CardListUiModel>> =
-        searchResults.withCategoryHeaders(_filterOptions.value.sortOrder)
+        _filterOptions.flatMapLatest { searchResults.withCategoryHeaders(it.sortOrder) }
 
     /**
      * Called when the user enters a new search term.

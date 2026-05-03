@@ -11,9 +11,9 @@ interface CampaignsRepository {
 
     suspend fun syncCampaigns(userId: String): Result<Unit>
 
-    fun getAllPaginatedCampaignsFlow(userId: String): Flow<PagingData<CampaignListItem>>
+    fun getAllPaginatedCampaignsFlow(): Flow<PagingData<CampaignListItem>>
 
-    fun searchPaginatedCampaignsFlow(query: String, userId: String): Flow<PagingData<CampaignListItem>>
+    fun searchPaginatedCampaignsFlow(query: String): Flow<PagingData<CampaignListItem>>
 
     fun getAllPaginatedCampaignsForTransferFlow(cycleId: String, userId: String): Flow<PagingData<CampaignListItem>>
 

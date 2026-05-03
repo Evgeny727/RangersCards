@@ -47,8 +47,6 @@ import androidx.paging.compose.itemKey
 import com.rangerscards.R
 import com.rangerscards.domain.model.UserInfo
 import com.rangerscards.objects.CampaignMaps
-import com.rangerscards.ui.campaigns.components.CampaignCreationUiState
-import com.rangerscards.ui.campaigns.components.CampaignCreationViewModel
 import com.rangerscards.ui.components.DataPicker
 import com.rangerscards.ui.components.RangersDialogWithContent
 import com.rangerscards.ui.components.RangersLoadingDialog

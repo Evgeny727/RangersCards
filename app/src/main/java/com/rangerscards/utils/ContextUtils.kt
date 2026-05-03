@@ -8,7 +8,7 @@ fun Context.openLink(link: String) {
     startActivity(
         Intent(
             Intent.ACTION_VIEW,
-            link.toUri()
+            link.toUri(),
         )
     )
 }

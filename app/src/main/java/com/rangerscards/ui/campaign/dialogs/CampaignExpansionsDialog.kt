@@ -47,7 +47,7 @@ fun CampaignExpansionsDialog(
         ) {
             allExpansions.forEach { expansion ->
                 item(expansion.id) {
-                    val isAdded = remember(expansions) { expansions.contains(expansion.id) }
+                    val isAdded = expansions.contains(expansion.id)
                     RangersRadioButtonRow(
                         text = stringResource(expansion.name),
                         isSelected = isAdded,

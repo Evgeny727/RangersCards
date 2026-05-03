@@ -248,13 +248,12 @@ fun DeckCreationScreen(
             }
 
             LazyColumn(
+                contentPadding = PaddingValues(horizontal = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item {
                     OutlinedTextField(
-                        modifier = Modifier
-                            .padding(horizontal = 8.dp)
-                            .fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth(),
                         value = name,
                         onValueChange = { name = it },
                         label = {
@@ -286,13 +285,12 @@ fun DeckCreationScreen(
                 }
                 when (tabIndex) {
                     0 -> {
-                        item(background) {
+                        item("background_$background") {
                             DataPicker(
                                 onClick = {
                                     showDialogPicker = ActiveField.FieldOne
                                 },
                                 type = R.string.background,
-                                modifier = Modifier.padding(horizontal = 8.dp)
                             ) {
                                 Text(
                                     text = background.second.ifEmpty { stringResource(R.string.background_placeholder) },
@@ -305,7 +303,7 @@ fun DeckCreationScreen(
                                 )
                             }
                         }
-                        item(specialty) {
+                        item("specialty_$specialty") {
                             DataPicker(
                                 onClick = {
                                     showDialogPicker = ActiveField.FieldTwo
@@ -323,7 +321,7 @@ fun DeckCreationScreen(
                                 )
                             }
                         }
-                        item(role.first) {
+                        item("role_${role.first}") {
                             AnimatedVisibility(specialty.first.isNotEmpty()) {
                                 DataPicker(
                                     onClick = {
@@ -383,8 +381,9 @@ fun DeckCreationScreen(
                     RangersRadioButtonRow(
                         text = stringResource(R.string.use_taboo),
                         isSelected = taboo,
-                        modifier = Modifier.fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
                     ) { value ->
                         taboo = value
                     }
@@ -393,8 +392,9 @@ fun DeckCreationScreen(
                     RangersRadioButtonRow(
                         text = stringResource(R.string.upload_to_rangersdb),
                         isSelected = isUploading,
-                        modifier = Modifier.fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
                     ) { value ->
                         isUploading = value
                     }
@@ -402,7 +402,8 @@ fun DeckCreationScreen(
             }
         }
         Row(
-            modifier = Modifier.height(IntrinsicSize.Max)
+            modifier = Modifier
+                .height(IntrinsicSize.Max)
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -415,7 +416,9 @@ fun DeckCreationScreen(
                     .copy(CustomTheme.colors.warn),
                 iconColor = if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30,
                 textColor = if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30,
-                modifier = Modifier.weight(1f).fillMaxHeight()
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
             )
             val postfix = stringResource(R.string.starter_deck_name_postfix)
             SquareButton(
@@ -444,7 +447,9 @@ fun DeckCreationScreen(
                 ),
                 iconColor = CustomTheme.colors.m,
                 textColor = CustomTheme.colors.l30,
-                modifier = Modifier.weight(1.1f).fillMaxHeight(),
+                modifier = Modifier
+                    .weight(1.1f)
+                    .fillMaxHeight(),
                 isEnabled = isLegit
             )
         }

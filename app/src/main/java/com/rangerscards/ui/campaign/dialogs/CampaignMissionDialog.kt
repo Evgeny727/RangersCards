@@ -164,7 +164,7 @@ fun CampaignMissionDialog(
             }
             RangersRadioButtonRow(
                 text = stringResource(R.string.mission_completed),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                modifier = Modifier.fillMaxWidth(),
                 isSelected = completed,
             ) { value ->
                 completed = value

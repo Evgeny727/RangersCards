@@ -59,7 +59,7 @@ class CampaignsRepositoryImpl @Inject constructor(
         campaignDao.syncCampaigns(networkCampaigns.campaigns.toDbCampaigns())
     }
 
-    override fun getAllPaginatedCampaignsFlow(userId: String): Flow<PagingData<CampaignListItem>> {
+    override fun getAllPaginatedCampaignsFlow(): Flow<PagingData<CampaignListItem>> {
         // Create a Pager that wraps the PagingSource from the DAO.
         return Pager(
             config = PagingConfig(
@@ -67,13 +67,13 @@ class CampaignsRepositoryImpl @Inject constructor(
                 enablePlaceholders = false,
                 initialLoadSize = 10
             ),
-            pagingSourceFactory = { campaignDao.getAllCampaigns(userId) }
+            pagingSourceFactory = { campaignDao.getAllCampaigns() }
         ).flow.map { pagingData ->
             pagingData.map { it.toDomain() }
         }
     }
 
-    override fun searchPaginatedCampaignsFlow(query: String, userId: String): Flow<PagingData<CampaignListItem>> {
+    override fun searchPaginatedCampaignsFlow(query: String): Flow<PagingData<CampaignListItem>> {
         val newQuery = query
             .lowercase()
             .replace("\"(\\[\"]|.*)?\"".toRegex(), " ")
@@ -87,7 +87,7 @@ class CampaignsRepositoryImpl @Inject constructor(
                 enablePlaceholders = false,
                 initialLoadSize = 10
             ),
-            pagingSourceFactory = { campaignDao.searchCampaigns(newQuery, userId) }
+            pagingSourceFactory = { campaignDao.searchCampaigns(newQuery) }
         ).flow.map { pagingData ->
             pagingData.map { it.toDomain() }
         }
@@ -328,7 +328,9 @@ class CampaignsRepositoryImpl @Inject constructor(
             }.toDbCampaign()
             campaignDao.updateCampaign(campaign)
         } else {
-            campaignDao.updateCampaign(campaign.toDbCampaign())
+            campaignDao.updateCampaign(
+                campaign.copy(updatedAt = getCurrentDateTime()).toDbCampaign()
+            )
         }
     }
 
@@ -424,12 +426,7 @@ class CampaignsRepositoryImpl @Inject constructor(
         return campaignsRemoteDataSource.startSubscription(id)
             .onEach { response ->
                 response.dataAssertNoErrors.campaign?.campaign?.let { remoteCampaign ->
-                    val localCampaign = campaignDao.getCampaignById(campaignId)
-                    localCampaign?.let {
-                        val dbCampaign = remoteCampaign.toDbCampaign()
-                        if (localCampaign.updatedAt != dbCampaign.updatedAt)
-                            campaignDao.updateCampaign(dbCampaign)
-                    }
+                    campaignDao.updateCampaign(remoteCampaign.toDbCampaign())
                 }
             }
             .map { Result.success(Unit) }

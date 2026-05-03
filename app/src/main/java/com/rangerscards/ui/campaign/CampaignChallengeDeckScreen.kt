@@ -5,15 +5,18 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -90,7 +93,8 @@ fun CampaignChallengeDeckScreen(
             .background(CustomTheme.colors.l30)
             .fillMaxSize()
             .applyScaffoldPaddings(contentPadding)
-            .padding(8.dp),
+            .padding(8.dp)
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         AnimatedVisibility(returnInOrderMode != null) {
@@ -271,5 +275,6 @@ fun CampaignChallengeDeckScreen(
             isEnabled = isScoutAvailable.value
         )
         AspectsRowCharts(challengeDeckIds)
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }

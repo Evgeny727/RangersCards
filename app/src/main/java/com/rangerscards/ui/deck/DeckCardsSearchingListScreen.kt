@@ -222,8 +222,7 @@ fun DeckCardsSearchingListScreen(
                     key = { index ->
                         when (val item = cardsLazyItems.peek(index)) {
                             is DeckCardListUiModel.CardItem -> item.card.id
-                            is DeckCardListUiModel.CategoryHeader -> "header-${item.category?.name}"
-                            null -> index
+                            else -> index
                         }
                     },
                     contentType = cardsLazyItems.itemContentType { it }

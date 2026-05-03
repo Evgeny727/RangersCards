@@ -40,7 +40,7 @@ fun AddPlayersToCampaign(
         contentPadding = PaddingValues(bottom = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(user.friends, { friend -> friend.id }) { friend ->
+        items(user.friends.filterNot { it.id == campaign.userId }, { friend -> friend.id }) { friend ->
             val isInCampaign = remember(friendsInCampaign) {
                 friendsInCampaign.firstOrNull { it.id == friend.id } != null
             }

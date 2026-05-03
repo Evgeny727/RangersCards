@@ -23,6 +23,8 @@ internal fun Flow<PagingData<CardDeckListItem>>.withCategoryHeaders(sortOrder: L
                 val beforeItem = before?.card
                 val afterItem = after?.card
 
+                if (afterItem == null) return@insertSeparators null
+
                 val headerOptions = getHeaderOptions(
                     sortOrder = sortOrder,
                     previousItem = beforeItem,
@@ -33,11 +35,11 @@ internal fun Flow<PagingData<CardDeckListItem>>.withCategoryHeaders(sortOrder: L
                     DeckCardListUiModel.CategoryHeader(
                         category = headerOptions.second,
                         value = when(headerOptions.second) {
-                            CardsHeaderType.EQUIP -> beforeItem?.equip?.toString()
-                            CardsHeaderType.SET_ID -> beforeItem?.setName
-                            CardsHeaderType.TYPE_NAME -> beforeItem?.typeName
-                            CardsHeaderType.COST -> beforeItem?.cost?.toString()
-                            CardsHeaderType.ASPECT_ID -> beforeItem?.aspect?.shortName
+                            CardsHeaderType.EQUIP -> afterItem.equip?.toString()
+                            CardsHeaderType.SET_ID -> afterItem.setName
+                            CardsHeaderType.TYPE_NAME -> afterItem.typeName
+                            CardsHeaderType.COST -> afterItem.cost?.toString()
+                            CardsHeaderType.ASPECT_ID -> afterItem.aspect?.shortName
                             else -> null
                         }
                     )
@@ -49,27 +51,27 @@ private fun getHeaderOptions(
     sortOrder: List<String>,
     previousItem: CardDeckListItem?,
     nextItem: CardDeckListItem?
-): Pair<Boolean, com.rangerscards.ui.cards.components.CardsHeaderType?> {
+): Pair<Boolean, CardsHeaderType?> {
     return when(sortOrder.first()) {
         "equip" -> {
-            (previousItem?.equip != nextItem?.equip) to com.rangerscards.ui.cards.components.CardsHeaderType.EQUIP
+            (previousItem?.equip != nextItem?.equip) to CardsHeaderType.EQUIP
         }
         "set_id" -> {
-            (previousItem?.setName != nextItem?.setName) to com.rangerscards.ui.cards.components.CardsHeaderType.SET_ID
+            (previousItem?.setName != nextItem?.setName) to CardsHeaderType.SET_ID
         }
         "set_type_id" -> {
             (if (sortOrder.indexOf("set_id") == 1) {
                 previousItem?.setName != nextItem?.setName
-            } else false) to com.rangerscards.ui.cards.components.CardsHeaderType.SET_ID
+            } else false) to CardsHeaderType.SET_ID
         }
         "type_name" -> {
-            (previousItem?.typeName != nextItem?.typeName) to com.rangerscards.ui.cards.components.CardsHeaderType.TYPE_NAME
+            (previousItem?.typeName != nextItem?.typeName) to CardsHeaderType.TYPE_NAME
         }
         "cost" -> {
-            (previousItem?.cost != nextItem?.cost) to com.rangerscards.ui.cards.components.CardsHeaderType.COST
+            (previousItem?.cost != nextItem?.cost) to CardsHeaderType.COST
         }
         "aspect_id" -> {
-            (previousItem?.aspect?.id != nextItem?.aspect?.id) to com.rangerscards.ui.cards.components.CardsHeaderType.ASPECT_ID
+            (previousItem?.aspect?.id != nextItem?.aspect?.id) to CardsHeaderType.ASPECT_ID
         }
         else -> false to null
     }

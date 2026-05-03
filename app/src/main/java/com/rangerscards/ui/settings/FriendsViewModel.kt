@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -61,13 +60,16 @@ class FriendsViewModel @Inject constructor(
         _searchQuery.value = ""
     }
 
-    fun getUsersByHandle(handle: String) {
+    fun getUsersByHandle(handle: String, user: User? = null) {
         viewModelScope.launch {
             if (handle == "") _searchResults.value = persistentListOf()
             else {
                 _friendsUiState.value = FriendsUiState.Loading
                 settingsRepository.searchUsersByHandle(handle)
-                    .onSuccess { _searchResults.value = it.toImmutableList() }
+                    .onSuccess {
+                        if (user != null) filterUsers(user, it)
+                        else _searchResults.value = it.toImmutableList()
+                    }
                     .onFailure {
                         emitError(it)
                         _searchResults.value = persistentListOf()
@@ -77,20 +79,23 @@ class FriendsViewModel @Inject constructor(
         }
     }
 
-    fun filterUsers(user: User) = _searchResults.update {
-        _friendsUiState.value = FriendsUiState.Loading
-        val filtered = it.filterNot { item ->
-            item in user.friends && item in user.sentRequests
-                    && item in user.receivedRequests && item.id == user.userInfo?.id
+    private fun filterUsers(user: User, list: List<UserInfo>)  {
+        val filtered = list.filterNot { item ->
+            item in user.friends || item in user.sentRequests
+                    || item in user.receivedRequests || item.id == user.userInfo?.id
         }.toImmutableList()
-        _friendsUiState.value = FriendsUiState.Idle
-        filtered
+        _searchResults.value = filtered
+    }
+
+    private fun removeUser(userId: String): ImmutableList<UserInfo> {
+        return _searchResults.value.filterNot { it.id == userId }.toImmutableList()
     }
 
     fun sendFriendRequest(toUserId: String) {
         viewModelScope.launch {
             _friendsUiState.value = FriendsUiState.Loading
             settingsRepository.friendRequestAction(FriendAction.SENT, toUserId)
+                .onSuccess { _searchResults.value = removeUser(toUserId) }
                 .onFailure { emitError(it) }
             _friendsUiState.value = FriendsUiState.Idle
         }

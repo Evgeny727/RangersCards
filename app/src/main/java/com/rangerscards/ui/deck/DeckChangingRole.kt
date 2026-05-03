@@ -278,8 +278,8 @@ fun DeckChangingRole(
                     stringId = R.string.done_button,
                     leadingIcon = R.drawable.done_32dp,
                     onClick = {
-                        if (deck.deckMeta.roleId != role.first && deck.deckMeta.background != background
-                            && deck.deckMeta.specialty != specialty)
+                        if (deck.deckMeta.roleId != role.first || deck.deckMeta.background != background
+                            || deck.deckMeta.specialty != specialty)
                                 deckViewModel.changeRole(background, specialty, role.first)
                         onBack()
                     },

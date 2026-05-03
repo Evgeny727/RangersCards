@@ -31,7 +31,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
@@ -98,9 +97,9 @@ fun CampaignScreen(
     var showNameDialog by rememberSaveable { mutableStateOf(false) }
     var campaignNameEditing by rememberSaveable { mutableStateOf("") }
     var showConfirmationDialog by rememberSaveable { mutableStateOf(false) }
-    val isOwner by remember { derivedStateOf {
+    val isOwner = remember(campaign?.userId, user.userInfo) {
         campaign?.userId == user.userInfo?.id || campaign?.userId?.isEmpty() == true
-    } }
+    }
     var isCampaignLogExpanded by rememberSaveable { mutableStateOf(false) }
     var campaignLogTypeIndex by rememberSaveable { mutableIntStateOf(0) }
     var isCampaignMissionsOnlyActive by rememberSaveable { mutableStateOf(false) }
@@ -469,7 +468,7 @@ fun CampaignScreen(
                                         RangersRadioButtonRow(
                                             text = stringResource(R.string.show_all_rewards_in_collection),
                                             onValueChange = campaignViewModel::setShowAllRewards,
-                                            modifier = Modifier,
+                                            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                                             isSelected = isShowAllRewards
                                         )
                                         val rewards by campaignViewModel.rewards.collectAsState()
@@ -533,7 +532,7 @@ fun CampaignScreen(
                                     )
                                     3 -> CampaignNotes(
                                         onAdd = { navController.navigate(
-                                            "${BottomNavScreen.Campaigns.route}/campaign/recordEvent"
+                                            "${BottomNavScreen.Campaigns.route}/campaign/addNote"
                                         ) {
                                             launchSingleTop = true
                                         } },

@@ -39,7 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -117,6 +117,7 @@ import com.rangerscards.ui.settings.SettingsCollectionScreen
 import com.rangerscards.ui.settings.SettingsDiagnosticsScreen
 import com.rangerscards.ui.settings.SettingsFriendsScreen
 import com.rangerscards.ui.settings.SettingsScreen
+import com.rangerscards.ui.settings.SettingsUiState
 import com.rangerscards.ui.settings.SettingsViewModel
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
@@ -137,8 +138,8 @@ fun RangersNavHost(
             !route.startsWith("deck/") && !route.contains("Options")
         } ?: true
     }
-    val context = LocalContext.current.applicationContext
-    var title by rememberSaveable { mutableStateOf(context.getString(BottomNavScreen.Settings.label)) }
+    val resources = LocalResources.current
+    var title by rememberSaveable { mutableStateOf(resources.getString(BottomNavScreen.Settings.label)) }
     var actions: @Composable (RowScope.() -> Unit)? by remember { mutableStateOf(null) }
     var switch: @Composable (RowScope.() -> Unit)? = null
     val cardsState by appViewModel.cardsSyncState.collectAsState()
@@ -174,17 +175,17 @@ fun RangersNavHost(
             appViewModel.checkIfCardsReady()
             appViewModel.events.collect { error ->
                 val message = when (error.exception) {
-                    is InvalidEmailException -> context.getString(R.string.invalid_email_text)
-                    is InvalidPasswordException -> context.getString(R.string.invalid_password_text)
-                    is HandleAlreadyTakenException -> context.getString(R.string.handle_already_taken_text)
-                    is InvalidHandleSizeException -> context.getString(R.string.invalid_handle_text)
-                    is UploadingCampaignWithDecksException -> context.getString(R.string.upload_campaign_warning)
-                    is NotAvailableWhileInEitModeException -> context.getString(R.string.not_available_in_edit_mode)
-                    is DeckContainsErrorsException -> context.getString(R.string.campaign_section_camp_warning)
-                    is DeckContainsUpgradesException -> context.getString(R.string.options_section_upload_deck_warning)
-                    is DeckInCampaignException -> context.getString(R.string.options_section_upload_deck_in_campaign_warning)
+                    is InvalidEmailException -> resources.getString(R.string.invalid_email_text)
+                    is InvalidPasswordException -> resources.getString(R.string.invalid_password_text)
+                    is HandleAlreadyTakenException -> resources.getString(R.string.handle_already_taken_text)
+                    is InvalidHandleSizeException -> resources.getString(R.string.invalid_handle_text)
+                    is UploadingCampaignWithDecksException -> resources.getString(R.string.upload_campaign_warning)
+                    is NotAvailableWhileInEitModeException -> resources.getString(R.string.not_available_in_edit_mode)
+                    is DeckContainsErrorsException -> resources.getString(R.string.campaign_section_camp_warning)
+                    is DeckContainsUpgradesException -> resources.getString(R.string.options_section_upload_deck_warning)
+                    is DeckInCampaignException -> resources.getString(R.string.options_section_upload_deck_in_campaign_warning)
                     else -> error.exception.localizedMessage ?:
-                    context.getString(R.string.something_went_wrong)
+                    resources.getString(R.string.something_went_wrong)
                 }
                 snackbarHostState.showSnackbar(message)
             }
@@ -329,10 +330,13 @@ fun RangersNavHost(
                         navController.getBackStackEntry(BottomNavScreen.Settings.startDestination)
                     }
                     val settingsViewModel = hiltViewModel<SettingsViewModel>(parentEntry)
+                    val state by settingsViewModel.settingsUiState.collectAsState()
                     val user by appViewModel.userUiState.collectAsState()
                     SettingsCollectionScreen(
                         user = user,
                         setCollection = settingsViewModel::setCollection,
+                        isLoading = state is SettingsUiState.Loading,
+                        isDarkTheme = isDarkTheme,
                         contentPadding = innerPadding
                     )
                     title = stringResource(R.string.collection_header)

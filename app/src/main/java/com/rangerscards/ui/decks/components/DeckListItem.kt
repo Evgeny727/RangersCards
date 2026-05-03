@@ -97,7 +97,7 @@ fun DeckListItem(
                             modifier = Modifier.size(32.dp)
                         )
                     }
-                if (meta.problems != null) Icon(
+                if (!meta.problems.isNullOrEmpty()) Icon(
                     painterResource(R.drawable.error_32dp),
                     contentDescription = "Error",
                     tint = CustomTheme.colors.warn,

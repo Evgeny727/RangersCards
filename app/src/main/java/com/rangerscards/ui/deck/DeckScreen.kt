@@ -269,12 +269,18 @@ fun DeckScreen(
                 leadingIcon = R.drawable.done_32dp,
                 onClick = {
                     when(showInputDialog) {
-                        DialogWithInputType.Name -> deckViewModel.updateDeckName(deckNameEditing)
-                        else -> deckViewModel.cloneDeck(
-                            isUploadClone,
-                            deckNameEditing,
-                            postfix
-                        )
+                        DialogWithInputType.Name -> {
+                            deckViewModel.updateDeckName(deckNameEditing)
+                            showInputDialog = null
+                        }
+                        else -> {
+                            deckViewModel.cloneDeck(
+                                isUploadClone,
+                                deckNameEditing,
+                                postfix
+                            )
+                            showInputDialog = null
+                        }
                     }
                 },
                 buttonColor = ButtonDefaults.buttonColors().copy(
@@ -403,7 +409,7 @@ fun DeckScreen(
                             name = role?.name,
                             text = CardTextParser.parseCustomText(role?.text, null),
                             campaignName = deck!!.campaignInfo?.campaignName,
-                            onClick = if (role != null) {{
+                            onClick = if (role != null && deck!!.previousDeck == null && deck!!.nextId == null) {{
                                 navController.navigate("deck/card/${deck!!.deckMeta.roleId}") {
                                     launchSingleTop = true
                                 }
@@ -431,11 +437,13 @@ fun DeckScreen(
                         FullDeckProblemsItem(deckProblems.problems)
                         Spacer(modifier = Modifier.height(16.dp))
                     }
-                    if (isOwner) item(key = "edit_button") {
+                    if (isOwner && deck!!.previousDeck == null && deck!!.nextId == null) item(key = "edit_button") {
                         Button(
-                            onClick = { if (!isEditing) {
-                                deckViewModel.saveChanges(); showActionDialog = null
-                            } else deckViewModel.enterEditMode() },
+                            onClick = {
+                                if (isEditing) {
+                                    deckViewModel.saveChanges(); showActionDialog = null
+                                } else deckViewModel.enterEditMode()
+                            },
                             modifier = Modifier.fillMaxWidth(),
                             shape = CustomTheme.shapes.small,
                             colors = ButtonDefaults.buttonColors().copy(CustomTheme.colors.d10),
@@ -497,7 +505,6 @@ fun DeckScreen(
                                 )
                             }
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
                     }
                     item("deck_section_header") {
                         DeckSectionHeader(R.string.deck_section_header)
@@ -766,7 +773,7 @@ fun DeckScreen(
                 val locale = Locale.getDefault().language.take(2)
                 val supportedLocale = if (SUPPORTED_LANGUAGES.contains(locale)) locale
                 else ""
-                val context = LocalContext.current.applicationContext
+                val context = LocalContext.current
                 DeckRightSideDrawer(
                     isOpen = drawerOpen,
                     onClick = { drawerOpen = !drawerOpen },
@@ -774,7 +781,7 @@ fun DeckScreen(
                     isOwner = isOwner,
                     deckName = deck!!.name,
                     deckId = if (deck!!.uploaded) deck!!.id else null,
-                    changeName = { showInputDialog = DialogWithInputType.Name },
+                    changeName = { showInputDialog = DialogWithInputType.Name; deckNameEditing = deck!!.name },
                     setTaboo = { deckViewModel.setDeckTaboo(!isTabooSet) },
                     isTabooSet = isTabooSet,
                     toNotes = { /*TODO:Implement notes*/ },
@@ -828,7 +835,7 @@ fun DeckScreen(
 @Composable
 fun DeckSectionHeader(@StringRes textId: Int) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
         horizontalArrangement = Arrangement.Center
     ) {
         Text(
@@ -848,11 +855,12 @@ fun DeckCardsTypeHeader(
     additionalText: String? = null,
     onClick: (() -> Unit)? = null
 ) {
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 8.dp, bottom = 4.dp)
+                .padding(horizontal = 8.dp)
+                .padding(top = 16.dp, bottom = 4.dp)
                 .clickable(onClick = onClick ?: {}),
             verticalAlignment = Alignment.Top,
             horizontalArrangement = Arrangement.spacedBy(8.dp)

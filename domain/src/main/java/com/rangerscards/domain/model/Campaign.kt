@@ -37,7 +37,7 @@ data class CampaignNote(
 data class CampaignMission(
     val day: Int,
     val name: String,
-    val checks: List<Boolean> = emptyList(),
+    val checks: List<Boolean> = listOf(false, false, false),
     val completed: Boolean = false,
 )
 

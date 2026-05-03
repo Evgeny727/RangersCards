@@ -30,6 +30,8 @@ internal fun Flow<PagingData<CardListItem>>.withCategoryHeaders(sortOrder: List<
                 val beforeItem = before?.card
                 val afterItem = after?.card
 
+                if (afterItem == null) return@insertSeparators null
+
                 val headerOptions = getHeaderOptions(
                     sortOrder = sortOrder,
                     previousItem = beforeItem,
@@ -40,11 +42,11 @@ internal fun Flow<PagingData<CardListItem>>.withCategoryHeaders(sortOrder: List<
                     CardListUiModel.CategoryHeader(
                         category = headerOptions.second,
                         value = when(headerOptions.second) {
-                            CardsHeaderType.EQUIP -> beforeItem?.equip?.toString()
-                            CardsHeaderType.SET_ID -> beforeItem?.setName
-                            CardsHeaderType.TYPE_NAME -> beforeItem?.typeName
-                            CardsHeaderType.COST -> beforeItem?.cost?.toString()
-                            CardsHeaderType.ASPECT_ID -> beforeItem?.aspect?.shortName
+                            CardsHeaderType.EQUIP -> afterItem.equip?.toString()
+                            CardsHeaderType.SET_ID -> afterItem.setName
+                            CardsHeaderType.TYPE_NAME -> afterItem.typeName
+                            CardsHeaderType.COST -> afterItem.cost?.toString()
+                            CardsHeaderType.ASPECT_ID -> afterItem.aspect?.shortName
                             else -> null
                         }
                     )

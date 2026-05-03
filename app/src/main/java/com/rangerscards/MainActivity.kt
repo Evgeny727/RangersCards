@@ -7,6 +7,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -56,8 +57,9 @@ class MainActivity : AppCompatActivity() {
         }
         setContent {
             viewModel = hiltViewModel<AppViewModel>(this)
+            val theme by viewModel.themeState.collectAsState()
             // Collecting user's theme from shared preferences via viewmodel - false = light, true = dark
-            val currentTheme = when(viewModel.themeState.collectAsState().value) {
+            val currentTheme = when(theme) {
                 0 -> false
                 1 -> true
                 2 -> isSystemInDarkTheme()

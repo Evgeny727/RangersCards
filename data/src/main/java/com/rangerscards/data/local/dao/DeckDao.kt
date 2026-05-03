@@ -69,7 +69,7 @@ interface DeckDao {
     }
 
     @Query("SELECT * FROM deck WHERE id = :id")
-    fun getDeckById(id: String): Deck?
+    suspend fun getDeckById(id: String): Deck?
 
     @Query("SELECT * FROM deck WHERE id = :id")
     fun getDeckByIdFlow(id: String): Flow<Deck?>

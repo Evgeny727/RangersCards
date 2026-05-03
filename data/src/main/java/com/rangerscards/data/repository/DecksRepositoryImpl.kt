@@ -8,7 +8,6 @@ import androidx.room.withTransaction
 import com.rangerscards.data.local.RangersDatabase
 import com.rangerscards.data.local.dao.CampaignDao
 import com.rangerscards.data.local.dao.DeckDao
-import com.rangerscards.data.mapper.toDbCampaign
 import com.rangerscards.data.mapper.toDbDeck
 import com.rangerscards.data.mapper.toDbDecks
 import com.rangerscards.data.mapper.toDomain
@@ -23,7 +22,6 @@ import com.rangerscards.domain.model.DeckMeta
 import com.rangerscards.domain.repository.DecksRepository
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
-import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -198,13 +196,13 @@ class DecksRepositoryImpl @Inject constructor(
         if (uploaded) {
             val upgradedDeck = decksRemoteDataSource.upgradeDeck(id.toInt())
                 .dataAssertNoErrors.deck!!.deck.toDbDeck()
-            val nextDeck = decksRemoteDataSource.fetchDeckById(upgradedDeck.nextId!!.toInt())
+            val previousDeck = decksRemoteDataSource.fetchDeckById(upgradedDeck.previousId!!.toInt())
                 .dataAssertNoErrors.deck!!.deck.toDbDeck()
             db.withTransaction {
-                deckDao.updateDeck(upgradedDeck)
-                deckDao.insertDeck(nextDeck)
+                deckDao.insertDeck(upgradedDeck)
+                deckDao.updateDeck(previousDeck)
             }
-            nextDeck.id
+            upgradedDeck.id
         } else {
             val newUuid = Uuid.random().toString()
             val localDeck = deckDao.getDeckById(id)!!
@@ -305,7 +303,7 @@ class DecksRepositoryImpl @Inject constructor(
             decksRemoteDataSource.setDeckCampaign(
                 id.toInt(),
                 campaignInfo.campaignId.toInt()
-            ).dataAssertNoErrors.campaign.map { campaign -> campaign.campaign.toDbCampaign() }
+            ).dataAssertNoErrors
             val updatedDeck = decksRemoteDataSource.fetchDeckById(id.toInt())
                 .dataAssertNoErrors.deck!!.deck.toDbDeck()
             deckDao.updateDeck(updatedDeck)
