@@ -42,8 +42,8 @@ class AppViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     private val userFlow = authRepository.currentUserId
         .flatMapLatest {
-            if (it == null) flowOf(Result.success(null))
-            else settingsRepository.startProfileSubscription(it)
+            if (it == null) flowOf(Result.success(null) to Result.success(null))
+            else settingsRepository.startUserSubscription(it)
         }
 
     private val _userUiState = MutableStateFlow(User())
@@ -74,30 +74,31 @@ class AppViewModel @Inject constructor(
     private fun observeUser() {
         viewModelScope.launch {
             userFlow.collect { result ->
-                result.onSuccess { user ->
-                    val data = result.getOrNull()
-                    if (data == null) _userUiState.update { user ->
-                        user.copy(
+                result.first.onSuccess { user ->
+                    if (user == null) _userUiState.update { state ->
+                        state.copy(
                             userInfo = null,
                             friends = persistentListOf(),
                             sentRequests = persistentListOf(),
                             receivedRequests = persistentListOf(),
                         )
-                    } else {
-                        _userUiState.update { user ->
-                            user.copy(
-                                userInfo = data.userInfo,
-                                friends = data.friends,
-                                sentRequests = data.sentRequests,
-                                receivedRequests = data.receivedRequests,
-                            )
-                        }
-                        val settings = data.settings
-                        userPreferencesRepository.saveTabooAndCollectionPreference(settings.taboo, settings.collection)
+                    } else _userUiState.update { state ->
+                        state.copy(
+                            userInfo = user.userInfo,
+                            friends = user.friends,
+                            sentRequests = user.sentRequests,
+                            receivedRequests = user.receivedRequests,
+                        )
                     }
-                }.onFailure { exception ->
-                    emitError(exception)
-                }
+                }.onFailure { exception -> emitError(exception) }
+                result.second.onSuccess { settings ->
+                    settings?.let {
+                        userPreferencesRepository.saveTabooAndCollectionPreference(
+                            settings.taboo,
+                            settings.collection
+                        )
+                    }
+                }.onFailure { exception -> emitError(exception) }
             }
         }
     }

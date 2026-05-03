@@ -2,11 +2,12 @@ package com.rangerscards.domain.repository
 
 import com.rangerscards.domain.model.User
 import com.rangerscards.domain.model.UserInfo
+import com.rangerscards.domain.model.UserSettings
 import kotlinx.coroutines.flow.Flow
 
 interface SettingsRepository {
 
-    fun startProfileSubscription(userId: String): Flow<Result<User>>
+    fun startUserSubscription(userId: String): Flow<Pair<Result<User>, Result<UserSettings>>>
 
     suspend fun updateHandle(userId: String, handle: String): Result<Unit>
 

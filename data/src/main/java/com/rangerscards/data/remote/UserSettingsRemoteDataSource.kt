@@ -9,6 +9,7 @@ import com.rangerscards.RejectFriendRequestMutation
 import com.rangerscards.SendFriendRequestMutation
 import com.rangerscards.SetAdhereTaboosMutation
 import com.rangerscards.SetPackCollectionMutation
+import com.rangerscards.SettingsSubscription
 import com.rangerscards.UpdateHandleMutation
 import kotlinx.serialization.json.JsonElement
 import javax.inject.Inject
@@ -23,6 +24,10 @@ class UserSettingsRemoteDataSource @Inject constructor(
 
     fun startProfileSubscription(id: String) = apolloClient
         .subscription(ProfileSubscription(id))
+        .toFlow()
+
+    fun startSettingsSubscription(id: String) = apolloClient
+        .subscription(SettingsSubscription(id))
         .toFlow()
 
     suspend fun setPackCollection(userId: String, packCollection: JsonElement) = apolloClient

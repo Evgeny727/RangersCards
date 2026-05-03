@@ -1,6 +1,7 @@
 package com.rangerscards.data.mapper
 
 import com.rangerscards.ProfileSubscription
+import com.rangerscards.SettingsSubscription
 import com.rangerscards.domain.model.User
 import com.rangerscards.domain.model.UserInfo
 import com.rangerscards.domain.model.UserSettings
@@ -21,12 +22,13 @@ fun RemoteUserInfo.toDomain(): UserInfo =
     )
 
 /**
- * Extension function to convert [ProfileSubscription.Settings] to [UserInfo]
+ * Extension function to convert [SettingsSubscription.Data] to [UserInfo]
  */
-fun ProfileSubscription.Settings.toDomain(): UserSettings =
+fun SettingsSubscription.Data.toDomain(): UserSettings =
     UserSettings(
-        adhere_taboos ?: false,
-        pack_collection?.jsonArray?.map { it.jsonPrimitive.content }?.toImmutableList() ?: persistentListOf()
+        settings!!.adhere_taboos ?: false,
+        settings.pack_collection?.jsonArray
+            ?.map { it.jsonPrimitive.content }?.toImmutableList() ?: persistentListOf()
     )
 
 /**
@@ -34,12 +36,10 @@ fun ProfileSubscription.Settings.toDomain(): UserSettings =
  */
 fun ProfileSubscription.Data.toDomain(): User {
     val profile = profile!!.userProfile
-    val settings = settings!!
     return User(
         userInfo = profile.userInfo.toDomain(),
         friends = profile.friends.mapNotNull { it.user?.userInfo?.toDomain() }.toImmutableList(),
         sentRequests = profile.sent_requests.mapNotNull { it.user?.userInfo?.toDomain() }.toImmutableList(),
         receivedRequests = profile.received_requests.mapNotNull { it.user?.userInfo?.toDomain() }.toImmutableList(),
-        settings = settings.toDomain()
     )
 }

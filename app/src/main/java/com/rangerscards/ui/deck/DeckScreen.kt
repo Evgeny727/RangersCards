@@ -499,7 +499,7 @@ fun DeckScreen(
                         }
                         Spacer(modifier = Modifier.height(16.dp))
                     }
-                    stickyHeader("deck_section_header") {
+                    item("deck_section_header") {
                         DeckSectionHeader(R.string.deck_section_header)
                     }
                     slots.forEach { (key, cards) ->
@@ -516,8 +516,12 @@ fun DeckScreen(
                                 )
                             }
                             "background" -> item("deck_section_background_header") {
+                                val background = stringResource(
+                                    DeckMetaMaps.background[deck!!.deckMeta.background] ?: R.string.text_none
+                                )
                                 DeckCardsTypeHeader(
                                     textId = R.string.background,
+                                    additionalText = background,
                                     onClick = if (isOwner) {{
                                         deckViewModel.enterEditMode()
                                         navController.navigate("deck/cardsList/${if (deck!!.previousDeck == null) 1 else 0}") {
@@ -528,8 +532,12 @@ fun DeckScreen(
                             }
 
                             "specialty" -> item("deck_section_specialty_header") {
+                                val specialty = stringResource(
+                                    DeckMetaMaps.specialty[deck!!.deckMeta.specialty] ?: R.string.text_none
+                                )
                                 DeckCardsTypeHeader(
                                     textId = R.string.specialty,
+                                    additionalText = specialty,
                                     onClick = if (isOwner) {{
                                         deckViewModel.enterEditMode()
                                         navController.navigate("deck/cardsList/${if (deck!!.previousDeck == null) 2 else 0}") {
@@ -676,13 +684,13 @@ fun DeckScreen(
                             )
                         }
                     }
-                    stickyHeader("side_deck_section_header") {
+                    item("side_deck_section_header") {
                         Column {
                             Spacer(modifier = Modifier.height(8.dp))
                             DeckSectionHeader(R.string.side_deck)
                         }
                     }
-                    items(extraSlots, { it.card.id }, { it.card }) { item ->
+                    items(extraSlots, { "side_${it.card.id}" }, { it.card }) { item ->
                         val currentAmount = values?.slots?.get(item.card.id) ?: 0
                         val card = item.card
                         CardListItem(
@@ -713,7 +721,7 @@ fun DeckScreen(
                         )
                     }
                     if (deck!!.previousDeck != null && changedCards.isNotEmpty()){
-                        stickyHeader("deck_changes_section_header") {
+                        item("deck_changes_section_header") {
                             Column {
                                 Spacer(modifier = Modifier.height(8.dp))
                                 DeckSectionHeader(R.string.deck_changes)
@@ -724,7 +732,7 @@ fun DeckScreen(
                                 item("changes_header_$title") {
                                     DeckCardsTypeHeader(title)
                                 }
-                                items(cards, { it.card.id }, { it.card }) { cardWithCount ->
+                                items(cards, { "changes_${it.card.id}" }, { it.card }) { cardWithCount ->
                                     val card = cardWithCount.card
                                     CardListItem(
                                         tabooId = card.tabooId,
@@ -835,7 +843,11 @@ fun DeckSectionHeader(@StringRes textId: Int) {
 }
 
 @Composable
-fun DeckCardsTypeHeader(@StringRes textId: Int, onClick: (() -> Unit)? = null) {
+fun DeckCardsTypeHeader(
+    @StringRes textId: Int,
+    additionalText: String? = null,
+    onClick: (() -> Unit)? = null
+) {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
         Row(
             modifier = Modifier
@@ -846,11 +858,10 @@ fun DeckCardsTypeHeader(@StringRes textId: Int, onClick: (() -> Unit)? = null) {
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = stringResource(textId),
+                text = stringResource(textId) + if (additionalText != null) ": $additionalText" else "",
                 color = CustomTheme.colors.d30,
                 fontFamily = Jost,
                 fontWeight = FontWeight.Normal,
-                fontStyle = FontStyle.Italic,
                 fontSize = 18.sp,
                 lineHeight = 18.sp,
                 modifier = Modifier.weight(1f)
@@ -859,7 +870,7 @@ fun DeckCardsTypeHeader(@StringRes textId: Int, onClick: (() -> Unit)? = null) {
                 painterResource(R.drawable.edit_32dp),
                 contentDescription = null,
                 tint = CustomTheme.colors.m,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(24.dp)
             )
         }
         HorizontalDivider(color = CustomTheme.colors.l10)

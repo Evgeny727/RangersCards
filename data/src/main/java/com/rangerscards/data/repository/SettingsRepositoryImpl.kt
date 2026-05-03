@@ -6,6 +6,7 @@ import com.rangerscards.domain.exceptions.HandleAlreadyTakenException
 import com.rangerscards.domain.exceptions.InvalidHandleSizeException
 import com.rangerscards.domain.repository.FriendAction
 import com.rangerscards.domain.repository.SettingsRepository
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
@@ -16,13 +17,21 @@ class SettingsRepositoryImpl @Inject constructor(
     private val userSettingsRemoteDataSource: UserSettingsRemoteDataSource
 ) : SettingsRepository {
 
-    override fun startProfileSubscription(userId: String) =
-        userSettingsRemoteDataSource.startProfileSubscription(userId)
-            .map { response ->
-                runCatching {
-                    response.dataAssertNoErrors.toDomain()
+    override fun startUserSubscription(userId: String) =
+        combine(
+            userSettingsRemoteDataSource.startProfileSubscription(userId)
+                .map { response ->
+                    runCatching {
+                        response.dataAssertNoErrors.toDomain()
+                    }
+                },
+            userSettingsRemoteDataSource.startSettingsSubscription(userId)
+                .map { response ->
+                    runCatching {
+                        response.dataAssertNoErrors.toDomain()
+                    }
                 }
-            }
+        ) { profileResult, settingsResult -> profileResult to settingsResult }
 
     override suspend fun updateHandle(userId: String, handle: String) = runCatching {
         validateHandle(handle)
