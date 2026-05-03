@@ -210,6 +210,7 @@
     <string name="collection_text">Some campaign events may allow you to permanently swap cards from your deck with those from the collection.\nAfter selecting a new collection card and removing one from your deck, you can ‘return’ a card to the collection using the displaced cards tab.</string>
 
     //Deck Side Drawer
+    <string name="not_available_in_edit_mode">Not available in edit mode.</string>
     <string name="deck_section_header">Deck</string>
     <string name="deck_section_deck_id">Deck #%s</string>
     <string name="section_notes">Notes</string>
@@ -230,7 +231,7 @@
     <string name="options_section_delete_deck">Delete deck</string>
     <string name="options_section_delete_current_deck">Delete current version</string>
     <string name="options_section_delete_deck_all_versions">Delete all versions of deck</string>
-    <string name="options_section_delete_deck_warning">Error: This deck in campaign!</string>
+    <string name="options_section_upload_deck_in_campaign_warning">Error: This deck in campaign!</string>
     <string name="delete_deck_text">Are you sure you want to delete this deck? Version: %d.</string>
 
     //Deck history screen

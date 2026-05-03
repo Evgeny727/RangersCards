@@ -22,9 +22,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,17 +34,18 @@ import androidx.compose.ui.unit.sp
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
-import androidx.paging.compose.itemKey
 import com.rangerscards.R
-import com.rangerscards.data.local.card.CardDeckListItemProjection
 import com.rangerscards.ui.cards.components.CardListItem
+import com.rangerscards.ui.cards.components.CardsHeaderType
 import com.rangerscards.ui.components.RangersSearchOutlinedField
 import com.rangerscards.ui.components.RangersTopAppBar
 import com.rangerscards.ui.components.RowTypeDivider
 import com.rangerscards.ui.components.ScrollableRangersTabs
+import com.rangerscards.ui.deck.components.DeckCardListUiModel
 import com.rangerscards.ui.settings.components.RangersRadioButtonRow
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
+import com.rangerscards.utils.applyScaffoldPaddings
 import kotlinx.coroutines.flow.drop
 
 @Composable
@@ -55,7 +53,6 @@ fun DeckCardsSearchingListScreen(
     navigateUp: () -> Unit,
     deckViewModel: DeckViewModel,
     deckCardsViewModel: DeckCardsViewModel,
-    startingTypeIndex: Int,
     isDarkTheme: Boolean,
     navigateToCard: (Int) -> Unit,
     navigateToSort: () -> Unit,
@@ -64,12 +61,11 @@ fun DeckCardsSearchingListScreen(
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val values by deckViewModel.updatableValues.collectAsState()
-    val deck by deckViewModel.originalDeck.collectAsState()
+    val deck by deckViewModel.deck.collectAsState()
     val showAll by deckCardsViewModel.showAllSpoilers.collectAsState()
     val filterOptions by deckCardsViewModel.filterOptions.collectAsState()
     val typeIndex by deckCardsViewModel.typeIndex.collectAsState()
-    val cardsLazyItems = deckCardsViewModel.searchResults.collectAsLazyPagingItems()
-    var isTypeIndexSet by rememberSaveable { mutableStateOf(false) }
+    val cardsLazyItems = deckCardsViewModel.searchResultsWithHeaders.collectAsLazyPagingItems()
     // Remember a LazyListState to control and observe scroll position.
     val listState = rememberLazyListState()
 
@@ -82,23 +78,14 @@ fun DeckCardsSearchingListScreen(
                 listState.animateScrollToItem(0)
             }
     }
-    LaunchedEffect(deck, values?.sideSlots) {
-        if (deck == null || values == null) navigateUp()
-        else deckCardsViewModel.updateDeckInfo(deck!!, values!!.sideSlots.keys.toList())
-    }
-    LaunchedEffect(Unit) {
-        if (!isTypeIndexSet){
-            deckCardsViewModel.onTypeIndexChanged(startingTypeIndex)
-            isTypeIndexSet = true
-        }
+
+    LaunchedEffect(values?.sideSlots) {
+        deckCardsViewModel.updateDeckInfo(deck!!, values!!.sideSlots.keys.toList())
     }
 
     Scaffold(
         containerColor = CustomTheme.colors.l30,
-        modifier = modifier.padding(
-            top = contentPadding.calculateTopPadding(),
-            bottom = contentPadding.calculateBottomPadding()
-        ),
+        modifier = modifier.applyScaffoldPaddings(contentPadding),
         topBar = {
             RangersTopAppBar(
                 title = stringResource(R.string.editing_deck_screen_header),
@@ -138,13 +125,10 @@ fun DeckCardsSearchingListScreen(
             modifier = modifier
                 .background(CustomTheme.colors.l20)
                 .fillMaxSize()
-                .padding(
-                    top = innerPadding.calculateTopPadding(),
-                    bottom = innerPadding.calculateBottomPadding()
-                ),
+                .applyScaffoldPaddings(innerPadding),
         ) {
             ScrollableRangersTabs(
-                if (deck?.previousId != null) listOf(
+                if (deck?.previousDeck != null) listOf(
                     R.string.rewards_search_tab,
                     R.string.maladies_search_tab,
                     R.string.collection_search_tab,
@@ -192,7 +176,7 @@ fun DeckCardsSearchingListScreen(
                     }
                 }
                 item {
-                    if (deck?.previousId == null) Column(modifier = Modifier.fillMaxWidth()) {
+                    if (deck?.previousDeck == null) Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
                             text = stringResource(when(typeIndex) {
                                 0 -> R.string.personality_text
@@ -216,7 +200,7 @@ fun DeckCardsSearchingListScreen(
                     ) {
                         RangersRadioButtonRow(
                             text = stringResource(R.string.show_all_button),
-                            onValueChange = { deckCardsViewModel.updateShowAllSpoilers(!showAll) },
+                            onValueChange = deckCardsViewModel::updateShowAllSpoilers,
                             modifier = Modifier,
                             isSelected = showAll
                         )
@@ -235,60 +219,59 @@ fun DeckCardsSearchingListScreen(
                 }
                 items(
                     count = cardsLazyItems.itemCount,
-                    key = cardsLazyItems.itemKey(CardDeckListItemProjection::id),
+                    key = { index ->
+                        when (val item = cardsLazyItems.peek(index)) {
+                            is DeckCardListUiModel.CardItem -> item.card.id
+                            is DeckCardListUiModel.CategoryHeader -> "header-${item.category?.name}"
+                            null -> index
+                        }
+                    },
                     contentType = cardsLazyItems.itemContentType { it }
                 ) { index ->
                     val item = cardsLazyItems[index] ?: return@items
-                    val headerOptions = getHeaderOptions(
-                        filterOptions.sortOrder,
-                        index,
-                        if (index != 0) cardsLazyItems[index - 1] else null,
-                        item
-                    )
-                    if (headerOptions.first && (deck?.previousId == null || typeIndex in 0..2))
-                        RowTypeDivider(text = when(headerOptions.second) {
-                            "set_id" -> item.setName.toString()
-                            "equip" -> "${stringResource(R.string.equip_card_divider_header)}: ${
-                                if (item.equip == null) stringResource(R.string.text_none)
-                                else item.equip.toString()
+                    when (item) {
+                        is DeckCardListUiModel.CategoryHeader -> RowTypeDivider(text = when(item.category) {
+                            CardsHeaderType.SET_ID -> item.value.toString()
+                            CardsHeaderType.EQUIP -> "${stringResource(R.string.equip_card_divider_header)}: ${
+                                item.value ?: stringResource(R.string.text_none)
                             }"
-                            "type_name" -> item.typeName.toString()
-                            "cost" -> "${stringResource(R.string.cost_filter_header)}: ${
-                                when (item.cost) {
+                            CardsHeaderType.TYPE_NAME -> item.value.toString()
+                            CardsHeaderType.COST -> "${stringResource(R.string.cost_filter_header)}: ${
+                                when (item.value) {
                                     null -> stringResource(R.string.text_none)
-                                    -2 -> "X"
-                                    else -> item.cost.toString()
+                                    "-2" -> "X"
+                                    else -> item.value
                                 }
                             }"
-                            "aspect_id" -> "${stringResource(R.string.aspect_card_divider_header)}: ${
-                                if (item.aspectId == null) stringResource(R.string.text_none)
-                                else item.aspectShortName
+                            CardsHeaderType.ASPECT_ID -> "${stringResource(R.string.aspect_card_divider_header)}: ${
+                                item.value ?: stringResource(R.string.text_none)
                             }"
                             else -> ""
                         })
-                    val amount = values?.slots?.get(item.code) ?: 0
-                    CardListItem(
-                        tabooId = item.tabooId,
-                        aspectId = item.aspectId,
-                        aspectShortName = item.aspectShortName,
-                        cost = item.cost,
-                        imageSrc = item.realImageSrc,
-                        approachConflict = item.approachConflict,
-                        approachConnection = item.approachConnection,
-                        approachReason = item.approachReason,
-                        approachExploration = item.approachExploration,
-                        name = item.name.toString(),
-                        typeName = item.typeName,
-                        traits = item.traits,
-                        level = item.level,
-                        isDarkTheme = isDarkTheme,
-                        currentAmount = amount,
-                        onRemoveClick = { deckViewModel.removeCard(item.code, item.setId) },
-                        onRemoveEnabled = amount > 0,
-                        onAddClick = { deckViewModel.addCard(item.code) },
-                        onAddEnabled = amount != item.deckLimit,
-                        onClick = { navigateToCard.invoke(index) }
-                    )
+                        is DeckCardListUiModel.CardItem -> {
+                            val amount = values?.slots?.get(item.card.code) ?: 0
+                            CardListItem(
+                                tabooId = item.card.tabooId,
+                                aspect = item.card.aspect,
+                                cost = item.card.cost,
+                                imageSrc = item.card.realImageSrc,
+                                approaches = item.card.approaches,
+                                name = item.card.name.toString(),
+                                typeName = item.card.typeName,
+                                traits = item.card.traits,
+                                level = item.card.level,
+                                isDarkTheme = isDarkTheme,
+                                currentAmount = amount,
+                                onRemoveClick = {
+                                    deckViewModel.removeCard(item.card.code, item.card.setId)
+                                },
+                                onRemoveEnabled = amount > 0,
+                                onAddClick = { deckViewModel.addCard(item.card.code) },
+                                onAddEnabled = amount != item.card.deckLimit,
+                                onClick = { navigateToCard(index) }
+                            )
+                        }
+                    }
                 }
 
                 // Handle load states: initial load and pagination load errors/loading.
@@ -331,42 +314,5 @@ fun DeckCardsSearchingListScreen(
                 }
             }
         }
-    }
-}
-
-private fun getHeaderOptions(
-    sortOrder: List<String>,
-    index: Int,
-    previousItem: CardDeckListItemProjection?,
-    currentItem: CardDeckListItemProjection
-): Pair<Boolean, String?> {
-    return when(sortOrder.first()) {
-        "equip" -> {
-            (if (index == 0) true
-            else previousItem?.equip != currentItem.equip) to "equip"
-        }
-        "set_id" -> {
-            (if (index == 0) true
-            else previousItem?.setName != currentItem.setName) to "set_id"
-        }
-        "set_type_id" -> {
-            (if (sortOrder.indexOf("set_id") == 1) {
-                if (index == 0) true
-                else previousItem?.setName != currentItem.setName
-            } else false) to "set_id"
-        }
-        "type_name" -> {
-            (if (index == 0) true
-            else previousItem?.typeName != currentItem.typeName) to "type_name"
-        }
-        "cost" -> {
-            (if (index == 0) true
-            else previousItem?.cost != currentItem.cost) to "cost"
-        }
-        "aspect_id" -> {
-            (if (index == 0) true
-            else previousItem?.aspectId != currentItem.aspectId) to "aspect_id"
-        }
-        else -> false to null
     }
 }

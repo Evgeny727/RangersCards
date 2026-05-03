@@ -214,7 +214,7 @@
     <string name="options_section_delete_deck">Eliminar mazo</string>
     <string name="options_section_delete_current_deck">Eliminar versión actual</string>
     <string name="options_section_delete_deck_all_versions">Eliminar todas las versiones del mazo</string>
-    <string name="options_section_delete_deck_warning">Error: ¡Este mazo está en una campaña!</string>
+    <string name="options_section_upload_deck_in_campaign_warning">Error: ¡Este mazo está en una campaña!</string>
     <string name="delete_deck_text">¿Seguro que quieres eliminar este mazo? Version: %d.</string>
 
     //Campaigns screen

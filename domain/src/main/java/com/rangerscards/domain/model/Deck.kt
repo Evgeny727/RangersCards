@@ -1,8 +1,9 @@
 package com.rangerscards.domain.model
 
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.PersistentMap
+import kotlinx.collections.immutable.persistentMapOf
 
 data class Deck(
     val id: String,
@@ -41,26 +42,21 @@ data class DeckCampaignInfo(
 
 data class PreviousDeck(
     val id: String,
-    val slots: ImmutableList<DeckSlot>,
-    val sideSlots: ImmutableList<DeckSlot>,
-)
-
-data class DeckSlot(
-    val id: String,
-    val count: Int
+    val slots: ImmutableMap<String, Int>,
+    val sideSlots: ImmutableMap<String, Int>,
 )
 
 data class DeckChanges(
-    val addedCards: ImmutableList<DeckSlot> = persistentListOf(),
-    val removedCards: ImmutableList<DeckSlot> = persistentListOf(),
-    val addedCollectionCards: ImmutableList<DeckSlot> = persistentListOf(),
-    val returnedCollectionCards: ImmutableList<DeckSlot> = persistentListOf(),
+    val addedCards: ImmutableMap<String, Int> = persistentMapOf(),
+    val removedCards: ImmutableMap<String, Int> = persistentMapOf(),
+    val addedCollectionCards: ImmutableMap<String, Int> = persistentMapOf(),
+    val returnedCollectionCards: ImmutableMap<String, Int> = persistentMapOf(),
 )
 
 data class OftenUpdatableDeckValues(
-    val slots: PersistentList<DeckSlot>,
-    val sideSlots: PersistentList<DeckSlot>,
-    val extraSlots: PersistentList<DeckSlot>,
+    val slots: PersistentMap<String, Int>,
+    val sideSlots: PersistentMap<String, Int>,
+    val extraSlots: PersistentMap<String, Int>,
     val awa: Int,
     val spi: Int,
     val fit: Int,
@@ -71,7 +67,12 @@ data class DeckInfo(
     val isUpgrade: Boolean,
     val background: String,
     val specialty: String,
-    val rewards: ImmutableList<String>,
-    val extraSlots: ImmutableList<String>,
+    val rewards: List<String>,
+    val extraSlots: List<String>,
     val taboo: String?,
+)
+
+data class CardWithCount(
+    val card: CardDeckListItem,
+    val count: Int
 )

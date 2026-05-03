@@ -20,13 +20,14 @@ import com.rangerscards.domain.model.Deck
 import com.rangerscards.domain.model.DeckCampaignInfo
 import com.rangerscards.domain.model.DeckListItem
 import com.rangerscards.domain.model.DeckMeta
-import com.rangerscards.domain.model.DeckSlot
 import com.rangerscards.domain.repository.DecksRepository
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
@@ -105,7 +106,8 @@ class DecksRepositoryImpl @Inject constructor(
     override suspend fun createDeck(
         uploaded: Boolean,
         name: String,
-        slots: ImmutableList<DeckSlot>,
+        slots: ImmutableMap<String, Int>,
+        extraSlots: ImmutableMap<String, Int>,
         meta: DeckMeta,
         tabooSetId: String?,
         awa: Int?,
@@ -122,7 +124,7 @@ class DecksRepositoryImpl @Inject constructor(
                 spi = spi ?: 3,
                 meta = meta.toJsonDeckMeta(),
                 slots = slots.toJsonDeckSlots(),
-                extraSlots = persistentListOf<DeckSlot>().toJsonDeckSlots(),
+                extraSlots = extraSlots.toJsonDeckSlots(),
                 tabooSetId = tabooSetId
             ).dataAssertNoErrors.deck!!.deck.toDbDeck()
             deckDao.insertDeck(newDeck)
@@ -133,6 +135,7 @@ class DecksRepositoryImpl @Inject constructor(
                 id = uuid,
                 name = name,
                 slots = slots.toJsonDeckSlots(),
+                extraSlots = extraSlots.toJsonDeckSlots(),
                 meta = meta.toJsonDeckMeta(),
                 tabooSetId = tabooSetId,
                 awa = awa,
@@ -148,7 +151,8 @@ class DecksRepositoryImpl @Inject constructor(
     private fun createLocalDeck(
         id: String,
         name: String,
-        slots: JsonElement?,
+        slots: JsonElement,
+        extraSlots: JsonElement,
         meta: JsonElement,
         tabooSetId: String?,
         awa: Int?,
@@ -163,8 +167,8 @@ class DecksRepositoryImpl @Inject constructor(
             userId = "",
             tabooSetId = tabooSetId,
             userHandle = null,
-            slots = slots ?: JsonObject(emptyMap()),
-            sideSlots = JsonObject(emptyMap()),
+            slots = slots,
+            sideSlots = extraSlots,
             extraSlots = JsonObject(emptyMap()),
             version = 1,
             name = name,
@@ -186,8 +190,8 @@ class DecksRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun getDeckById(id: String): Deck? =
-        deckDao.getDeckById(id)?.toDomain()
+    override fun getDeckByIdFlow(id: String): Flow<Deck> =
+        deckDao.getDeckByIdFlow(id).mapNotNull { it?.toDomain() }
 
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun upgradeDeck(id: String, uploaded: Boolean) = runCatching {
@@ -272,9 +276,7 @@ class DecksRepositoryImpl @Inject constructor(
                 extraSlots = deck.oftenUpdatableDeckValues.extraSlots.toJsonDeckSlots()
             ).dataAssertNoErrors.update_rangers_deck_by_pk!!.deck.toDbDeck()
             deckDao.updateDeck(updatedDeck)
-        } else {
-            deckDao.updateDeck(deck.toDbDeck())
-        }
+        } else deckDao.updateDeck(deck.toDbDeck())
     }
 
     override suspend fun saveDeckTabooSet(id: String, tabooId: String?, uploaded: Boolean) =

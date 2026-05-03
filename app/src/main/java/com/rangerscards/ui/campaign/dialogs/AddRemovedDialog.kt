@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,7 +24,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -40,36 +38,28 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import com.google.firebase.auth.FirebaseUser
 import com.rangerscards.R
 import com.rangerscards.ui.campaign.CampaignViewModel
 import com.rangerscards.ui.components.RangersDialogWithContent
 import com.rangerscards.ui.components.SquareButton
-import com.rangerscards.ui.settings.components.RangersBaseCard
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
-import kotlinx.coroutines.launch
 
 @Composable
 fun AddRemovedDialog(
     campaignViewModel: CampaignViewModel,
     isDarkTheme: Boolean,
     onBack: () -> Unit,
-    user: FirebaseUser?
 ) {
-    var showLoadingDialog by rememberSaveable { mutableStateOf(false) }
     var showDialogPicker by rememberSaveable { mutableStateOf(false) }
     var name by rememberSaveable { mutableStateOf("") }
     var selectedSetId by rememberSaveable { mutableStateOf("") }
-    val coroutine = rememberCoroutineScope()
     val allRemovedSets = remember { campaignViewModel.getAllRemovedSets() }
     val isLegitAdding by remember { derivedStateOf {
         selectedSetId.isNotEmpty() && name.isNotEmpty()
     } }
     RangersDialogWithContent(
-        header = stringResource(id = R.string.remove_card_button),
+        headerId = R.string.remove_card_button,
         isDarkTheme = isDarkTheme,
         onBack = onBack
     ) {
@@ -171,80 +161,48 @@ fun AddRemovedDialog(
                 containerColor = CustomTheme.colors.d10,
                 disabledContainerColor = CustomTheme.colors.d10.copy(alpha = 0.3f)
             ),
-            onClick = { coroutine.launch { showLoadingDialog = true
-                campaignViewModel.addCampaignRemoved(selectedSetId, name, user)
-            }.invokeOnCompletion { showLoadingDialog = false
-                onBack.invoke()
-            } },
+            onClick = { campaignViewModel.addCampaignRemoved(selectedSetId, name); onBack() },
             isEnabled = isLegitAdding,
             modifier = Modifier.padding(8.dp)
         )
     }
-    if (showLoadingDialog) Dialog(
-        onDismissRequest = { showLoadingDialog = false },
-        properties = DialogProperties(
-            dismissOnBackPress = false,
-            dismissOnClickOutside = false,
-            usePlatformDefaultWidth = false
-        )
+    if (showDialogPicker) RangersDialogWithContent(
+        headerId = R.string.remove_card_button,
+        isDarkTheme = isDarkTheme,
+        onBack = { showDialogPicker = false },
     ) {
-        RangersBaseCard(
-            isDarkTheme = isDarkTheme,
-            labelIdRes = R.string.saving_changes_header
+        LazyColumn(
+            modifier = Modifier.sizeIn(maxHeight = 400.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                CircularProgressIndicator(modifier = Modifier.size(32.dp), color = CustomTheme.colors.m)
-            }
-        }
-    }
-    if (showDialogPicker) Dialog(
-        onDismissRequest = { showDialogPicker = false },
-        properties = DialogProperties(
-            dismissOnBackPress = true,
-            dismissOnClickOutside = true,
-            usePlatformDefaultWidth = false
-        )
-    ) {
-        RangersBaseCard(
-            isDarkTheme = isDarkTheme,
-            labelIdRes = R.string.remove_card_button,
-            modifier = Modifier.sizeIn(maxHeight = 400.dp)
-        ) {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                allRemovedSets.forEach { (key, value) ->
-                    item(key) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().clickable {
-                                selectedSetId = key
-                                showDialogPicker = false
-                            },
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            if (value.first != null) Icon(
-                                painterResource(value.first!!),
-                                contentDescription = null,
-                                tint = Color.Unspecified,
-                                modifier = Modifier.size(40.dp)
-                            )
-                            Text(
-                                text = stringResource(value.second),
-                                color = CustomTheme.colors.d30,
-                                fontFamily = Jost,
-                                fontWeight = FontWeight.Normal,
-                                fontSize = 16.sp,
-                                lineHeight = 18.sp,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        HorizontalDivider(color = CustomTheme.colors.l10)
+            allRemovedSets.forEach { (key, value) ->
+                item(key) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().clickable {
+                            selectedSetId = key
+                            showDialogPicker = false
+                        },
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (value.first != null) Icon(
+                            painterResource(value.first!!),
+                            contentDescription = null,
+                            tint = Color.Unspecified,
+                            modifier = Modifier.size(40.dp)
+                        )
+                        Text(
+                            text = stringResource(value.second),
+                            color = CustomTheme.colors.d30,
+                            fontFamily = Jost,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 16.sp,
+                            lineHeight = 18.sp,
+                            modifier = Modifier.weight(1f)
+                        )
                     }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    HorizontalDivider(color = CustomTheme.colors.l10)
                 }
             }
         }

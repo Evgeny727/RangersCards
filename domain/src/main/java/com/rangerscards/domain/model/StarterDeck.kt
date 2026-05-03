@@ -1,6 +1,6 @@
 package com.rangerscards.domain.model
 
-import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
 
 data class StarterDeck(
     val meta: DeckMeta,
@@ -8,5 +8,5 @@ data class StarterDeck(
     val spi: Int,
     val awa: Int,
     val fit: Int,
-    val slots: ImmutableList<DeckSlot>,
+    val slots: ImmutableMap<String, Int>,
 )

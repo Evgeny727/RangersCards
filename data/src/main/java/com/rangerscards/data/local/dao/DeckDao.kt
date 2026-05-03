@@ -10,6 +10,7 @@ import androidx.room.Update
 import androidx.room.Upsert
 import com.rangerscards.data.local.deck.Deck
 import com.rangerscards.data.local.deck.DeckListItemProjection
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface DeckDao {
@@ -68,7 +69,10 @@ interface DeckDao {
     }
 
     @Query("SELECT * FROM deck WHERE id = :id")
-    suspend fun getDeckById(id: String): Deck?
+    fun getDeckById(id: String): Deck?
+
+    @Query("SELECT * FROM deck WHERE id = :id")
+    fun getDeckByIdFlow(id: String): Flow<Deck?>
 
     @Query("SELECT * FROM deck WHERE id in (:ids)")
     suspend fun getDecksById(ids: List<String>): List<Deck>

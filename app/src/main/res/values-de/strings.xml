@@ -209,7 +209,7 @@
     <string name="options_section_delete_deck">Deck löschen</string>
     <string name="options_section_delete_current_deck">Aktuelle Version löschen</string>
     <string name="options_section_delete_deck_all_versions">Alle Versionen des Decks löschen</string>
-    <string name="options_section_delete_deck_warning">Fehler: Deck wird in einer Kampagne verwendet!</string>
+    <string name="options_section_upload_deck_in_campaign_warning">Fehler: Deck wird in einer Kampagne verwendet!</string>
     <string name="delete_deck_text">Bist Du sicher, dass Du dieses Deck löschen willst? Version: %d.</string>
 
     //Campaigns screen

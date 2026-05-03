@@ -3,7 +3,7 @@ package com.rangerscards.domain.usecase
 import com.rangerscards.domain.model.DeckMeta
 import com.rangerscards.domain.model.StarterDeck
 import com.rangerscards.domain.repository.DecksRepository
-import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 
 class CreateDeckUseCase(
     private val decksRepository: DecksRepository,
@@ -33,7 +33,7 @@ class CreateDeckUseCase(
         decksRepository.createDeck(
             uploaded = isUploading,
             name = name.ifEmpty { "$backgroundLocalized - $specialtyLocalized" },
-            slots = persistentListOf(),
+            slots = persistentMapOf(),
             meta = deckMeta!!,
             tabooSetId = tabooSetId,
         )

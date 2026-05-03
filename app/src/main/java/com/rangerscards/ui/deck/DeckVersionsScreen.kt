@@ -1,6 +1,5 @@
 package com.rangerscards.ui.deck
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,7 +18,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -29,25 +27,24 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.rangerscards.R
 import com.rangerscards.ui.components.RangersTopAppBar
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
+import com.rangerscards.utils.applyScaffoldPaddings
 
 @Composable
 fun DeckVersionsScreen(
     navigateUp: () -> Unit,
     navigateToDeck: (String) -> Unit,
-    deckViewModel: DeckViewModel,
     contentPadding: PaddingValues,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    deckVersionsViewModel: DeckVersionsViewModel = hiltViewModel()
 ) {
     Scaffold(
         containerColor = CustomTheme.colors.l30,
-        modifier = modifier.padding(
-            top = contentPadding.calculateTopPadding(),
-            bottom = contentPadding.calculateBottomPadding()
-        ),
+        modifier = modifier.applyScaffoldPaddings(contentPadding),
         topBar = {
             RangersTopAppBar(
                 title = stringResource(R.string.campaign_section_deck_history),
@@ -58,14 +55,7 @@ fun DeckVersionsScreen(
             )
         },
     ) { innerPadding ->
-        val currentDeck by deckViewModel.originalDeck.collectAsState()
-        val versions by deckViewModel.deckVersionIds.collectAsState()
-
-        LaunchedEffect(currentDeck?.id) {
-            if (currentDeck != null) {
-                deckViewModel.getAllDeckVersions(currentDeck!!.id)
-            } else navigateUp()
-        }
+        val versions by deckVersionsViewModel.deckVersionIds.collectAsState()
         if (versions.isEmpty()) Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -86,19 +76,15 @@ fun DeckVersionsScreen(
         else LazyColumn(
             modifier = modifier
                 .fillMaxSize()
-                .padding(
-                    top = innerPadding.calculateTopPadding(),
-                    bottom = innerPadding.calculateBottomPadding()
-                ),
+                .applyScaffoldPaddings(innerPadding),
             contentPadding = PaddingValues(8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
            items(versions, key = { it }) { id ->
-               val isCurrentDeck = currentDeck?.id == id
+               val isCurrentDeck = deckVersionsViewModel.deckId == id
 
                Button(
-                   onClick = { deckViewModel.clearDeckVersions()
-                       navigateToDeck(id) },
+                   onClick = { navigateToDeck(id) },
                    modifier = Modifier.fillMaxWidth(),
                    enabled = !isCurrentDeck,
                    shape = CustomTheme.shapes.small,

@@ -11,6 +11,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.rangerscards.R
 import com.rangerscards.domain.model.User
@@ -38,7 +39,7 @@ fun SettingsCollectionScreen(
             val selected = remember(userCollection) { userCollection.contains("loa") }
             Column {
                 RangersRadioButtonRow(
-                    textId = R.string.loa_expansion,
+                    text = stringResource(R.string.loa_expansion),
                     isSelected = selected,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                 ) { value ->
@@ -54,7 +55,7 @@ fun SettingsCollectionScreen(
             val selected = remember(userCollection) { userCollection.contains("sotv") }
             Column {
                 RangersRadioButtonRow(
-                    textId = R.string.sotv_expansion,
+                    text = stringResource(R.string.sotv_expansion),
                     isSelected = selected,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                 ) { value ->
@@ -70,7 +71,7 @@ fun SettingsCollectionScreen(
             val selected = remember(userCollection) { userCollection.contains("sib") }
             Column {
                 RangersRadioButtonRow(
-                    textId = R.string.spire_in_bloom,
+                    text = stringResource(R.string.spire_in_bloom),
                     isSelected = selected,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                 ) { value ->
@@ -86,7 +87,7 @@ fun SettingsCollectionScreen(
             val selected = remember(userCollection) { userCollection.contains("sos") }
             Column {
                 RangersRadioButtonRow(
-                    textId = R.string.shadow_of_the_storm,
+                    text = stringResource(R.string.shadow_of_the_storm),
                     isSelected = selected,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                 ) { value ->

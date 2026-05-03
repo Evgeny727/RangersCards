@@ -5,8 +5,9 @@ import com.rangerscards.domain.model.Deck
 import com.rangerscards.domain.model.DeckCampaignInfo
 import com.rangerscards.domain.model.DeckListItem
 import com.rangerscards.domain.model.DeckMeta
-import com.rangerscards.domain.model.DeckSlot
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.flow.Flow
 
 
@@ -25,7 +26,8 @@ interface DecksRepository {
     suspend fun createDeck(
         uploaded: Boolean,
         name: String,
-        slots: ImmutableList<DeckSlot>,
+        slots: ImmutableMap<String, Int>,
+        extraSlots: ImmutableMap<String, Int> = persistentMapOf(),
         meta: DeckMeta,
         tabooSetId: String?,
         awa: Int? = null,
@@ -34,7 +36,7 @@ interface DecksRepository {
         foc: Int? = null,
         ): Result<String>
 
-    suspend fun getDeckById(id: String): Deck?
+    fun getDeckByIdFlow(id: String): Flow<Deck>
 
     suspend fun upgradeDeck(id: String, uploaded: Boolean): Result<String>
 

@@ -26,10 +26,11 @@ import androidx.compose.ui.unit.sp
 import com.rangerscards.R
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
+import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 fun FullDeckStatsItem(
-    stats: List<Int>,
+    stats: ImmutableList<Int>,
     isDarkTheme: Boolean,
     isEditing: Boolean,
     isUpgrade: Boolean,

@@ -63,7 +63,9 @@ class CardsRepositoryImpl @Inject constructor(
         }
 
     override fun getDeckCardsByIdFlow(ids: List<String>, tabooId: String?) =
-        cardDao.getCardsByCodes(ids, tabooId).map { list -> list.map { it.toDomain() } }
+        cardDao.getCardsByCodes(ids, tabooId).map { list ->
+            list.map { it.toDomain() }.toImmutableList()
+        }
 
     override suspend fun getChangedDeckCardsById(ids: List<String>, tabooId: String?) =
         cardDao.getChangedCardsByCodes(ids, tabooId).map { it.toDomain() }

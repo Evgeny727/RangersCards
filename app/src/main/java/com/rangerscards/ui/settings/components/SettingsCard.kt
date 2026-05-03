@@ -87,8 +87,7 @@ fun SettingsCard(
                 trailingIcon = R.drawable.edit_32dp,
                 headerId = R.string.theme_header,
                 text = currentThemeText,
-                { openThemeDialog = true }
-            )
+            ) { openThemeDialog = true }
         }
         if (language != "en") RangersRadioButtonRow(
             text = stringResource(id = R.string.english_search_results_radio_button),

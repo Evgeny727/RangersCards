@@ -3,8 +3,7 @@ package com.rangerscards.data.mapper
 
 import com.rangerscards.domain.model.Deck
 import com.rangerscards.domain.model.DeckMeta
-import com.rangerscards.domain.model.DeckSlot
-import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
@@ -63,10 +62,10 @@ fun DeckMeta.toJsonDeckMeta(): JsonElement =
 
 
 /**
- * Extension function to convert [ImmutableList] of [DeckSlot] to [JsonElement]
+ * Extension function to convert [ImmutableMap] of DeckSlots to [JsonElement]
  */
-fun ImmutableList<DeckSlot>.toJsonDeckSlots(): JsonElement = with(this) {
+fun ImmutableMap<String, Int>.toJsonDeckSlots(): JsonElement = with(this) {
     buildJsonObject {
-        this@with.forEach { (key, value) -> put(key, value) }
+        this@with.forEach { put(it.key, it.value) }
     }
 }

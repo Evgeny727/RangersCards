@@ -34,7 +34,7 @@ interface CardsRepository {
 
     fun getRoleCardsByIdFlow(ids: List<String>): Flow<List<RoleCard>>
 
-    fun getDeckCardsByIdFlow(ids: List<String>, tabooId: String?): Flow<List<CardDeckListItem>>
+    fun getDeckCardsByIdFlow(ids: List<String>, tabooId: String?): Flow<ImmutableList<CardDeckListItem>>
 
     suspend fun getChangedDeckCardsById(ids: List<String>, tabooId: String?): List<CardDeckListItem>
 

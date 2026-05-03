@@ -178,6 +178,7 @@
     <string name="specialty_text">Выберите 5 уникальных карт из карт вашей специализации.</string>
     <string name="outside_interest_text">Выберите 1 карту из любой квалификации или специализации как ваше хобби.\nПримечание: карты из выбранной вами специальности/квалификации здесь не показаны, но ваше хобби может быть из выбранного вами класса, если вы используете другие вкладки для его выбора.</string>
     <string name="collection_text">Некоторые события кампании могут позволить вам навсегда поменять карты из своей колоды на карты из коллекции.\nВыбрав новую карту коллекции и удалив одну из своей колоды, вы можете "вернуть" ее в коллекцию, используя вкладку отложенные карты.</string>
+    <string name="not_available_in_edit_mode">Не доступно в режиме редактирования.</string>
     <string name="deck_section_header">Колода</string>
     <string name="deck_section_deck_id">Колода №%s</string>
     <string name="section_notes">Заметки</string>
@@ -199,7 +200,7 @@
     <string name="options_section_delete_deck">Удалить колоду</string>
     <string name="options_section_delete_current_deck">Удалить текущую версию</string>
     <string name="options_section_delete_deck_all_versions">Удалить все версии</string>
-    <string name="options_section_delete_deck_warning">Ошибка: Эта колода находится в кампании!</string>
+    <string name="options_section_upload_deck_in_campaign_warning">Ошибка: Эта колода находится в кампании!</string>
     <string name="delete_deck_text">Вы уверены, что хотите удалить эту колоду? Версия: %d.</string>
     <string name="campaigns_current_day">День %d</string>
     <string name="search_campaigns">Поиск по кампаниям</string>

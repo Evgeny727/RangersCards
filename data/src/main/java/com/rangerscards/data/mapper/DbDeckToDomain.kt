@@ -5,13 +5,12 @@ import com.rangerscards.domain.model.Deck
 import com.rangerscards.domain.model.DeckCampaignInfo
 import com.rangerscards.domain.model.DeckListItem
 import com.rangerscards.domain.model.DeckMeta
-import com.rangerscards.domain.model.DeckSlot
 import com.rangerscards.domain.model.OftenUpdatableDeckValues
 import com.rangerscards.domain.model.PlayerInfo
 import com.rangerscards.domain.model.PreviousDeck
-import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.collections.immutable.toPersistentList
+import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
@@ -91,10 +90,5 @@ internal fun JsonElement.toDeckMeta(): DeckMeta =
         problems = jsonObject["problem"]?.jsonArray?.map { it.jsonPrimitive.content }?.toImmutableList()
     )
 
-internal fun JsonElement.toDeckSlots(): PersistentList<DeckSlot> =
-    jsonObject.map {
-        DeckSlot(
-            id = it.key,
-            count = it.value.jsonPrimitive.int
-        )
-    }.toPersistentList()
+internal fun JsonElement.toDeckSlots(): PersistentMap<String, Int> =
+    jsonObject.mapValues { it.value.jsonPrimitive.int }.toPersistentMap()

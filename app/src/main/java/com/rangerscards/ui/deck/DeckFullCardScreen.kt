@@ -15,7 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,36 +35,31 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rangerscards.R
-import com.rangerscards.ui.cards.CardsViewModel
 import com.rangerscards.ui.cards.components.FullCard
 import com.rangerscards.ui.components.RangersTopAppBar
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
+import com.rangerscards.utils.applyScaffoldPaddings
 
 @Composable
 fun DeckFullCardScreen(
     navigateUp: () -> Unit,
     deckViewModel: DeckViewModel,
-    cardsViewModel: CardsViewModel,
-    cardId: String,
-    isEditing: Boolean,
+    cardCode: String,
     isDarkTheme: Boolean,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
-    val deck by deckViewModel.originalDeck.collectAsState()
-    cardsViewModel.setTabooId(deck?.tabooSetId != null)
-    val fullCard by cardsViewModel.getCardById(cardId).collectAsState(null)
+    val deck by deckViewModel.deck.collectAsState()
+    val deckUiState by deckViewModel.deckUiState.collectAsState()
+    val fullCard by deckViewModel.getCardById(cardCode, deck?.tabooSetId != null).collectAsState(null)
     val values by deckViewModel.updatableValues.collectAsState()
-    val slots = deckViewModel.slotsCardsFlow.collectAsState(null)
-    val slotInfo = slots.value?.firstOrNull { it.code == cardId }
-    val isInExtraCards = (values?.extraSlots?.get(cardId) ?: 0) >= 1
+    val slots by deckViewModel.slotsCards.collectAsState()
+    val slotInfo = slots.firstOrNull { it.code == cardCode }
+    val isInExtraCards = (values?.extraSlots?.get(cardCode) ?: 0) >= 1
     Scaffold(
         containerColor = CustomTheme.colors.l30,
-        modifier = modifier.padding(
-            top = contentPadding.calculateTopPadding(),
-            bottom = contentPadding.calculateBottomPadding()
-        ),
+        modifier = modifier.applyScaffoldPaddings(contentPadding),
         topBar = {
             RangersTopAppBar(
                 title = "",
@@ -77,10 +73,7 @@ fun DeckFullCardScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(
-                    top = innerPadding.calculateTopPadding(),
-                    bottom = innerPadding.calculateBottomPadding()
-                ),
+                .applyScaffoldPaddings(innerPadding),
         ) {
             if (fullCard == null) Column(
                 verticalArrangement = Arrangement.Center,
@@ -94,44 +87,31 @@ fun DeckFullCardScreen(
                     color = CustomTheme.colors.m
                 )
             } else {
-                LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
-                    item {
-                        FullCard(
-                            tabooId = fullCard!!.tabooId,
-                            aspectId = fullCard!!.aspectId,
-                            aspectShortName = fullCard!!.aspectShortName,
-                            cost = fullCard!!.cost,
-                            imageSrc = fullCard!!.imageSrc,
-                            realImageSrc = fullCard!!.realImageSrc,
-                            name = fullCard!!.name,
-                            presence = fullCard!!.presence,
-                            approachConflict = fullCard!!.approachConflict,
-                            approachReason = fullCard!!.approachReason,
-                            approachExploration = fullCard!!.approachExploration,
-                            approachConnection = fullCard!!.approachConnection,
-                            typeName = fullCard!!.typeName,
-                            typeId = fullCard!!.typeId,
-                            traits = fullCard!!.traits,
-                            equip = fullCard!!.equip,
-                            harm = fullCard!!.harm,
-                            progress = fullCard!!.progress,
-                            tokenPlurals = fullCard!!.tokenPlurals,
-                            tokenCount = fullCard!!.tokenCount,
-                            text = fullCard!!.text,
-                            flavor = fullCard!!.flavor,
-                            level = fullCard!!.level,
-                            setName = fullCard!!.setName,
-                            setSize = fullCard!!.setSize,
-                            setPosition = fullCard!!.setPosition,
-                            subsetSize = fullCard!!.subsetSize,
-                            subsetPosition = fullCard!!.subsetPosition,
-                            packShortName = fullCard!!.packShortName,
-                            sunChallenge = fullCard!!.sunChallenge,
-                            mountainChallenge = fullCard!!.mountainChallenge,
-                            crestChallenge = fullCard!!.crestChallenge,
-                            isDarkTheme = isDarkTheme
-                        )
-                    }
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    FullCard(
+                        tabooId = fullCard!!.tabooId,
+                        aspect = fullCard!!.aspect,
+                        cost = fullCard!!.cost,
+                        image = fullCard!!.image,
+                        name = fullCard!!.name,
+                        presence = fullCard!!.presence,
+                        approaches = fullCard!!.approaches,
+                        type = fullCard!!.type,
+                        traits = fullCard!!.traits,
+                        equip = fullCard!!.equip,
+                        harm = fullCard!!.harm,
+                        progress = fullCard!!.progress,
+                        tokens = fullCard!!.tokens,
+                        text = fullCard!!.text,
+                        flavor = fullCard!!.flavor,
+                        level = fullCard!!.level,
+                        set = fullCard!!.set,
+                        subset = fullCard!!.subset,
+                        packShortName = fullCard!!.packShortName,
+                        challenges = fullCard!!.challenges,
+                        isDarkTheme = isDarkTheme
+                    )
+                    if (slotInfo?.realTraits != null) Spacer(modifier = Modifier.height(80.dp))
                 }
                 // Overlay custom FABs in the bottom-end corner
                 if (slotInfo?.realTraits != null) Row(
@@ -140,11 +120,11 @@ fun DeckFullCardScreen(
                         .padding(16.dp)
                         .height(IntrinsicSize.Max)
                 ) {
-                    if (isEditing) {
+                    if (deckUiState is DeckUiState.Editing) {
                         IconButton(
                             onClick = {
-                                if (isInExtraCards) deckViewModel.removeExtraCard(cardId)
-                                else deckViewModel.addExtraCard(cardId)
+                                if (isInExtraCards) deckViewModel.removeExtraCard(cardCode)
+                                else deckViewModel.addExtraCard(cardCode)
                             },
                             modifier = Modifier.size(62.dp),
                             colors = IconButtonDefaults.iconButtonColors().copy(containerColor = CustomTheme.colors.d30)
@@ -166,10 +146,10 @@ fun DeckFullCardScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             IconButton(
-                                onClick = { deckViewModel.removeCard(cardId, slotInfo.setId) },
+                                onClick = { deckViewModel.removeCard(cardCode, slotInfo.setId) },
                                 colors = IconButtonDefaults.iconButtonColors().copy(containerColor = Color.Transparent),
                                 modifier = Modifier.size(32.dp),
-                                enabled = (values?.slots?.get(cardId) ?: 0) > 0
+                                enabled = (values?.slots?.get(cardCode) ?: 0) > 0
                             ) {
                                 Icon(
                                     painterResource(id = R.drawable.remove_32dp),
@@ -189,7 +169,7 @@ fun DeckFullCardScreen(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = "×${values?.slots?.get(cardId) ?: 0}",
+                                        text = "×${values?.slots?.get(cardCode) ?: 0}",
                                         color = CustomTheme.colors.d10,
                                         fontFamily = Jost,
                                         fontWeight = FontWeight.Normal,
@@ -198,10 +178,10 @@ fun DeckFullCardScreen(
                                 }
                             }
                             IconButton(
-                                onClick = { deckViewModel.addCard(cardId) },
+                                onClick = { deckViewModel.addCard(cardCode) },
                                 colors = IconButtonDefaults.iconButtonColors().copy(containerColor = Color.Transparent),
                                 modifier = Modifier.size(32.dp),
-                                enabled = (values?.slots?.get(cardId) ?: 0) != slotInfo.deckLimit
+                                enabled = (values?.slots?.get(cardCode) ?: 0) != slotInfo.deckLimit
                             ) {
                                 Icon(
                                     painterResource(id = R.drawable.add_32dp),
@@ -225,7 +205,7 @@ fun DeckFullCardScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "×${values?.slots?.get(cardId) ?: 0}",
+                                text = "×${values?.slots?.get(cardCode) ?: 0}",
                                 color = CustomTheme.colors.d10,
                                 fontFamily = Jost,
                                 fontWeight = FontWeight.Medium,

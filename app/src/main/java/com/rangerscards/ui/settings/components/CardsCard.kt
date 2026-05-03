@@ -151,8 +151,7 @@ fun CardsCard(
                 trailingIcon = R.drawable.edit_32dp,
                 headerId = R.string.language_header,
                 text = selectedLocale.displayLanguage,
-                { openLanguagePickerDialog = true }
-            )
+            ) { openLanguagePickerDialog = true }
             HorizontalDivider(
                 modifier = Modifier.padding(horizontal = 8.dp),
                 color = CustomTheme.colors.l10
