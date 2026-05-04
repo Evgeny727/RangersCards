@@ -12,6 +12,8 @@
     <string name="password_placeholder">Пароль</string>
     <string name="sign_in_to_account_button">Войти в свой аккаунт</string>
     <string name="sign_up_to_app_account_button">Создать новый аккаунт</string>
+    <string name="forgot_password">Забыл пароль</string>
+    <string name="send_reset_link">Отправить email для сброса пароля</string>
     <string name="sign_out_account_button">Выйти</string>
     <string name="delete_account_button">Удалить аккаунт</string>
     <string name="sign_out_account_title">Выйти из RangersDB?</string>

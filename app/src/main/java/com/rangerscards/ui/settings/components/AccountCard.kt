@@ -45,6 +45,7 @@ fun AccountCard(
     settingsUiState: SettingsUiState,
     signIn: (String, String) -> Unit,
     signOut: () -> Unit,
+    sendPasswordResetEmail: (String) -> Unit,
     createAccount: (String, String) -> Unit,
     deleteAccount: (String, String) -> Unit,
     updateHandle: (String, String) -> Unit,
@@ -57,6 +58,33 @@ fun AccountCard(
     var openHandleDialog by rememberSaveable { mutableStateOf(false) }
     var userHandle by remember(user.userInfo) { mutableStateOf(user.userInfo?.handle ?: "") }
     var isDeleting by rememberSaveable { mutableStateOf(false) }
+    var forgotPassword by rememberSaveable { mutableStateOf(false) }
+
+    if (forgotPassword) RangersDialogWithContent(
+        headerId = R.string.forgot_password,
+        isDarkTheme = isDarkTheme,
+        onBack = { forgotPassword = false }
+    ) {
+        SettingsInputField(
+            leadingIcon = Icons.Filled.Email,
+            placeholder = R.string.email_placeholder,
+            textValue = email,
+            onValueChange = { email = it },
+            KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Next,
+            )
+        )
+        SquareButton(
+            R.string.send_reset_link,
+            R.drawable.done_32dp,
+            onClick = {
+                sendPasswordResetEmail(email)
+                forgotPassword = false
+                email = ""
+            }
+        )
+    }
 
     if (openAuthDialog && user.userInfo == null) RangersDialogWithContent(
         headerId = R.string.sign_in_up_to_app_account_title,
@@ -85,6 +113,15 @@ fun AccountCard(
                 createAccount(email, password)
                 openAuthDialog = false
                 email = ""; password = ""
+            }
+        )
+        SquareButton(
+            R.string.forgot_password,
+            R.drawable.info_32dp,
+            onClick = {
+                openAuthDialog = false
+                forgotPassword = true
+                password = ""
             }
         )
     } else if (openAuthDialog) RangersDialogWithContent(

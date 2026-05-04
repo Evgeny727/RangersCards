@@ -58,6 +58,14 @@ class FirebaseAuthRepository @Inject constructor(
             } else throw InvalidEmailException()
         }
 
+    override suspend fun sendPasswordResetEmail(email: String): Result<Unit> =
+        runCatching {
+            if (validateEmail(email)) {
+                auth.sendPasswordResetEmail(email).await()
+                Unit
+            } else throw InvalidEmailException()
+        }
+
     override suspend fun deleteAccount(email: String, password: String): Result<Unit> =
         runCatching {
             if (validateEmail(email)) {

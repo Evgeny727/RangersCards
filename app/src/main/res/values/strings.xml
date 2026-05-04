@@ -18,6 +18,8 @@
     <string name="password_placeholder">Password</string>
     <string name="sign_in_to_account_button">Sign in to your account</string>
     <string name="sign_up_to_app_account_button">Create a new account</string>
+    <string name="forgot_password">Forgot password</string>
+    <string name="send_reset_link">Send password reset email</string>
     <string name="sign_out_account_button">Sign out</string>
     <string name="delete_account_button">Delete your account</string>
     <string name="sign_out_account_title">Sign out of RangersDB?</string>

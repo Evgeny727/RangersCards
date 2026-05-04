@@ -65,7 +65,7 @@ fun CardsScreen(
     )
     LaunchedEffect(cardsLazyItems.loadState.refresh) {
         if (!restored && cardsLazyItems.loadState.refresh is LoadState.NotLoading) {
-            listState.animateScrollToItem(cardsViewModel.scrollIndex, cardsViewModel.scrollOffset)
+            listState.scrollToItem(cardsViewModel.scrollIndex, cardsViewModel.scrollOffset)
             restored = true
         }
     }

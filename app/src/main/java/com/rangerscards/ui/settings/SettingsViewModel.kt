@@ -81,6 +81,14 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun sendPasswordResetEmail(email: String) {
+        viewModelScope.launch {
+            _settingsUiState.value = SettingsUiState.Loading
+            authRepository.sendPasswordResetEmail(email).onFailure { emitError(it) }
+            _settingsUiState.value = SettingsUiState.Idle
+        }
+    }
+
     fun deleteUser(email: String, password: String) {
         viewModelScope.launch {
             _settingsUiState.value = SettingsUiState.Loading

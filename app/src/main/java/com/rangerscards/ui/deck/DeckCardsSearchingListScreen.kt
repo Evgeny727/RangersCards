@@ -78,7 +78,7 @@ fun DeckCardsSearchingListScreen(
     )
     LaunchedEffect(cardsLazyItems.loadState.refresh) {
         if (!restored && cardsLazyItems.loadState.refresh is LoadState.NotLoading) {
-            listState.animateScrollToItem(deckCardsViewModel.scrollIndex, deckCardsViewModel.scrollOffset)
+            listState.scrollToItem(deckCardsViewModel.scrollIndex, deckCardsViewModel.scrollOffset)
             restored = true
         }
     }

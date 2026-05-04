@@ -70,6 +70,7 @@ fun SettingsScreen(
                 settingsUiState = settingsUiState,
                 signIn = settingsViewModel::signIn,
                 signOut = settingsViewModel::signOut,
+                sendPasswordResetEmail = settingsViewModel::sendPasswordResetEmail,
                 createAccount = settingsViewModel::createAccount,
                 deleteAccount = settingsViewModel::deleteUser,
                 updateHandle = settingsViewModel::updateHandle,

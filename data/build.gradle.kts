@@ -34,10 +34,9 @@ kotlin {
 dependencies {
     implementation(project(":domain"))
 
-    // Apollo Kotlin (network + normalized cache)
+    // Apollo Kotlin
     implementation(libs.apollo.runtime)
     implementation(libs.apollo.normalized.cache)
-    implementation(libs.apollo.normalized.cache.sqlite)
 
     // Room
     implementation(libs.androidx.room.ktx)

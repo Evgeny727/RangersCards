@@ -88,10 +88,7 @@ class DeckViewModel @Inject constructor(
     private var _deckUiState = MutableStateFlow<DeckUiState>(DeckUiState.Idle)
     val deckUiState: StateFlow<DeckUiState> = _deckUiState.asStateFlow()
 
-    private val _events = MutableSharedFlow<UiErrorState>(
-        replay = 0,
-        extraBufferCapacity = 1
-    )
+    private val _events = MutableSharedFlow<UiErrorState>(extraBufferCapacity = 1)
     val events: SharedFlow<UiErrorState> = _events
 
     private fun emitError(throwable: Throwable) {
@@ -497,7 +494,6 @@ class DeckViewModel @Inject constructor(
 
     fun changeStat(index: Int, newValue: Int) {
         _updatableValues.update {
-            it.apply {  }
             it?.let {
                 when(index) {
                     0 -> it.copy(awa = newValue)
