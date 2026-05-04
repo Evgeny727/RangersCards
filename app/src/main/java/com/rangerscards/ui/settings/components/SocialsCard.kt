@@ -5,6 +5,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -39,13 +40,23 @@ fun SocialsCard(
         )
         val context = LocalContext.current
         when(language) {
-            "ru" -> SquareButton(
-                stringId = R.string.telegram_button,
-                leadingIcon = R.drawable.telegram,
-                onClick = remember { {
-                    context.openLink("https://t.me/rangersgameru")
-                } }
-            )
+            "ru" -> {
+                SquareButton(
+                    stringId = R.string.telegram_button,
+                    leadingIcon = R.drawable.telegram,
+                    onClick = remember { {
+                        context.openLink("https://t.me/rangersgameru")
+                    } }
+                )
+                SquareButton(
+                    stringId = R.string.vk_button_ru,
+                    leadingIcon = R.drawable.vk_logo,
+                    iconColor = Color.Unspecified,
+                    onClick = remember { {
+                        context.openLink("https://vk.com/rangersgame")
+                    } }
+                )
+            }
             else -> SquareButton(
                 stringId = R.string.discord_button,
                 leadingIcon = R.drawable.discord,

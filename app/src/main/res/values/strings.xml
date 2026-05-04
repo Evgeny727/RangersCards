@@ -80,6 +80,7 @@
     <string name="socials_text">Chat with other Earthborne Rangers players:</string>
     <string name="discord_button">Discord</string>
     <string name="telegram_button">Telegram</string>
+    <string name="vk_button_ru" translatable="false">ВКонтакте</string>
     <string name="support_title">Support</string>
     <string name="support_text_ru">Support Rangers Cards on Boosty.</string>
     <string name="support_text">Support Rangers Cards on Patreon.</string>
