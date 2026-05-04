@@ -32,14 +32,18 @@ class FriendsViewModel @Inject constructor(
     private val _friendsUiState = MutableStateFlow<FriendsUiState>(FriendsUiState.Idle)
     val friendsUiState: StateFlow<FriendsUiState> = _friendsUiState.asStateFlow()
 
-    private val _events = MutableSharedFlow<UiErrorState>(
-        replay = 0,
-        extraBufferCapacity = 1
-    )
+    private val _events = MutableSharedFlow<UiErrorState>(extraBufferCapacity = 1)
     val events: SharedFlow<UiErrorState> = _events
 
     fun emitError(throwable: Throwable) {
         _events.tryEmit(UiErrorState(throwable))
+    }
+
+    private val _userEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val userEvents: SharedFlow<Unit> = _userEvents
+
+    private fun emitUserEvent() {
+        _userEvents.tryEmit(Unit)
     }
 
     // Holds the current search query entered by the user.
@@ -95,7 +99,7 @@ class FriendsViewModel @Inject constructor(
         viewModelScope.launch {
             _friendsUiState.value = FriendsUiState.Loading
             settingsRepository.friendRequestAction(FriendAction.SENT, toUserId)
-                .onSuccess { _searchResults.value = removeUser(toUserId) }
+                .onSuccess { _searchResults.value = removeUser(toUserId); emitUserEvent() }
                 .onFailure { emitError(it) }
             _friendsUiState.value = FriendsUiState.Idle
         }
@@ -105,6 +109,7 @@ class FriendsViewModel @Inject constructor(
         viewModelScope.launch {
             _friendsUiState.value = FriendsUiState.Loading
             settingsRepository.friendRequestAction(FriendAction.ACCEPT, toUserId)
+                .onSuccess { emitUserEvent() }
                 .onFailure { emitError(it) }
             _friendsUiState.value = FriendsUiState.Idle
         }
@@ -114,6 +119,7 @@ class FriendsViewModel @Inject constructor(
         viewModelScope.launch {
             _friendsUiState.value = FriendsUiState.Loading
             settingsRepository.friendRequestAction(FriendAction.REVOKE, toUserId)
+                .onSuccess { emitUserEvent() }
                 .onFailure { emitError(it) }
             _friendsUiState.value = FriendsUiState.Idle
         }

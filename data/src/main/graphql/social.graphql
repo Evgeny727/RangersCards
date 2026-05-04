@@ -17,13 +17,10 @@ fragment UserProfile on rangers_users {
   }
 }
 
-subscription profile($id: String!) {
+query getProfile($id: String!) {
   profile: rangers_users_by_pk(id: $id) {
     ...UserProfile
   }
-}
-
-subscription settings($id: String!) {
   settings: rangers_user_settings_by_pk(user_id: $id) {
     pack_collection
     adhere_taboos

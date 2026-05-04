@@ -18,6 +18,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,6 +32,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
 import com.rangerscards.R
 import com.rangerscards.domain.model.User
 import com.rangerscards.ui.cards.components.CardListItem
@@ -45,7 +49,7 @@ import kotlinx.coroutines.flow.drop
 fun CardsScreen(
     isDarkTheme: Boolean,
     userUIState: User,
-    navigateToCard: (Int) -> Unit,
+    navigateToCard: (String) -> Unit,
     modifier: Modifier = Modifier,
     cardsViewModel: CardsViewModel = hiltViewModel(),
     contentPadding: PaddingValues = PaddingValues(0.dp),
@@ -53,8 +57,28 @@ fun CardsScreen(
     val filterOptions by cardsViewModel.filterOptions.collectAsState()
     val spoiler by cardsViewModel.spoiler.collectAsState()
     val cardsLazyItems = cardsViewModel.searchResultsWithHeaders.collectAsLazyPagingItems()
-    // Remember a LazyListState to control and observe scroll position.
-    val listState = rememberLazyListState()
+
+    var restored by remember { mutableStateOf(false) }
+    val listState = rememberLazyListState(
+        initialFirstVisibleItemIndex = cardsViewModel.scrollIndex,
+        initialFirstVisibleItemScrollOffset = cardsViewModel.scrollOffset
+    )
+    LaunchedEffect(cardsLazyItems.loadState.refresh) {
+        if (!restored && cardsLazyItems.loadState.refresh is LoadState.NotLoading) {
+            listState.animateScrollToItem(cardsViewModel.scrollIndex, cardsViewModel.scrollOffset)
+            restored = true
+        }
+    }
+    LaunchedEffect(listState, restored) {
+        if (!restored) return@LaunchedEffect
+
+        snapshotFlow {
+            listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset
+        }.collect { (index, offset) ->
+            cardsViewModel.scrollIndex = index
+            cardsViewModel.scrollOffset = offset
+        }
+    }
 
     val activity = LocalActivity.current
 
@@ -117,13 +141,16 @@ fun CardsScreen(
             }
             items(
                 count = cardsLazyItems.itemCount,
-                key = { index ->
-                    when (val item = cardsLazyItems.peek(index)) {
+                key = cardsLazyItems.itemKey { item ->
+                    when (item) {
                         is CardListUiModel.CardItem -> item.card.id
-                        else -> index
+                        is CardListUiModel.CategoryHeader -> item.key
                     }
                 },
-                contentType = cardsLazyItems.itemContentType { it }
+                contentType = cardsLazyItems.itemContentType { when (it) {
+                    is CardListUiModel.CardItem -> it.card
+                    is CardListUiModel.CategoryHeader -> it.category
+                } }
             ) { index ->
                 val item = cardsLazyItems[index] ?: return@items
                 when (item) {
@@ -156,7 +183,7 @@ fun CardsScreen(
                         traits = item.card.traits,
                         level = item.card.level,
                         isDarkTheme = isDarkTheme,
-                        onClick = { navigateToCard(index) }
+                        onClick = { navigateToCard(item.card.id) }
                     )
                 }
             }

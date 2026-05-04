@@ -133,9 +133,9 @@ fun DeckScreen(
 
     LaunchedEffect(deckUiState) {
         when (val state = deckUiState) {
-            is DeckUiState.Deleted -> state.previousDeckId?.let {
-                navController.navigate("deck/${state.previousDeckId}") {
-                    popUpTo(BottomNavScreen.Decks.startDestination) { inclusive = false }
+            is DeckUiState.DeckToOpen -> state.deckId?.let {
+                navController.navigate("deck/${state.deckId}") {
+                    popUpTo(navController.previousBackStackEntry?.destination?.id!!) { inclusive = false }
                     launchSingleTop = true
                 }
             } ?: navController.navigateUp()
@@ -399,7 +399,7 @@ fun DeckScreen(
                 .fillMaxSize()
                 .padding(top = innerPadding.calculateTopPadding())) {
                 val isOwner = remember(userInfo, deck?.playerInfo?.id) {
-                    userInfo == null || userInfo.id == deck!!.playerInfo.id || deck!!.playerInfo.id.isEmpty()
+                    userInfo?.id == deck!!.playerInfo.id || deck!!.playerInfo.id.isEmpty()
                 }
                 LazyColumn(contentPadding = PaddingValues(8.dp)) {
                     item(key = "role/${deck!!.deckMeta.roleId}") {
@@ -409,14 +409,16 @@ fun DeckScreen(
                             name = role?.name,
                             text = CardTextParser.parseCustomText(role?.text, null),
                             campaignName = deck!!.campaignInfo?.campaignName,
-                            onClick = if (role != null && deck!!.previousDeck == null && deck!!.nextId == null) {{
+                            onClick = if (role != null) {{
                                 navController.navigate("deck/card/${deck!!.deckMeta.roleId}") {
                                     launchSingleTop = true
                                 }
                             }} else {{ }},
-                            onEdit = { navController.navigate("deck/roleChanging") {
-                                launchSingleTop = true
-                            } }
+                            onEdit = if (isOwner && deck!!.nextId == null) {{
+                                navController.navigate("deck/roleChanging") {
+                                    launchSingleTop = true
+                                }
+                            } } else null
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
@@ -437,7 +439,7 @@ fun DeckScreen(
                         FullDeckProblemsItem(deckProblems.problems)
                         Spacer(modifier = Modifier.height(16.dp))
                     }
-                    if (isOwner && deck!!.previousDeck == null && deck!!.nextId == null) item(key = "edit_button") {
+                    if (isOwner && deck!!.nextId == null) item(key = "edit_button") {
                         Button(
                             onClick = {
                                 if (isEditing) {
@@ -514,7 +516,7 @@ fun DeckScreen(
                             "personality" -> item("deck_section_personality_header") {
                                 DeckCardsTypeHeader(
                                     textId = R.string.personality,
-                                    onClick = if (isOwner) {{
+                                    onClick = if (isOwner && deck!!.nextId == null) {{
                                         deckViewModel.enterEditMode()
                                         navController.navigate("deck/cardsList/0") {
                                             launchSingleTop = true
@@ -529,7 +531,7 @@ fun DeckScreen(
                                 DeckCardsTypeHeader(
                                     textId = R.string.background,
                                     additionalText = background,
-                                    onClick = if (isOwner) {{
+                                    onClick = if (isOwner && deck!!.nextId == null) {{
                                         deckViewModel.enterEditMode()
                                         navController.navigate("deck/cardsList/${if (deck!!.previousDeck == null) 1 else 0}") {
                                             launchSingleTop = true
@@ -545,7 +547,7 @@ fun DeckScreen(
                                 DeckCardsTypeHeader(
                                     textId = R.string.specialty,
                                     additionalText = specialty,
-                                    onClick = if (isOwner) {{
+                                    onClick = if (isOwner && deck!!.nextId == null) {{
                                         deckViewModel.enterEditMode()
                                         navController.navigate("deck/cardsList/${if (deck!!.previousDeck == null) 2 else 0}") {
                                             launchSingleTop = true
@@ -558,7 +560,7 @@ fun DeckScreen(
                                 Column {
                                     DeckCardsTypeHeader(
                                         textId = R.string.outside_interest,
-                                        onClick = if (isOwner) {{
+                                        onClick = if (isOwner && deck!!.nextId == null) {{
                                             deckViewModel.enterEditMode()
                                             navController.navigate("deck/cardsList/${if (deck!!.previousDeck == null) 3 else 0}") {
                                                 launchSingleTop = true
@@ -611,7 +613,7 @@ fun DeckScreen(
                                 Column {
                                     DeckCardsTypeHeader(
                                         textId = R.string.rewards_and_maladies,
-                                        onClick = if (isOwner) {{
+                                        onClick = if (isOwner && deck!!.nextId == null) {{
                                             deckViewModel.enterEditMode()
                                             navController.navigate("deck/cardsList/0") {
                                                 launchSingleTop = true
@@ -791,7 +793,7 @@ fun DeckScreen(
                     } } else null,
                     toPreviousDeck = if (deck!!.previousDeck != null) {{
                         navController.navigate("deck/${deck!!.previousDeck!!.id}") {
-                            popUpTo(BottomNavScreen.Decks.startDestination) { inclusive = false }
+                            popUpTo(navController.previousBackStackEntry?.destination?.id!!) { inclusive = false }
                             launchSingleTop = true
                         }
                     }} else null,
@@ -799,7 +801,7 @@ fun DeckScreen(
                         navController.navigate(
                             "deck/${deck!!.nextId}"
                         ) {
-                            popUpTo(BottomNavScreen.Decks.startDestination) { inclusive = false }
+                            popUpTo(navController.previousBackStackEntry?.destination?.id!!) { inclusive = false }
                             launchSingleTop = true
                         }
                     }} else null,

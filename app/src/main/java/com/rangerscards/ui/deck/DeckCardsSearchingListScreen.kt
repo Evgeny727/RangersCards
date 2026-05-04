@@ -22,6 +22,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
 import com.rangerscards.R
 import com.rangerscards.ui.cards.components.CardListItem
 import com.rangerscards.ui.cards.components.CardsHeaderType
@@ -54,7 +58,7 @@ fun DeckCardsSearchingListScreen(
     deckViewModel: DeckViewModel,
     deckCardsViewModel: DeckCardsViewModel,
     isDarkTheme: Boolean,
-    navigateToCard: (Int) -> Unit,
+    navigateToCard: (String) -> Unit,
     navigateToSort: () -> Unit,
     navigateToFilters: () -> Unit,
     modifier: Modifier = Modifier,
@@ -67,7 +71,27 @@ fun DeckCardsSearchingListScreen(
     val typeIndex by deckCardsViewModel.typeIndex.collectAsState()
     val cardsLazyItems = deckCardsViewModel.searchResultsWithHeaders.collectAsLazyPagingItems()
     // Remember a LazyListState to control and observe scroll position.
-    val listState = rememberLazyListState()
+    var restored by remember { mutableStateOf(false) }
+    val listState = rememberLazyListState(
+        initialFirstVisibleItemIndex = deckCardsViewModel.scrollIndex,
+        initialFirstVisibleItemScrollOffset = deckCardsViewModel.scrollOffset
+    )
+    LaunchedEffect(cardsLazyItems.loadState.refresh) {
+        if (!restored && cardsLazyItems.loadState.refresh is LoadState.NotLoading) {
+            listState.animateScrollToItem(deckCardsViewModel.scrollIndex, deckCardsViewModel.scrollOffset)
+            restored = true
+        }
+    }
+    LaunchedEffect(listState, restored) {
+        if (!restored) return@LaunchedEffect
+
+        snapshotFlow {
+            listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset
+        }.collect { (index, offset) ->
+            deckCardsViewModel.scrollIndex = index
+            deckCardsViewModel.scrollOffset = offset
+        }
+    }
 
     // Whenever the search query changes, scroll the list back to the top.
     LaunchedEffect(Unit) {
@@ -219,13 +243,16 @@ fun DeckCardsSearchingListScreen(
                 }
                 items(
                     count = cardsLazyItems.itemCount,
-                    key = { index ->
-                        when (val item = cardsLazyItems.peek(index)) {
+                    key = cardsLazyItems.itemKey { item ->
+                        when (item) {
                             is DeckCardListUiModel.CardItem -> item.card.id
-                            else -> index
+                            is DeckCardListUiModel.CategoryHeader -> item.key
                         }
                     },
-                    contentType = cardsLazyItems.itemContentType { it }
+                    contentType = cardsLazyItems.itemContentType { when (it) {
+                        is DeckCardListUiModel.CardItem -> it.card
+                        is DeckCardListUiModel.CategoryHeader -> it.category
+                    } }
                 ) { index ->
                     val item = cardsLazyItems[index] ?: return@items
                     when (item) {
@@ -267,7 +294,7 @@ fun DeckCardsSearchingListScreen(
                                 onRemoveEnabled = amount > 0,
                                 onAddClick = { deckViewModel.addCard(item.card.code) },
                                 onAddEnabled = amount != item.card.deckLimit,
-                                onClick = { navigateToCard(index) }
+                                onClick = { navigateToCard(item.card.id) }
                             )
                         }
                     }

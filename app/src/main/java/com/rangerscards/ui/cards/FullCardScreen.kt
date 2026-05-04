@@ -26,12 +26,13 @@ import com.rangerscards.utils.applyScaffoldPaddings
 @Composable
 fun FullCardScreen(
     cardsViewModel: CardsViewModel,
-    cardIndex: Int,
+    cardId: String,
     isDarkTheme: Boolean,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val cardsLazyItems = cardsViewModel.searchResults.collectAsLazyPagingItems()
+    val cardIndex = cardsLazyItems.itemSnapshotList.items.indexOfFirst { it.id == cardId }
     val pagerState = rememberPagerState(initialPage = cardIndex) { cardsLazyItems.itemCount }
     HorizontalPager(
         state = pagerState,

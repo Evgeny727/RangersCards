@@ -25,7 +25,6 @@ import com.rangerscards.utils.applyScaffoldPaddings
 @Composable
 fun SettingsScreen(
     isDarkTheme: Boolean,
-    showSnackBar: suspend (String) -> Unit,
     navigateToAbout: () -> Unit,
     navigateToDiagnostics: () -> Unit,
     navigateToFriends: () -> Unit,
@@ -49,10 +48,9 @@ fun SettingsScreen(
             appViewModel.emitError(it.exception)
         }
     }
-
     LaunchedEffect(Unit) {
-        settingsViewModel.settingsUiState.collect { state ->
-            if (state is SettingsUiState.Success) showSnackBar(state.message)
+        settingsViewModel.userEvents.collect {
+            appViewModel.emitUserEvent()
         }
     }
 

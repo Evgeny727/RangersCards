@@ -20,8 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -41,9 +40,9 @@ class AppViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val userFlow = authRepository.currentUserId
-        .flatMapLatest {
-            if (it == null) flowOf(Result.success(null) to Result.success(null))
-            else settingsRepository.startUserSubscription(it)
+        .mapLatest {
+            if (it == null) Result.success(null)
+            else settingsRepository.getProfile(it)
         }
 
     private val _userUiState = MutableStateFlow(User())
@@ -54,6 +53,12 @@ class AppViewModel @Inject constructor(
 
     fun emitError(throwable: Throwable) {
         _events.tryEmit(UiErrorState(throwable))
+    }
+
+    private val userEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    fun emitUserEvent() {
+        userEvents.tryEmit(Unit)
     }
 
     val cardsSyncState = cardsSyncManager.state
@@ -69,12 +74,13 @@ class AppViewModel @Inject constructor(
         observeUser()
         observePreferences()
         observeCardsErrors()
+        observeUserEvents()
     }
 
     private fun observeUser() {
         viewModelScope.launch {
             userFlow.collect { result ->
-                result.first.onSuccess { user ->
+                result.onSuccess { user ->
                     if (user == null) _userUiState.update { state ->
                         state.copy(
                             userInfo = null,
@@ -82,17 +88,16 @@ class AppViewModel @Inject constructor(
                             sentRequests = persistentListOf(),
                             receivedRequests = persistentListOf(),
                         )
-                    } else _userUiState.update { state ->
-                        state.copy(
-                            userInfo = user.userInfo,
-                            friends = user.friends,
-                            sentRequests = user.sentRequests,
-                            receivedRequests = user.receivedRequests,
-                        )
-                    }
-                }.onFailure { exception -> emitError(exception) }
-                result.second.onSuccess { settings ->
-                    settings?.let {
+                    } else {
+                        _userUiState.update { state ->
+                            state.copy(
+                                userInfo = user.userInfo,
+                                friends = user.friends,
+                                sentRequests = user.sentRequests,
+                                receivedRequests = user.receivedRequests,
+                            )
+                        }
+                        val settings = user.settings
                         userPreferencesRepository.saveTabooAndCollectionPreference(
                             settings.taboo,
                             settings.collection
@@ -127,6 +132,31 @@ class AppViewModel @Inject constructor(
         viewModelScope.launch {
             cardsSyncManager.errors.collect {
                 emitError(it)
+            }
+        }
+    }
+
+    private fun observeUserEvents() {
+        viewModelScope.launch {
+            userEvents.collect {
+                userUiState.value.userInfo?.id?.let { userId ->
+                    settingsRepository.getProfile(userId)
+                        .onSuccess { user ->
+                            _userUiState.update { state ->
+                                state.copy(
+                                    userInfo = user.userInfo,
+                                    friends = user.friends,
+                                    sentRequests = user.sentRequests,
+                                    receivedRequests = user.receivedRequests,
+                                )
+                            }
+                            val settings = user.settings
+                            userPreferencesRepository.saveTabooAndCollectionPreference(
+                                settings.taboo,
+                                settings.collection
+                            )
+                        }.onFailure { exception -> emitError(exception) }
+                }
             }
         }
     }

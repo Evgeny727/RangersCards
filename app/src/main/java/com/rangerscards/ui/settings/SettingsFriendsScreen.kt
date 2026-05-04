@@ -63,6 +63,11 @@ fun SettingsFriendsScreen(
             appViewModel.emitError(error.exception)
         }
     }
+    LaunchedEffect(Unit) {
+        friendsViewModel.userEvents.collect {
+            appViewModel.emitUserEvent()
+        }
+    }
 
     Column(
         modifier = modifier

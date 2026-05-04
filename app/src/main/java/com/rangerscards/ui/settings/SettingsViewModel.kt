@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -39,14 +40,18 @@ class SettingsViewModel @Inject constructor(
     private val _settingsUiState = MutableStateFlow<SettingsUiState>(SettingsUiState.Idle)
     val settingsUiState: StateFlow<SettingsUiState> = _settingsUiState.asStateFlow()
 
-    private val _events = MutableSharedFlow<UiErrorState>(
-        replay = 0,
-        extraBufferCapacity = 1
-    )
+    private val _events = MutableSharedFlow<UiErrorState>(extraBufferCapacity = 1)
     val events: SharedFlow<UiErrorState> = _events
 
     fun emitError(throwable: Throwable) {
         _events.tryEmit(UiErrorState(throwable))
+    }
+
+    private val _userEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val userEvents: SharedFlow<Unit> = _userEvents.asSharedFlow()
+
+    private fun emitUserEvent() {
+        _userEvents.tryEmit(Unit)
     }
 
     val isIncludeEnglishSearchResultsState: StateFlow<Boolean> =
@@ -87,7 +92,9 @@ class SettingsViewModel @Inject constructor(
     fun updateHandle(userId: String, handle: String) {
         viewModelScope.launch {
             _settingsUiState.value = SettingsUiState.Loading
-            settingsRepository.updateHandle(userId, handle).onFailure { emitError(it) }
+            settingsRepository.updateHandle(userId, handle)
+                .onSuccess { emitUserEvent() }
+                .onFailure { emitError(it) }
             _settingsUiState.value = SettingsUiState.Idle
         }
     }
@@ -102,7 +109,9 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             _settingsUiState.value = SettingsUiState.Loading
             if (userId != null) {
-                settingsRepository.setTaboo(userId, taboo).onFailure { emitError(it) }
+                settingsRepository.setTaboo(userId, taboo)
+                    .onSuccess { emitUserEvent() }
+                    .onFailure { emitError(it) }
             } else {
                 userPreferencesRepository.saveTabooPreference(taboo)
             }
@@ -114,7 +123,9 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             _settingsUiState.value = SettingsUiState.Loading
             if (userId != null) {
-                settingsRepository.setCollection(userId, collection).onFailure { emitError(it) }
+                settingsRepository.setCollection(userId, collection)
+                    .onSuccess { emitUserEvent(); }
+                    .onFailure { emitError(it) }
             } else {
                 userPreferencesRepository.saveCollectionPreference(collection)
             }

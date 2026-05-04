@@ -1,5 +1,8 @@
 package com.rangerscards.ui.deck
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -50,6 +53,9 @@ class DeckCardsViewModel @Inject constructor(
 
     private val _filterOptions = MutableStateFlow(CardFilterOptions())
     val filterOptions: StateFlow<CardFilterOptions> = _filterOptions.asStateFlow()
+
+    var scrollIndex by mutableIntStateOf(0)
+    var scrollOffset by mutableIntStateOf(0)
 
     // Exposes the paginated search results as PagingData.
     @OptIn(ExperimentalCoroutinesApi::class)

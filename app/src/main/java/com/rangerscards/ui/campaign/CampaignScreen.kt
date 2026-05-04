@@ -468,7 +468,7 @@ fun CampaignScreen(
                                         RangersRadioButtonRow(
                                             text = stringResource(R.string.show_all_rewards_in_collection),
                                             onValueChange = campaignViewModel::setShowAllRewards,
-                                            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                                            modifier = Modifier.fillMaxWidth().padding(8.dp),
                                             isSelected = isShowAllRewards
                                         )
                                         val rewards by campaignViewModel.rewards.collectAsState()

@@ -49,12 +49,13 @@ fun DeckFullCardWithPagerScreen(
     navigateUp: () -> Unit,
     deckViewModel: DeckViewModel,
     deckCardsViewModel: DeckCardsViewModel,
-    cardIndex: Int,
+    cardId: String,
     isDarkTheme: Boolean,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val deck by deckViewModel.deck.collectAsState()
     val cardsLazyItems = deckCardsViewModel.searchResults.collectAsLazyPagingItems()
+    val cardIndex = cardsLazyItems.itemSnapshotList.items.indexOfFirst { it.id == cardId }
     val pagerState = rememberPagerState(initialPage = cardIndex) { cardsLazyItems.itemCount }
     val values by deckViewModel.updatableValues.collectAsState()
     val slots = deckViewModel.slotsCards.collectAsState()

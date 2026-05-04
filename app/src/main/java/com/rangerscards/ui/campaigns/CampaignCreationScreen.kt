@@ -277,7 +277,7 @@ fun CampaignCreationScreen(
                     fontSize = 20.sp,
                 )
                 availableExpansions.forEach { expansion ->
-                    val isAdded = remember(expansions) { expansions.contains(expansion.id) }
+                    val isAdded = expansions.contains(expansion.id)
                     RangersRadioButtonRow(
                         text = stringResource(expansion.name),
                         isSelected = isAdded,

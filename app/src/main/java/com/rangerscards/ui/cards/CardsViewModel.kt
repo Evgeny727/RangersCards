@@ -1,5 +1,8 @@
 package com.rangerscards.ui.cards
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
@@ -49,6 +52,9 @@ class CardsViewModel @Inject constructor(
 
     private val _filterOptions = MutableStateFlow(CardFilterOptions())
     val filterOptions: StateFlow<CardFilterOptions> = _filterOptions.asStateFlow()
+
+    var scrollIndex by mutableIntStateOf(0)
+    var scrollOffset by mutableIntStateOf(0)
 
     init {
         // launch a single, one-shot read

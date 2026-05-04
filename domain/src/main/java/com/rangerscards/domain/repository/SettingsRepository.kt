@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface SettingsRepository {
 
-    fun startUserSubscription(userId: String): Flow<Pair<Result<User>, Result<UserSettings>>>
+    suspend fun getProfile(userId: String): Result<User>
 
     suspend fun updateHandle(userId: String, handle: String): Result<Unit>
 

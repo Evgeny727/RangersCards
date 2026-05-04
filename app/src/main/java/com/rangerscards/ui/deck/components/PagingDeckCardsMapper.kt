@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.map
 
 sealed interface DeckCardListUiModel {
     data class CardItem(val card: CardDeckListItem) : DeckCardListUiModel
-    data class CategoryHeader(val category: CardsHeaderType?, val value: String?) : DeckCardListUiModel
+    data class CategoryHeader(val key: String, val category: CardsHeaderType?, val value: String?) : DeckCardListUiModel
 }
 
 internal fun Flow<PagingData<CardDeckListItem>>.withCategoryHeaders(sortOrder: List<String>): Flow<PagingData<DeckCardListUiModel>> =
@@ -33,6 +33,7 @@ internal fun Flow<PagingData<CardDeckListItem>>.withCategoryHeaders(sortOrder: L
 
                 if (headerOptions.first)
                     DeckCardListUiModel.CategoryHeader(
+                        key = "header_before_${afterItem.id}",
                         category = headerOptions.second,
                         value = when(headerOptions.second) {
                             CardsHeaderType.EQUIP -> afterItem.equip?.toString()

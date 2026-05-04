@@ -47,7 +47,7 @@ fun CampaignMissions(
         RangersRadioButtonRow(
             text = stringResource(R.string.show_only_active_missions),
             onValueChange = onActiveClick,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
             isSelected = isOnlyActive
         )
         SquareButton(

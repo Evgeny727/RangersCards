@@ -257,7 +257,6 @@ fun RangersNavHost(
                     if (cardsState !is CardsSyncState.Loading) {
                         SettingsScreen(
                             isDarkTheme = isDarkTheme,
-                            showSnackBar = snackbarHostState::showSnackbar,
                             navigateToAbout = {
                                 navController.navigate(
                                     "${BottomNavScreen.Settings.route}/about"
@@ -316,6 +315,21 @@ fun RangersNavHost(
                         navController.getBackStackEntry(BottomNavScreen.Settings.startDestination)
                     }
                     val settingsViewModel = hiltViewModel<SettingsViewModel>(parentEntry)
+                    LaunchedEffect(Unit) {
+                        settingsViewModel.events.collect {
+                            appViewModel.emitError(it.exception)
+                        }
+                    }
+                    LaunchedEffect(Unit) {
+                        settingsViewModel.userEvents.collect {
+                            appViewModel.emitUserEvent()
+                        }
+                    }
+                    LaunchedEffect(Unit) {
+                        settingsViewModel.settingsUiState.collect { state ->
+                            if (state is SettingsUiState.Success) snackbarHostState.showSnackbar(state.message)
+                        }
+                    }
                     SettingsDiagnosticsScreen(
                         clearLocalData = settingsViewModel::clearLocalData,
                         clearImageCache = settingsViewModel::clearImageCache,
@@ -332,6 +346,16 @@ fun RangersNavHost(
                     val settingsViewModel = hiltViewModel<SettingsViewModel>(parentEntry)
                     val state by settingsViewModel.settingsUiState.collectAsState()
                     val user by appViewModel.userUiState.collectAsState()
+                    LaunchedEffect(Unit) {
+                        settingsViewModel.events.collect {
+                            appViewModel.emitError(it.exception)
+                        }
+                    }
+                    LaunchedEffect(Unit) {
+                        settingsViewModel.userEvents.collect {
+                            appViewModel.emitUserEvent()
+                        }
+                    }
                     SettingsCollectionScreen(
                         user = user,
                         setCollection = settingsViewModel::setCollection,
@@ -362,9 +386,9 @@ fun RangersNavHost(
                             userUIState = user,
                             cardsViewModel = cardsViewModel,
                             contentPadding = innerPadding,
-                            navigateToCard = { cardIndex ->
+                            navigateToCard = { cardId ->
                                 navController.navigate(
-                                    "${BottomNavScreen.Cards.route}/card/$cardIndex"
+                                    "${BottomNavScreen.Cards.route}/card/$cardId"
                                 ) {
                                     launchSingleTop = true
                                 }
@@ -418,20 +442,20 @@ fun RangersNavHost(
                         RangersSpoilerSwitch(spoiler, cardsViewModel::onSpoilerChanged)
                     }
                 }
-                val cardIndexArgument = "cardIndex"
+                val cardIdArgument = "cardId"
                 composable(
-                    route = BottomNavScreen.Cards.route + "/card/{$cardIndexArgument}",
-                    arguments = listOf(navArgument(cardIndexArgument) { type = NavType.IntType })
+                    route = BottomNavScreen.Cards.route + "/card/{$cardIdArgument}",
+                    arguments = listOf(navArgument(cardIdArgument) { type = NavType.StringType })
                 ) { backStackEntry ->
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry(BottomNavScreen.Cards.startDestination)
                     }
                     val cardsViewModel: CardsViewModel = hiltViewModel(parentEntry)
-                    val cardIndex = backStackEntry.arguments?.getInt(cardIndexArgument)
-                    if (cardIndex != null) {
+                    val cardId = backStackEntry.arguments?.getString(cardIdArgument)
+                    if (cardId != null) {
                         FullCardScreen(
                             cardsViewModel = cardsViewModel,
-                            cardIndex = cardIndex,
+                            cardId = cardId,
                             isDarkTheme = isDarkTheme,
                             contentPadding = innerPadding
                         )
@@ -439,7 +463,7 @@ fun RangersNavHost(
                         actions = null
                         switch = null
                     } else {
-                        appViewModel.emitError(IllegalStateException("cardIndexArgument cannot be null"))
+                        appViewModel.emitError(IllegalStateException("cardIdArgument cannot be null"))
                         navController.navigateUp()
                     }
                 }
@@ -654,11 +678,14 @@ fun RangersNavHost(
                 composable(
                     route = "deck/{$deckIdArgument}/history",
                     arguments = listOf(navArgument(deckIdArgument) { type = NavType.StringType })
-                ) {
+                ) { backStackEntry ->
+                    val parentEntry = remember(backStackEntry) {
+                        navController.getBackStackEntry("deck/{$deckIdArgument}")
+                    }
                     DeckVersionsScreen(
                         navigateUp = navController::navigateUp,
                         navigateToDeck = { deckId -> navController.navigate("deck/$deckId") {
-                            popUpTo(BottomNavScreen.Decks.startDestination) { inclusive = false }
+                            popUpTo(parentEntry.destination.route.orEmpty()) { inclusive = true }
                             launchSingleTop = true
                         } },
                         contentPadding = innerPadding,
@@ -676,44 +703,46 @@ fun RangersNavHost(
                             navController.getBackStackEntry("deck/{$deckIdArgument}")
                         }
                         val deckViewModel: DeckViewModel = hiltViewModel(parentEntry)
-                        val deckCardsViewModel: DeckCardsViewModel = hiltViewModel(backStackEntry)
-                        val user by appViewModel.userUiState.collectAsState()
-                        LaunchedEffect(Unit) {
-                            deckCardsViewModel.setPackIds(user.settings.collection)
-                        }
-                        DeckCardsSearchingListScreen(
-                            navigateUp = navController::navigateUp,
-                            deckViewModel = deckViewModel,
-                            deckCardsViewModel = deckCardsViewModel,
-                            isDarkTheme = isDarkTheme,
-                            navigateToCard = { cardIndex ->
-                                navController.navigate(
-                                    "deck/cardsList/{$typeIndexArgument}/card/$cardIndex"
-                                ) { launchSingleTop = true }
-                            },
-                            navigateToSort = {
-                                navController.navigate("deck/cardsList/{$typeIndexArgument}/sortOptions") {
-                                    launchSingleTop = true
-                                }
-                            },
-                            navigateToFilters = {
-                                navController.navigate("deck/cardsList/{$typeIndexArgument}/filterOptions") {
-                                    launchSingleTop = true
-                                }
+                        val deck by deckViewModel.deck.collectAsState()
+                        if (deck != null) {
+                            val deckCardsViewModel: DeckCardsViewModel = hiltViewModel(backStackEntry)
+                            val user by appViewModel.userUiState.collectAsState()
+                            LaunchedEffect(Unit) {
+                                deckCardsViewModel.setPackIds(user.settings.collection)
                             }
-                        )
+                            DeckCardsSearchingListScreen(
+                                navigateUp = navController::navigateUp,
+                                deckViewModel = deckViewModel,
+                                deckCardsViewModel = deckCardsViewModel,
+                                isDarkTheme = isDarkTheme,
+                                navigateToCard = { cardId ->
+                                    navController.navigate(
+                                        "deck/cardsList/{$typeIndexArgument}/card/$cardId"
+                                    ) { launchSingleTop = true }
+                                },
+                                navigateToSort = {
+                                    navController.navigate("deck/cardsList/{$typeIndexArgument}/sortOptions") {
+                                        launchSingleTop = true
+                                    }
+                                },
+                                navigateToFilters = {
+                                    navController.navigate("deck/cardsList/{$typeIndexArgument}/filterOptions") {
+                                        launchSingleTop = true
+                                    }
+                                }
+                            )
+                        } else navController.navigateUp()
                     } else {
                         appViewModel.emitError(IllegalStateException("typeIndexArgument cannot be null"))
                         navController.navigateUp()
                     }
                 }
-                val cardIndexArgument = "cardIndex"
                 composable(
-                    route = "deck/cardsList/{$typeIndexArgument}/card/{$cardIndexArgument}",
-                    arguments = listOf(navArgument(cardIndexArgument) { type = NavType.IntType })
+                    route = "deck/cardsList/{$typeIndexArgument}/card/{$cardIdArgument}",
+                    arguments = listOf(navArgument(cardIdArgument) { type = NavType.StringType })
                 ) { backStackEntry ->
-                    val cardIndex = backStackEntry.arguments?.getInt(cardIndexArgument)
-                    if (cardIndex != null) {
+                    val cardId = backStackEntry.arguments?.getString(cardIdArgument)
+                    if (cardId != null) {
                         val parentGraphEntry = remember(backStackEntry) {
                             navController.getBackStackEntry("deck/{$deckIdArgument}")
                         }
@@ -721,15 +750,18 @@ fun RangersNavHost(
                             navController.getBackStackEntry("deck/cardsList/{$typeIndexArgument}")
                         }
                         val deckViewModel: DeckViewModel = hiltViewModel(parentGraphEntry)
-                        val deckCardsViewModel: DeckCardsViewModel = hiltViewModel(parentEntry)
-                        DeckFullCardWithPagerScreen(
-                            navigateUp = navController::navigateUp,
-                            deckViewModel = deckViewModel,
-                            deckCardsViewModel = deckCardsViewModel,
-                            cardIndex = cardIndex,
-                            isDarkTheme = isDarkTheme,
-                            contentPadding = innerPadding,
-                        )
+                        val deck by deckViewModel.deck.collectAsState()
+                        if (deck != null) {
+                            val deckCardsViewModel: DeckCardsViewModel = hiltViewModel(parentEntry)
+                            DeckFullCardWithPagerScreen(
+                                navigateUp = navController::navigateUp,
+                                deckViewModel = deckViewModel,
+                                deckCardsViewModel = deckCardsViewModel,
+                                cardId = cardId,
+                                isDarkTheme = isDarkTheme,
+                                contentPadding = innerPadding,
+                            )
+                        } else navController.navigateUp()
                     } else {
                         appViewModel.emitError(IllegalStateException("cardIndexArgument cannot be null"))
                         navController.navigateUp()

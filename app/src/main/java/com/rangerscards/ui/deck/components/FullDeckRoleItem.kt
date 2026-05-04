@@ -50,7 +50,7 @@ fun FullDeckRoleItem(
     text: AnnotatedString,
     campaignName: String?,
     onClick: () -> Unit,
-    onEdit: () -> Unit,
+    onEdit: (() -> Unit)?,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
@@ -153,7 +153,7 @@ fun FullDeckRoleItem(
                 )
             }
         }
-        IconButton(
+        if (onEdit != null) IconButton(
             onClick = onEdit,
             colors = IconButtonDefaults.iconButtonColors().copy(containerColor = Color.Transparent),
             modifier = Modifier.size(32.dp),

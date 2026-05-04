@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.map
 
 sealed interface CardListUiModel {
     data class CardItem(val card: CardListItem) : CardListUiModel
-    data class CategoryHeader(val category: CardsHeaderType?, val value: String?) : CardListUiModel
+    data class CategoryHeader(val key: String, val category: CardsHeaderType?, val value: String?) : CardListUiModel
 }
 
 enum class CardsHeaderType {
@@ -40,6 +40,7 @@ internal fun Flow<PagingData<CardListItem>>.withCategoryHeaders(sortOrder: List<
 
                 if (headerOptions.first)
                     CardListUiModel.CategoryHeader(
+                        key = "header_before_${afterItem.id}",
                         category = headerOptions.second,
                         value = when(headerOptions.second) {
                             CardsHeaderType.EQUIP -> afterItem.equip?.toString()

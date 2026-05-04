@@ -51,7 +51,7 @@ sealed interface DeckUiState {
     object Idle : DeckUiState
     object Loading : DeckUiState
     object Editing : DeckUiState
-    data class Deleted(val previousDeckId: String? = null) : DeckUiState
+    data class DeckToOpen(val deckId: String? = null) : DeckUiState
     data class DeckUploaded(val deckId: String) : DeckUiState
 }
 
@@ -156,10 +156,12 @@ class DeckViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val orderedSlotsCards: StateFlow<ImmutableMap<String, ImmutableList<CardWithCount>>> =
-        slotsCards.map { slots ->
+        combine(_updatableValues, slotsCards) { values, cards ->
+            values?.slots.orEmpty() to cards
+        }.map { (values, slots) ->
             buildOrderedSlotsUseCase(
                 slots,
-                _updatableValues.value?.slots.orEmpty(),
+                values,
                 deck.value?.deckMeta
             )
         }.stateIn(
@@ -521,7 +523,7 @@ class DeckViewModel @Inject constructor(
                         emitError(it)
                         _deckUiState.value = DeckUiState.Idle
                     }.onSuccess {
-                        _deckUiState.value = DeckUiState.DeckUploaded(it)
+                        _deckUiState.value = DeckUiState.DeckToOpen(it)
                     }
                 }
             }
@@ -622,7 +624,7 @@ class DeckViewModel @Inject constructor(
                         emitError(it)
                         _deckUiState.value = DeckUiState.Idle
                     }.onSuccess {
-                        _deckUiState.value = DeckUiState.Deleted(it)
+                        _deckUiState.value = DeckUiState.DeckToOpen(it)
                     }
                 }
             }
@@ -643,7 +645,7 @@ class DeckViewModel @Inject constructor(
                         emitError(it)
                         _deckUiState.value = DeckUiState.Idle
                     }.onSuccess {
-                        _deckUiState.value = DeckUiState.Deleted(null)
+                        _deckUiState.value = DeckUiState.DeckToOpen(null)
                     }
                 }
             }

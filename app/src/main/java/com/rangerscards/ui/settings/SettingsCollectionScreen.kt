@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -40,7 +39,7 @@ fun SettingsCollectionScreen(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         item("loa") {
-            val selected = remember(userCollection) { userCollection.contains("loa") }
+            val selected = userCollection.contains("loa")
             Column {
                 RangersRadioButtonRow(
                     text = stringResource(R.string.loa_expansion),
@@ -56,7 +55,7 @@ fun SettingsCollectionScreen(
             }
         }
         item("sotv") {
-            val selected = remember(userCollection) { userCollection.contains("sotv") }
+            val selected = userCollection.contains("sotv")
             Column {
                 RangersRadioButtonRow(
                     text = stringResource(R.string.sotv_expansion),
@@ -72,7 +71,7 @@ fun SettingsCollectionScreen(
             }
         }
         item("sib") {
-            val selected = remember(userCollection) { userCollection.contains("sib") }
+            val selected = userCollection.contains("sib")
             Column {
                 RangersRadioButtonRow(
                     text = stringResource(R.string.spire_in_bloom),
@@ -88,7 +87,7 @@ fun SettingsCollectionScreen(
             }
         }
         item("sos") {
-            val selected = remember(userCollection) { userCollection.contains("sos") }
+            val selected = userCollection.contains("sos")
             Column {
                 RangersRadioButtonRow(
                     text = stringResource(R.string.shadow_of_the_storm),

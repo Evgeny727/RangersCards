@@ -2,14 +2,13 @@ package com.rangerscards.data.remote
 
 import com.apollographql.apollo.ApolloClient
 import com.rangerscards.AcceptFriendRequestMutation
+import com.rangerscards.GetProfileQuery
 import com.rangerscards.GetUserInfoByHandleQuery
 import com.rangerscards.GetUsersInfoByHandleQuery
-import com.rangerscards.ProfileSubscription
 import com.rangerscards.RejectFriendRequestMutation
 import com.rangerscards.SendFriendRequestMutation
 import com.rangerscards.SetAdhereTaboosMutation
 import com.rangerscards.SetPackCollectionMutation
-import com.rangerscards.SettingsSubscription
 import com.rangerscards.UpdateHandleMutation
 import kotlinx.serialization.json.JsonElement
 import javax.inject.Inject
@@ -22,13 +21,9 @@ class UserSettingsRemoteDataSource @Inject constructor(
         .mutation(UpdateHandleMutation(userId, handle, normalizedHandle))
         .execute()
 
-    fun startProfileSubscription(id: String) = apolloClient
-        .subscription(ProfileSubscription(id))
-        .toFlow()
-
-    fun startSettingsSubscription(id: String) = apolloClient
-        .subscription(SettingsSubscription(id))
-        .toFlow()
+    suspend fun getProfile(id: String) = apolloClient
+        .query(GetProfileQuery(id))
+        .execute()
 
     suspend fun setPackCollection(userId: String, packCollection: JsonElement) = apolloClient
         .mutation(SetPackCollectionMutation(userId, packCollection))
