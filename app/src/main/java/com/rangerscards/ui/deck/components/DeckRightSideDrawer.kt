@@ -136,17 +136,16 @@ fun BoxScope.DeckRightSideDrawer(
 //                    )
                 }
             }
-            //TODO:Implement deck charts
-//            item {
-//                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-//                    DrawerSectionHeader(R.string.tools_section_header)
-//                    DrawerSectionButtonRow(
-//                        R.drawable.charts_32dp,
-//                        stringResource(R.string.tools_section_charts),
-//                        toCharts,
-//                    )
-//                }
-//            }
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DrawerSectionHeader(R.string.tools_section_header)
+                    DrawerSectionButtonRow(
+                        R.drawable.charts_32dp,
+                        stringResource(R.string.tools_section_charts),
+                        toCharts,
+                    )
+                }
+            }
             if (isOwner) item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     DrawerSectionHeader(R.string.campaign_section_header)

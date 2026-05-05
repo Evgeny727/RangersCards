@@ -104,6 +104,7 @@ import com.rangerscards.ui.components.SquareButton
 import com.rangerscards.ui.deck.DeckCardsSearchingListScreen
 import com.rangerscards.ui.deck.DeckCardsViewModel
 import com.rangerscards.ui.deck.DeckChangingRole
+import com.rangerscards.ui.deck.DeckChartsScreen
 import com.rangerscards.ui.deck.DeckFullCardScreen
 import com.rangerscards.ui.deck.DeckFullCardWithPagerScreen
 import com.rangerscards.ui.deck.DeckScreen
@@ -674,6 +675,17 @@ fun RangersNavHost(
                         appViewModel.emitError(IllegalStateException("cardIdArgument cannot be null"))
                         navController.navigateUp()
                     }
+                }
+                composable(route = "deck/charts") { backStackEntry ->
+                    val parentEntry = remember(backStackEntry) {
+                        navController.getBackStackEntry("deck/{$deckIdArgument}")
+                    }
+                    val deckViewModel: DeckViewModel = hiltViewModel(parentEntry)
+                    DeckChartsScreen(
+                        navigateUp = navController::navigateUp,
+                        deckViewModel = deckViewModel,
+                        contentPadding = innerPadding,
+                    )
                 }
                 composable(
                     route = "deck/{$deckIdArgument}/history",
