@@ -61,7 +61,8 @@ class DecksRepositoryImpl @Inject constructor(
 
     override fun getAllPaginatedDecksFlow(
         userId: String,
-        uploaded: Boolean?
+        uploaded: Boolean?,
+        notInCampaign: Boolean?
     ): Flow<PagingData<DeckListItem>> {
         // Create a Pager that wraps the PagingSource from the DAO.
         return Pager(
@@ -70,7 +71,7 @@ class DecksRepositoryImpl @Inject constructor(
                 enablePlaceholders = false,
                 initialLoadSize = 20
             ),
-            pagingSourceFactory = { deckDao.getAllDecks(userId, uploaded) }
+            pagingSourceFactory = { deckDao.getAllDecks(userId, uploaded, notInCampaign) }
         ).flow.map { pagingData ->
             pagingData.map { it.toDomain() }
         }
@@ -79,7 +80,8 @@ class DecksRepositoryImpl @Inject constructor(
     override fun searchPaginatedDecksFlow(
         query: String,
         userId: String,
-        uploaded: Boolean?
+        uploaded: Boolean?,
+        notInCampaign: Boolean?
     ): Flow<PagingData<DeckListItem>> {
         val newQuery = query
             .lowercase()
@@ -94,7 +96,7 @@ class DecksRepositoryImpl @Inject constructor(
                 enablePlaceholders = false,
                 initialLoadSize = 20
             ),
-            pagingSourceFactory = { deckDao.searchDecks(newQuery, userId, uploaded) }
+            pagingSourceFactory = { deckDao.searchDecks(newQuery, userId, uploaded, notInCampaign) }
         ).flow.map { pagingData ->
             pagingData.map { it.toDomain() }
         }

@@ -19,9 +19,18 @@ interface DecksRepository {
 
     suspend fun syncDeckById(id: Int): Result<Unit>
 
-    fun getAllPaginatedDecksFlow(userId: String, uploaded: Boolean? = null): Flow<PagingData<DeckListItem>>
+    fun getAllPaginatedDecksFlow(
+        userId: String,
+        uploaded: Boolean? = null,
+        notInCampaign: Boolean? = null
+    ): Flow<PagingData<DeckListItem>>
 
-    fun searchPaginatedDecksFlow(query: String, userId: String, uploaded: Boolean? = null): Flow<PagingData<DeckListItem>>
+    fun searchPaginatedDecksFlow(
+        query: String,
+        userId: String,
+        uploaded: Boolean? = null,
+        notInCampaign: Boolean? = null
+    ): Flow<PagingData<DeckListItem>>
 
     suspend fun createDeck(
         uploaded: Boolean,
