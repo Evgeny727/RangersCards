@@ -17,6 +17,8 @@
     <string name="password_placeholder">Passwort</string>
     <string name="sign_in_to_account_button">Mit Deinem Konto anmelden</string>
     <string name="sign_up_to_app_account_button">Ein neues Konto anlegen</string>
+    <string name="forgot_password">Passwort vergessen</string>
+    <string name="send_reset_link">E-Mail zum Zurücksetzen des Passworts senden</string>
     <string name="sign_out_account_button">Abmelden</string>
     <string name="delete_account_button">Konto löschen</string>
     <string name="sign_out_account_title">Von RangersDB abmelden?</string>
@@ -59,7 +61,7 @@
     <string name="authentication_failed_toast">Authentifizierung fehlgeschlagen.</string>
     <string name="invalid_password_text">Ungültiges Passwort. Es muss mindestens 6 Zeichen lang sein.</string>
     <string name="invalid_email_text">Ungültige E-Mail-Adresse.</string>
-    <string name="account_successfully_deleted_toast">Account successfully deleted.</string>
+    <string name="account_successfully_deleted_toast">Konto erfolgreich gelöscht.</string>
     <string name="invalid_credentials_toast">Ungültige Zugangsdaten.</string>
     <string name="handle_already_taken_text">Dieser Name ist leider schon vergeben.</string>
     <string name="invalid_handle_text">Ungültiger Name. Er muss zwischen 2 und 22 Zeichen lang sein.</string>
@@ -190,17 +192,19 @@
     <string name="collection_text">Manche Ereignisse während der Kampagne erlauben Dir, Karten aus Deinem Deck dauerhaft mit solchen aus der Sammlung zu tauschen (sog. permanente Verändeungen).\nNachdem Du eine neue Karte aus der Sammlung ausgewählt und eine Karte aus Deinem Deck entfernt hast, kannst Du eine Karte im Tab Gespeicherte Karten in die Sammlung \'zurücklegen\'.</string>
 
     //Deck Side Drawer
+    <string name="not_available_in_edit_mode">Während der Bearbeitung nicht verfügbar.</string>
     <string name="deck_section_header">Deck</string>
     <string name="deck_section_deck_id">Deck #%s</string>
-    <string name="section_notes">Notes</string>
+    <string name="section_notes">Notizen</string>
     <string name="tools_section_header">Tools</string>
-    <string name="tools_section_charts">Charts</string>
+    <string name="tools_section_charts">Statistiken</string>
     <string name="campaign_section_header">Kampagne</string>
     <string name="campaign_section_camp">Nachtlager</string>
     <string name="campaign_section_camp_additional_text">Zum Hinzufügen von Belohnungen und zur Nachverfolgung von Änderungen</string>
     <string name="campaign_section_camp_warning">Fehler: Es gibt Probleme mit Deinem Deck!</string>
     <string name="campaign_section_previous_deck">Vorherige Version</string>
     <string name="campaign_section_next_deck">Nächste Version</string>
+    <string name="campaign_section_deck_history">Deck-Historie</string>
     <string name="options_section_header">Optionen</string>
     <string name="options_section_clone_deck">Deck klonen</string>
     <string name="clone_deck_name_postfix">(Kopie)</string>
@@ -211,6 +215,9 @@
     <string name="options_section_delete_deck_all_versions">Alle Versionen des Decks löschen</string>
     <string name="options_section_upload_deck_in_campaign_warning">Fehler: Deck wird in einer Kampagne verwendet!</string>
     <string name="delete_deck_text">Bist Du sicher, dass Du dieses Deck löschen willst? Version: %d.</string>
+
+    //Deck history screen
+    <string name="deck_history_current_deck">Aktuelles Deck</string>
 
     //Campaigns screen
     <string name="campaigns_current_day">Tag %d</string>
@@ -223,6 +230,7 @@
     <string name="campaign">Kampagne</string>
     <string name="campaign_placeholder">Kampagne wählen</string>
     <string name="transfer_campaign">Kampagne übertragen</string>
+    <string name="transfer_campaign_no_results">Keine Kampagne zum Übertragen verfügbar.</string>
     <string name="core_cycle">Grundspiel</string>
     <string name="general_set_general">Standard</string>
     <string name="general_set_the_valley">Das Tal</string>
@@ -318,6 +326,10 @@
     //Rangers section
     <string name="rangers_section_header">— Ranger —</string>
     <string name="add_ranger_button">Ranger hinzufügen</string>
+    <string name="no_local_decks_for_add">Keine passenden lokalen Decks.</string>
+    <string name="no_uploaded_decks_for_add">Keine passenden hochgeladenen Decks.</string>
+    <string name="search_local_decks">Lokale Decks durchsuchen</string>
+    <string name="search_uploaded_decks">Hochgeladene Decks durchsuchen</string>
 
     //Settings section
     <string name="settings_section_header">— Einstellungen —</string>
@@ -351,6 +363,10 @@
     <string name="event_header">Besonderes Ereignis</string>
     <string name="event_crossed_out">Durchgestrichen</string>
     <string name="event_marks">Markierungen</string>
+    <string name="delete_event_button">Ereignis löschen</string>
+    <string name="add_note_button">Notiz hinzufügen</string>
+    <string name="note_text">Notiz</string>
+    <string name="delete_note_button">Notiz löschen</string>
     <string name="removed_campaign_log_tab">Entfernte Karten</string>
     <string name="remove_card_button">Karte entfernen</string>
     <string name="removed_set_header">Set</string>
@@ -468,6 +484,9 @@
     <string name="approaches_filter_connection">Verständnis</string>
     <string name="approaches_filter_exploration">Tatendrang</string>
     <string name="approaches_filter_reason">Vernunft</string>
+
+    //Aspect requirements
+    <string name="aspect_requirements_equal_or_lower">Niedrigere Werte einbeziehen</string>
 
     //Challenge deck
     <string name="challenge_deck_title">Welteffektkartenstapel</string>
