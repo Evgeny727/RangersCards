@@ -18,8 +18,8 @@ android {
         applicationId = "com.rangerscards"
         minSdk = 24
         targetSdk = 36
-        versionCode = 87
-        versionName = "3.0.1"
+        versionCode = 89
+        versionName = "3.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -68,6 +68,7 @@ dependencies {
     //Import In-app updates
     implementation(libs.play.app.update)
     implementation(libs.app.update.ktx)
+    implementation(libs.play.services.base)
 
     //Import splash screen
     implementation(libs.androidx.core.splashscreen)

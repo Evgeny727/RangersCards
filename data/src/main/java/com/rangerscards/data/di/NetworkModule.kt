@@ -5,8 +5,6 @@ import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.annotations.ApolloExperimental
 import com.apollographql.apollo.api.http.HttpRequest
 import com.apollographql.apollo.api.http.HttpResponse
-import com.apollographql.apollo.cache.normalized.FetchPolicy
-import com.apollographql.apollo.cache.normalized.fetchPolicy
 import com.apollographql.apollo.interceptor.RetryOnErrorInterceptor
 import com.apollographql.apollo.network.NetworkMonitor
 import com.apollographql.apollo.network.http.HttpInterceptor
@@ -76,7 +74,6 @@ object NetworkModule {
         .retryOnErrorInterceptor(RetryOnErrorInterceptor(NetworkMonitor(context)))
         .failFastIfOffline(true)
         .addCustomScalarAdapter(Jsonb.type, JsonElementAdapter)
-        .fetchPolicy(FetchPolicy.NetworkOnly)
         .build()
 
 }

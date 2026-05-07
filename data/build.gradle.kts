@@ -36,7 +36,6 @@ dependencies {
 
     // Apollo Kotlin
     implementation(libs.apollo.runtime)
-    implementation(libs.apollo.normalized.cache)
 
     // Room
     implementation(libs.androidx.room.ktx)
