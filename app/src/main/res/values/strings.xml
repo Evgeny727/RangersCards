@@ -18,6 +18,8 @@
     <string name="password_placeholder">Password</string>
     <string name="sign_in_to_account_button">Sign in to your account</string>
     <string name="sign_up_to_app_account_button">Create a new account</string>
+    <string name="forgot_password">Forgot password</string>
+    <string name="send_reset_link">Send password reset email</string>
     <string name="sign_out_account_button">Sign out</string>
     <string name="delete_account_button">Delete your account</string>
     <string name="sign_out_account_title">Sign out of RangersDB?</string>
@@ -70,16 +72,17 @@
     <string name="update_cards_button">Update cards</string>
     <string name="rules_button">Rules</string>
     <string name="authentication_failed_toast">Authentication failed.</string>
-    <string name="invalid_password_toast">Invalid password. It must be 6 characters minimum.</string>
-    <string name="invalid_email_toast">Invalid email.</string>
+    <string name="invalid_password_text">Invalid password. It must be 6 characters minimum.</string>
+    <string name="invalid_email_text">Invalid email.</string>
     <string name="account_successfully_deleted_toast">Account successfully deleted.</string>
     <string name="invalid_credentials_toast">Invalid credentials.</string>
-    <string name="handle_already_taken_toast">Sorry, this handle has already been taken.</string>
-    <string name="invalid_handle_toast">Invalid handle. It must be between 2 and 22 characters long.</string>
+    <string name="handle_already_taken_text">Sorry, this handle has already been taken.</string>
+    <string name="invalid_handle_text">Invalid handle. It must be between 2 and 22 characters long.</string>
     <string name="socials_title">Socials</string>
     <string name="socials_text">Chat with other Earthborne Rangers players:</string>
     <string name="discord_button">Discord</string>
     <string name="telegram_button">Telegram</string>
+    <string name="vk_button_ru" translatable="false">ВКонтакте</string>
     <string name="support_title">Support</string>
     <string name="support_text_ru">Support Rangers Cards on Boosty.</string>
     <string name="support_text">Support Rangers Cards on Patreon.</string>
@@ -121,7 +124,7 @@
     <string name="new_deck">New deck</string>
     <string name="custom_deck_tab">Custom deck</string>
     <string name="starter_deck_tab">Starter deck</string>
-    <string name="deck_creation_name_label">Name</string>
+    <string name="name_label">Name</string>
     <string name="deck_creation_name_placeholder">Enter a name for this deck.</string>
     <string name="starter_deck_title">Choose starter deck:</string>
     <string name="upload_to_rangersdb">Upload to RangersDB</string>
@@ -210,9 +213,10 @@
     <string name="collection_text">Some campaign events may allow you to permanently swap cards from your deck with those from the collection.\nAfter selecting a new collection card and removing one from your deck, you can ‘return’ a card to the collection using the displaced cards tab.</string>
 
     //Deck Side Drawer
+    <string name="not_available_in_edit_mode">Not available in edit mode.</string>
     <string name="deck_section_header">Deck</string>
     <string name="deck_section_deck_id">Deck #%s</string>
-    <string name="deck_section_notes">Notes</string>
+    <string name="section_notes">Notes</string>
     <string name="tools_section_header">Tools</string>
     <string name="tools_section_charts">Charts</string>
     <string name="campaign_section_header">Campaign</string>
@@ -221,6 +225,7 @@
     <string name="campaign_section_camp_warning">Error: Deck contains problems!</string>
     <string name="campaign_section_previous_deck">Previous deck</string>
     <string name="campaign_section_next_deck">Next deck</string>
+    <string name="campaign_section_deck_history">Deck history</string>
     <string name="options_section_header">Options</string>
     <string name="options_section_clone_deck">Clone deck</string>
     <string name="clone_deck_name_postfix">(Copy)</string>
@@ -229,8 +234,11 @@
     <string name="options_section_delete_deck">Delete deck</string>
     <string name="options_section_delete_current_deck">Delete current version</string>
     <string name="options_section_delete_deck_all_versions">Delete all versions of deck</string>
-    <string name="options_section_delete_deck_warning">Error: This deck in campaign!</string>
+    <string name="options_section_upload_deck_in_campaign_warning">Error: This deck in campaign!</string>
     <string name="delete_deck_text">Are you sure you want to delete this deck? Version: %d.</string>
+
+    //Deck history screen
+    <string name="deck_history_current_deck">Current deck</string>
 
     //Campaigns screen
     <string name="campaigns_current_day">Day %d</string>
@@ -243,6 +251,7 @@
     <string name="campaign">Campaign</string>
     <string name="campaign_placeholder">Choose campaign</string>
     <string name="transfer_campaign">Transfer campaign</string>
+    <string name="transfer_campaign_no_results">No campaigns available for transfer.</string>
     <string name="core_cycle">Core</string>
     <string name="general_set_general">General</string>
     <string name="general_set_the_valley">The Valley</string>
@@ -299,7 +308,7 @@
     //Campaign screen
     <string name="current_location">Current location</string>
     <string name="current_path_terrain">Current path terrain</string>
-    <string name="current_path_terrain_none">None</string>
+    <string name="text_none">None</string>
     <string name="recorded_journey_button">Recorded journey</string>
     <string name="extend_campaign_button">Extend campaign</string>
 
@@ -338,7 +347,10 @@
     //Rangers section
     <string name="rangers_section_header">— Rangers —</string>
     <string name="add_ranger_button">Add ranger</string>
-    <string name="no_decks_for_add">No eligible decks.</string>
+    <string name="no_local_decks_for_add">No eligible local decks.</string>
+    <string name="no_uploaded_decks_for_add">No eligible uploaded decks.</string>
+    <string name="search_local_decks">Search local decks</string>
+    <string name="search_uploaded_decks">Search uploaded decks</string>
 
     //Settings section
     <string name="settings_section_header">— Settings —</string>
@@ -372,6 +384,10 @@
     <string name="event_header">Notable event</string>
     <string name="event_crossed_out">Crossed-out</string>
     <string name="event_marks">Marks</string>
+    <string name="delete_event_button">Delete event</string>
+    <string name="add_note_button">Add note</string>
+    <string name="note_text">Note</string>
+    <string name="delete_note_button">Delete note</string>
     <string name="removed_campaign_log_tab">Removed cards</string>
     <string name="remove_card_button">Remove card</string>
     <string name="removed_set_header">Set</string>
@@ -386,8 +402,6 @@
     <string name="diagnostics_clear_local_data_cleared">Local data is cleared.</string>
     <string name="diagnostics_clear_coil_cache">Clear image cache</string>
     <string name="diagnostics_clear_coil_cache_cleared">Image cache is cleared.</string>
-    <string name="diagnostics_clear_apollo_cache">Clear network cache</string>
-    <string name="diagnostics_clear_apollo_cache_cleared">Network cache is cleared.</string>
 
     //loa campaign
     <string name="general_set_the_arcology">The Arcology</string>
@@ -491,6 +505,9 @@
     <string name="approaches_filter_connection">Connection</string>
     <string name="approaches_filter_exploration">Exploration</string>
     <string name="approaches_filter_reason">Reason</string>
+    
+    //Aspect requirements
+    <string name="aspect_requirements_equal_or_lower">Include lower values</string>
 
     //Challenge deck
     <string name="challenge_deck_title">Challenge deck</string>
@@ -530,5 +547,16 @@
 
     <string name="cards_update_available_header">Cards update</string>
     <string name="cards_update_available_text">Cards update available.</string>
+
+    //Shadow of the Storm
+    <string name="shadow_of_the_storm">Shadow of the Storm</string>
+    <string name="nimbus">Nimbus</string>
+    <string name="terra_lodge">Terra Lodge</string>
+    <string name="the_otherwoods">The Otherwoods</string>
+    <string name="crystal_basin">Crystal Basin</string>
+    <string name="sentinel_peak">Sentinel Peak</string>
+    <string name="nimbus_facility">Nimbus Facility</string>
+    <string name="arbor_mists">Arbor Mists</string>
+    <string name="the_undergrove">The Undergrove</string>
 
 </resources>

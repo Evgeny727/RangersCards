@@ -1,0 +1,324 @@
+# import Campaign from 'fragments.graphql'
+
+query getMyCampaigns(
+  $userId: String!
+) {
+  campaigns: rangers_user_campaign(
+    where: { user_id: { _eq: $userId }}
+  ) {
+    campaign {
+      ...Campaign
+    }
+  }
+}
+
+mutation createCampaign(
+  $name: String!,
+  $cycleId: String!,
+  $currentLocation: String!,
+  $expansions: jsonb!,
+  $calendar: jsonb!
+) {
+  campaign: insert_rangers_campaign_one(
+    object: {
+      name: $name
+      cycle_id: $cycleId
+      current_location: $currentLocation
+      expansions: $expansions
+      calendar: $calendar
+    }
+  ) {
+    ...Campaign
+  }
+}
+
+subscription campaign(
+  $campaignId: Int!
+) {
+  campaign: rangers_campaign_by_pk(id: $campaignId) {
+    ...Campaign
+  }
+}
+
+mutation updateUploaded(
+  $campaignId: Int!,
+  $currentPathTerrain: String,
+  $day: Int!
+  $extendedCalendar: Boolean,
+  $missions: jsonb!,
+  $events: jsonb!,
+  $rewards: jsonb!,
+  $removed: jsonb!,
+  $history: jsonb!,
+) {
+  campaign: update_rangers_campaign_by_pk(
+    pk_columns: { id: $campaignId }
+    _set: {
+      day: $day
+      extended_calendar: $extendedCalendar
+      current_path_terrain: $currentPathTerrain
+      missions: $missions
+      events: $events
+      rewards: $rewards
+      removed: $removed
+      history: $history
+    }
+  ) {
+    ...Campaign
+  }
+}
+
+mutation transferCampaign(
+  $campaignId: Int!,
+  $cycleId: String!,
+  $currentLocation: String!,
+) {
+  campaign: rangers_transfer_campaign(
+    args: {
+      existing_campaign_id: $campaignId
+      cycle_code: $cycleId
+      current_location: $currentLocation
+    }
+  ) {
+    ...Campaign
+  }
+}
+
+mutation updateCampaignExpansions(
+  $campaignId: Int!,
+  $expansions: jsonb!
+) {
+  campaign: update_rangers_campaign_by_pk(
+    pk_columns: {
+      id: $campaignId
+    }
+    _set: {
+      expansions: $expansions
+    }
+  ) {
+    ...Campaign
+  }
+}
+
+mutation setCampaignTitle(
+  $name: String!,
+  $campaignId: Int!
+) {
+  campaign: update_rangers_campaign_by_pk(
+    pk_columns: { id: $campaignId }
+    _set: {
+      name: $name
+    }
+  ) {
+    ...Campaign
+  }
+}
+
+mutation addFriendToCampaign(
+  $campaignId: Int!,
+  $userId: String!
+) {
+  access: insert_rangers_campaign_access_one(
+    object: {
+      campaign_id: $campaignId,
+      user_id: $userId
+    }
+    on_conflict: {
+      constraint: campaign_access_pkey
+    }
+  ) {
+    campaign {
+      access {
+        user {
+          ...UserInfo
+        }
+      }
+    }
+  }
+}
+
+mutation removeFriendFromCampaign(
+  $campaignId: Int!,
+  $userId: String!
+) {
+  access: delete_rangers_campaign_access_by_pk(campaign_id: $campaignId, user_id: $userId) {
+    campaign {
+      access {
+        user {
+          ...UserInfo
+        }
+      }
+    }
+  }
+}
+
+mutation updateCampaignRewards(
+  $campaignId: Int!,
+  $rewards: jsonb!
+) {
+  campaign: update_rangers_campaign_by_pk(
+    pk_columns: {
+	    id: $campaignId
+    }
+    _set: {
+      rewards: $rewards
+    }
+  ) {
+    ...Campaign
+  }
+}
+
+
+mutation updateCampaignRemoved(
+  $campaignId: Int!,
+  $removed: jsonb!
+) {
+  campaign: update_rangers_campaign_by_pk(
+    pk_columns: {
+	    id: $campaignId
+    }
+    _set: {
+      removed: $removed
+    }
+  ) {
+    ...Campaign
+  }
+}
+
+mutation extendCampaign(
+  $campaignId: Int!,
+) {
+  campaign: update_rangers_campaign_by_pk(
+    pk_columns: {
+	    id: $campaignId
+    }
+    _set: {
+      extended_calendar: true
+    }
+  ) {
+    ...Campaign
+  }
+}
+
+mutation updateCampaignEvents(
+  $campaignId: Int!,
+  $events: jsonb!
+) {
+  campaign: update_rangers_campaign_by_pk(
+    pk_columns: {
+	    id: $campaignId
+    }
+    _set: {
+      events: $events
+    }
+  ) {
+    ...Campaign
+  }
+}
+
+mutation setCampaignMissions(
+  $campaignId: Int!,
+  $missions: jsonb!
+) {
+  campaign: update_rangers_campaign_by_pk(
+    pk_columns: {
+	    id: $campaignId
+    }
+    _set: {
+      missions: $missions
+    }
+  ) {
+    ...Campaign
+  }
+}
+
+mutation setCampaignNotes(
+  $campaignId: Int!,
+  $notes: jsonb!
+) {
+  campaign: update_rangers_campaign_by_pk(
+    pk_columns: {
+      id: $campaignId
+    }
+    _set: {
+      notes: $notes
+    }
+  ) {
+    ...Campaign
+  }
+}
+
+
+mutation setCampaignCalendar(
+  $campaignId: Int!,
+  $calendar: jsonb!
+) {
+  campaign: update_rangers_campaign_by_pk(
+    pk_columns: {
+	    id: $campaignId
+    }
+    _set: {
+      calendar: $calendar
+    }
+  ) {
+    ...Campaign
+  }
+}
+
+mutation setCampaignDay(
+  $campaignId: Int!,
+  $day: Int!
+) {
+  campaign: update_rangers_campaign_by_pk(
+    pk_columns: {
+	    id: $campaignId
+    }
+    _set: {
+      day: $day
+    }
+  ) {
+    ...Campaign
+  }
+}
+
+mutation setCampaignTravel(
+  $campaignId: Int!,
+  $history: jsonb!,
+  $day: Int!,
+  $location: String!,
+  $pathTerrain: String
+) {
+  campaign: update_rangers_campaign_by_pk(
+    pk_columns: {
+	    id: $campaignId
+    }
+    _set: {
+      day: $day
+      current_location: $location
+      current_path_terrain: $pathTerrain
+      history: $history
+    }
+  ) {
+    ...Campaign
+  }
+}
+
+mutation leaveCampaign(
+  $campaignId: Int!,
+  $userId: String!
+) {
+  delete_rangers_campaign_access_by_pk(campaign_id: $campaignId, user_id: $userId) {
+    campaign_id
+    user_id
+  }
+}
+
+mutation deleteCampaign(
+  $campaignId: Int!
+) {
+  rangers_remove_campaign(
+    args: { campaign_id: $campaignId }
+  ) {
+    ...Campaign
+  }
+}

@@ -12,6 +12,8 @@
     <string name="password_placeholder">Пароль</string>
     <string name="sign_in_to_account_button">Войти в свой аккаунт</string>
     <string name="sign_up_to_app_account_button">Создать новый аккаунт</string>
+    <string name="forgot_password">Забыл пароль</string>
+    <string name="send_reset_link">Отправить email для сброса пароля</string>
     <string name="sign_out_account_button">Выйти</string>
     <string name="delete_account_button">Удалить аккаунт</string>
     <string name="sign_out_account_title">Выйти из RangersDB?</string>
@@ -49,12 +51,12 @@
     <string name="collection_header">Коллекция карт</string>
     <string name="update_cards_button">Обновить карты</string>
     <string name="authentication_failed_toast">Ошибка аутентификации.</string>
-    <string name="invalid_password_toast">Неверный пароль. Он должен состоять минимум из 6 символов.</string>
+    <string name="invalid_password_text">Неверный пароль. Он должен состоять минимум из 6 символов.</string>
     <string name="account_successfully_deleted_toast">Аккаунт успешно удалён.</string>
     <string name="invalid_credentials_toast">Неверные учетные данные.</string>
-    <string name="invalid_handle_toast">Неверное имя. Оно должно состоять от 2 до 22 символов.</string>
-    <string name="invalid_email_toast">Неверный адрес электронной почты.</string>
-    <string name="handle_already_taken_toast">Извините, это имя уже занято.</string>
+    <string name="invalid_handle_text">Неверное имя. Оно должно состоять от 2 до 22 символов.</string>
+    <string name="invalid_email_text">Неверный адрес электронной почты.</string>
+    <string name="handle_already_taken_text">Извините, это имя уже занято.</string>
     <plurals name="expansions_amount">
         <item quantity="one">%d дополнение</item>
         <item quantity="few">%d дополнения</item>
@@ -100,7 +102,7 @@
     <string name="new_deck">Новая колода</string>
     <string name="custom_deck_tab">Пользовательская колода</string>
     <string name="starter_deck_tab">Стартовая колода</string>
-    <string name="deck_creation_name_label">Название</string>
+    <string name="name_label">Название</string>
     <string name="deck_creation_name_placeholder">Введите название этой колоды.</string>
     <string name="starter_deck_title">Выберите стартовую колоду:</string>
     <string name="upload_to_rangersdb">Загрузить на RangersDB</string>
@@ -178,9 +180,10 @@
     <string name="specialty_text">Выберите 5 уникальных карт из карт вашей специализации.</string>
     <string name="outside_interest_text">Выберите 1 карту из любой квалификации или специализации как ваше хобби.\nПримечание: карты из выбранной вами специальности/квалификации здесь не показаны, но ваше хобби может быть из выбранного вами класса, если вы используете другие вкладки для его выбора.</string>
     <string name="collection_text">Некоторые события кампании могут позволить вам навсегда поменять карты из своей колоды на карты из коллекции.\nВыбрав новую карту коллекции и удалив одну из своей колоды, вы можете "вернуть" ее в коллекцию, используя вкладку отложенные карты.</string>
+    <string name="not_available_in_edit_mode">Не доступно в режиме редактирования.</string>
     <string name="deck_section_header">Колода</string>
     <string name="deck_section_deck_id">Колода №%s</string>
-    <string name="deck_section_notes">Заметки</string>
+    <string name="section_notes">Заметки</string>
     <string name="tools_section_header">Утилиты</string>
     <string name="tools_section_charts">Диаграммы</string>
     <string name="campaign_section_header">Кампания</string>
@@ -189,6 +192,8 @@
     <string name="campaign_section_camp_warning">Ошибка: Ваша колода содержит ошибки!</string>
     <string name="campaign_section_previous_deck">Предыдущая колода</string>
     <string name="campaign_section_next_deck">Следующая колода</string>
+    <string name="campaign_section_deck_history">История колоды</string>
+    <string name="deck_history_current_deck">Текущая колода</string>
     <string name="options_section_header">Опции</string>
     <string name="options_section_clone_deck">Копировать колоду</string>
     <string name="clone_deck_name_postfix">(Копия)</string>
@@ -197,7 +202,7 @@
     <string name="options_section_delete_deck">Удалить колоду</string>
     <string name="options_section_delete_current_deck">Удалить текущую версию</string>
     <string name="options_section_delete_deck_all_versions">Удалить все версии</string>
-    <string name="options_section_delete_deck_warning">Ошибка: Эта колода находится в кампании!</string>
+    <string name="options_section_upload_deck_in_campaign_warning">Ошибка: Эта колода находится в кампании!</string>
     <string name="delete_deck_text">Вы уверены, что хотите удалить эту колоду? Версия: %d.</string>
     <string name="campaigns_current_day">День %d</string>
     <string name="search_campaigns">Поиск по кампаниям</string>
@@ -209,6 +214,7 @@
     <string name="campaign">Кампания</string>
     <string name="campaign_placeholder">Выберите кампанию</string>
     <string name="transfer_campaign">Перенос кампании</string>
+    <string name="transfer_campaign_no_results">Нет кампаний доступных для переноса.</string>
     <string name="core_cycle">База</string>
     <string name="general_set_general">Общий набор</string>
     <string name="general_set_the_valley">Долина</string>
@@ -259,7 +265,7 @@
     <string name="headwaters_station">База Верховодье</string>
     <string name="current_location">Текущая локация</string>
     <string name="current_path_terrain">Текущий тип местности</string>
-    <string name="current_path_terrain_none">Отсутствует</string>
+    <string name="text_none">Отсутствует</string>
     <string name="recorded_journey_button">Путевые заметки</string>
     <string name="extend_campaign_button">Расширить кампанию</string>
     <string name="weather_perfect_day">Ясный день</string>
@@ -286,7 +292,10 @@
     <string name="travel_with_camp">Решение разбить лагерь закончит день %d и позволит обменять карты из колоды на заработанные награды.</string>
     <string name="rangers_section_header">— Рейнджеры —</string>
     <string name="add_ranger_button">Добавить рейнджера</string>
-    <string name="no_decks_for_add">У вас нет подходящих колод.</string>
+    <string name="search_local_decks">Поиск по локальным колодам</string>
+    <string name="search_uploaded_decks">Поиск по загруженным колодам</string>
+    <string name="no_local_decks_for_add">У вас нет подходящих локальных колод.</string>
+    <string name="no_uploaded_decks_for_add">У вас нет подходящих загруженных колод.</string>
     <string name="settings_section_header">— Настройки —</string>
     <string name="add_remove_players_button">Добавить/удалить игроков</string>
     <string name="upload_campaign_button">Загрузить на RangersDB</string>
@@ -314,6 +323,10 @@
     <string name="event_header">Важное событие</string>
     <string name="event_crossed_out">Зачёркнуто</string>
     <string name="event_marks">Отметки</string>
+    <string name="delete_event_button">Удалить событие</string>
+    <string name="add_note_button">Добавить заметку</string>
+    <string name="note_text">Заметка</string>
+    <string name="delete_note_button">Удалить заметку</string>
     <string name="removed_campaign_log_tab">Удалённые карты</string>
     <string name="remove_card_button">Удалить карту</string>
     <string name="removed_set_header">Набор</string>
@@ -324,8 +337,6 @@
     <string name="diagnostics_clear_local_data_cleared">Локальные данные очищены.</string>
     <string name="diagnostics_clear_coil_cache">Очистить кэш изображений</string>
     <string name="diagnostics_clear_coil_cache_cleared">Кэш изображений очищен.</string>
-    <string name="diagnostics_clear_apollo_cache">Очистить кэш сетевых запросов</string>
-    <string name="diagnostics_clear_apollo_cache_cleared">Сетевой кэш очищен.</string>
     <string name="loa_expansion">Наследие предков</string>
     <string name="general_set_the_arcology">Аркология</string>
     <string name="ancient_ruins">Древние руины</string>
@@ -424,6 +435,9 @@
     <string name="approaches_filter_connection">Контакт</string>
     <string name="approaches_filter_exploration">Разведка</string>
     <string name="approaches_filter_reason">Интеллект</string>
+
+    //Aspect requirements
+    <string name="aspect_requirements_equal_or_lower">Включать в поиск значения меньше</string>
 
     //Challenge deck
     <string name="challenge_deck_title">Колода вызова</string>

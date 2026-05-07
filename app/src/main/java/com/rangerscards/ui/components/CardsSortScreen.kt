@@ -37,10 +37,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rangerscards.R
-import com.rangerscards.data.CardFilters
-import com.rangerscards.data.SortOption
+import com.rangerscards.objects.CardFilters
+import com.rangerscards.objects.SortOption
+import com.rangerscards.ui.settings.components.RangersRadioButtonRow
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
+import com.rangerscards.utils.applyScaffoldPaddings
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
@@ -68,10 +70,7 @@ fun CardsSortScreen(
     }
     Scaffold(
         containerColor = CustomTheme.colors.l30,
-        modifier = Modifier.padding(
-            top = contentPadding.calculateTopPadding(),
-            bottom = contentPadding.calculateBottomPadding()
-        ),
+        modifier = Modifier.applyScaffoldPaddings(contentPadding),
         topBar = {
             RangersTopAppBar(
                 title = stringResource(R.string.sort_screen_header),
@@ -99,10 +98,7 @@ fun CardsSortScreen(
             modifier = Modifier
                 .background(CustomTheme.colors.l30)
                 .fillMaxSize()
-                .padding(
-                    top = innerPadding.calculateTopPadding(),
-                    bottom = innerPadding.calculateBottomPadding()
-                ),
+                .applyScaffoldPaddings(innerPadding),
         ) {
             LazyColumn(
                 state = lazyState,
@@ -124,41 +120,13 @@ fun CardsSortScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    IconButton(
-                                        onClick = {},
-                                        colors = IconButtonDefaults.iconButtonColors().copy(containerColor = Color.Transparent),
-                                        modifier = Modifier.size(32.dp).draggableHandle(),
-                                    ) {
-                                        Icon(
-                                            painterResource(R.drawable.drag_handle_32dp),
-                                            contentDescription = null,
-                                            tint = CustomTheme.colors.m,
-                                            modifier = Modifier.size(32.dp)
-                                        )
-                                    }
-
-                                    Text(
-                                        text = stringResource(sortOption.resId),
-                                        color = CustomTheme.colors.d30,
-                                        fontFamily = Jost,
-                                        fontWeight = FontWeight.Medium,
-                                        fontSize = 18.sp,
-                                        lineHeight = 22.sp,
-                                        modifier = Modifier.weight(1f)
-                                    )
-
-                                    RangersRadioButton(
-                                        selected = sortOption.isActive,
-                                        onClick = {
-                                            localSortOptionsList[index] = sortOption.copy(isActive = !sortOption.isActive)
-                                        },
-                                        modifier = Modifier.size(32.dp),
-                                    )
+                                RangersRadioButtonRow(
+                                    text = stringResource(sortOption.resId),
+                                    leadingIcon = R.drawable.drag_handle_32dp,
+                                    isSelected = sortOption.isActive,
+                                    modifier = Modifier.fillMaxWidth().draggableHandle()
+                                ) { value ->
+                                    localSortOptionsList[index] = sortOption.copy(isActive = value)
                                 }
                                 if (index != localSortOptionsList.lastIndex) HorizontalDivider(color = CustomTheme.colors.l10)
                             }

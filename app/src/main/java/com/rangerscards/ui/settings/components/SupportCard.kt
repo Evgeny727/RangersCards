@@ -2,13 +2,15 @@ package com.rangerscards.ui.settings.components
 
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.rangerscards.R
 import com.rangerscards.ui.components.SquareButton
-import com.rangerscards.ui.settings.SettingsViewModel
 import com.rangerscards.ui.settings.email
 import com.rangerscards.ui.theme.CustomTheme
+import com.rangerscards.utils.openEmail
+import com.rangerscards.utils.openLink
 
 const val boostyLink = "https://boosty.to/rangerscards/"
 const val patreonLink = "https://patreon.com/rangerscards"
@@ -19,11 +21,10 @@ fun SupportCard(
     language: String,
     navigateToAbout: () -> Unit,
     navigateToDiagnostics: () -> Unit,
-    modifier: Modifier = Modifier,
-    settingsViewModel: SettingsViewModel
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    SettingsBaseCard(
+    RangersBaseCard(
         isDarkTheme = isDarkTheme,
         labelIdRes = R.string.support_title,
         modifier = modifier
@@ -31,7 +32,9 @@ fun SupportCard(
         SquareButton(
             stringId = if (language == "ru") R.string.support_text_ru else R.string.support_text,
             leadingIcon = if (language == "ru") R.drawable.boosty else R.drawable.patreon_logo,
-            onClick = { settingsViewModel.openLink(if (language == "ru") boostyLink else patreonLink, context) }
+            onClick = remember(language) { {
+                context.openLink(if (language == "ru") boostyLink else patreonLink)
+            } }
         )
         SquareButton(
             stringId = R.string.about_button,
@@ -56,7 +59,9 @@ fun SupportCard(
             buttonColor = ButtonDefaults.buttonColors().copy(CustomTheme.colors.gold),
             iconColor = if (isDarkTheme) CustomTheme.colors.l20 else CustomTheme.colors.d20,
             textColor = if (isDarkTheme) CustomTheme.colors.l30 else CustomTheme.colors.d30,
-            onClick = { settingsViewModel.openEmail(email, context) }
+            onClick = remember { {
+                context.openEmail(email)
+            } }
         )
     }
 }

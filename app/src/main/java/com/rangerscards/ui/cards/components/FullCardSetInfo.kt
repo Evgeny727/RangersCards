@@ -18,18 +18,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rangerscards.R
+import com.rangerscards.domain.model.CardAspect
+import com.rangerscards.domain.model.CardSet
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 
 @Composable
 fun FullCardSetInfo(
     tabooId: String?,
-    aspectId: String?,
-    aspectShortName: String?,
+    aspect: CardAspect?,
     level: Int?,
-    name: String,
-    size: Int,
-    position: Int,
+    set: CardSet,
+    subset: CardSet?,
     packShortName: String?,
     isDarkTheme: Boolean
 ) {
@@ -37,7 +37,7 @@ fun FullCardSetInfo(
         modifier = Modifier.fillMaxWidth()
     ) {
         if (level != null) Surface(
-            color = when (aspectId) {
+            color = when (aspect?.id) {
                 "AWA" -> CustomTheme.colors.green
                 "FIT" -> CustomTheme.colors.red
                 "FOC" -> CustomTheme.colors.blue
@@ -52,7 +52,7 @@ fun FullCardSetInfo(
                 modifier = Modifier.padding(8.dp)
             ) {
                 Text(
-                    text = level.toString() + " " + aspectShortName.toString(),
+                    text = level.toString() + " " + aspect?.shortName.toString(),
                     color = if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30,
                     fontFamily = Jost,
                     fontWeight = FontWeight.Medium,
@@ -77,8 +77,10 @@ fun FullCardSetInfo(
                 modifier = Modifier.padding(8.dp)
             ) {
                 Text(
-                    text = name + " - " + stringResource(R.string.set_info, position, size) +
-                            if (packShortName != null) " ($packShortName)" else "",
+                    text = set.name + " - " + stringResource(
+                        R.string.set_info,
+                        subset?.position ?: set.position, subset?.size ?: set.size
+                    ) + if (packShortName != null) " ($packShortName)" else "",
                     color = CustomTheme.colors.d20,
                     fontFamily = Jost,
                     fontWeight = FontWeight.Medium,

@@ -1,40 +1,39 @@
 package com.rangerscards.ui.deck
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import com.rangerscards.data.CardFilterOptions
-import com.rangerscards.data.UserPreferencesRepository
-import com.rangerscards.data.database.card.CardDeckListItemProjection
-import com.rangerscards.data.database.repository.DeckRepository
+import com.rangerscards.domain.model.CardDeckListItem
+import com.rangerscards.domain.model.CardFilterOptions
+import com.rangerscards.domain.model.Deck
+import com.rangerscards.domain.model.DeckInfo
+import com.rangerscards.domain.repository.UserPreferencesRepository
+import com.rangerscards.domain.usecase.SearchDeckCardsUseCase
 import com.rangerscards.ui.cards.Quintuple
+import com.rangerscards.ui.deck.components.DeckCardListUiModel
+import com.rangerscards.ui.deck.components.withCategoryHeaders
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
-import java.util.Locale
+import javax.inject.Inject
 
-data class DeckInfo(
-    val isUpgrade: Boolean,
-    val background: String,
-    val specialty: String,
-    val rewards: List<String>,
-    val extraSlots: List<String>,
-    val taboo: String?,
-)
-
-class DeckCardsViewModel(
-    private val deckRepository: DeckRepository,
+@HiltViewModel
+class DeckCardsViewModel @Inject constructor(
+    private val searchDeckCardsUseCase: SearchDeckCardsUseCase,
     userPreferencesRepository: UserPreferencesRepository,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _deckInfo= MutableStateFlow<DeckInfo?>(null)
@@ -44,14 +43,10 @@ class DeckCardsViewModel(
 
     // Holds the current state of whether to include English search results.
     private val _includeEnglish: StateFlow<Boolean> =
-        userPreferencesRepository.isIncludeEnglishSearchResults.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = false
-        )
+        userPreferencesRepository.isIncludeEnglishSearchResults
 
     // Holds the current type index.
-    private val _typeIndex = MutableStateFlow(0)
+    private val _typeIndex: MutableStateFlow<Int> = MutableStateFlow(checkNotNull(savedStateHandle["typeIndexArgument"]))
     val typeIndex: StateFlow<Int> = _typeIndex.asStateFlow()
 
     private val _packIds = MutableStateFlow(listOf("core"))
@@ -59,40 +54,36 @@ class DeckCardsViewModel(
     private val _filterOptions = MutableStateFlow(CardFilterOptions())
     val filterOptions: StateFlow<CardFilterOptions> = _filterOptions.asStateFlow()
 
+    var scrollIndex by mutableIntStateOf(0)
+    var scrollOffset by mutableIntStateOf(0)
+
     // Exposes the paginated search results as PagingData.
     @OptIn(ExperimentalCoroutinesApi::class)
-    val searchResults: Flow<PagingData<CardDeckListItemProjection>> =
-        combine(_filterOptions, _deckInfo, _typeIndex, _showAllSpoilers, _includeEnglish) { filterOptions, deckInfo, typeIndex, showAllSpoilers, includeEnglish ->
+    val searchResults: Flow<PagingData<CardDeckListItem>> =
+        combine(
+            _filterOptions,
+            _deckInfo,
+            _typeIndex,
+            _showAllSpoilers,
+            _includeEnglish
+        ) { filterOptions, deckInfo, typeIndex, showAllSpoilers, includeEnglish ->
             Quintuple(filterOptions, deckInfo, typeIndex, showAllSpoilers, includeEnglish)
         }.flatMapLatest { (filterOptions, deckInfo, typeIndex, showAllSpoilers, includeEnglish) ->
-            // When the search query or include flag changes, perform a new search.
-            if (deckInfo != null) {
-                if (filterOptions.searchQuery.isEmpty()) {
-                    deckRepository.getAllCards(deckInfo, typeIndex, showAllSpoilers, _packIds.value, filterOptions)
-                        .catch { throwable ->
-                            // Log the error.
-                            throwable.printStackTrace()
-                            // Return an empty PagingData on error so that the flow continues.
-                            emit(PagingData.empty())
-                        }
-                } else {
-                    deckRepository.searchCards(
-                        filterOptions = filterOptions,
-                        deckInfo = deckInfo,
-                        includeEnglish = includeEnglish,
-                        typeIndex = typeIndex,
-                        showAllSpoilers = showAllSpoilers,
-                        language = Locale.getDefault().language.substring(0..1),
-                        packIds = _packIds.value
-                    ).catch { throwable ->
-                        // Log the error.
-                        throwable.printStackTrace()
-                        // Return an empty PagingData on error so that the flow continues.
-                        emit(PagingData.empty())
-                    }
-                }
-            } else flow { emit(PagingData.empty()) }
+            if (deckInfo != null)
+                searchDeckCardsUseCase(
+                    filterOptions,
+                    deckInfo,
+                    typeIndex,
+                    showAllSpoilers,
+                    _packIds.value,
+                    includeEnglish
+                )
+            else flowOf(PagingData.empty())
         }.cachedIn(viewModelScope)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val searchResultsWithHeaders: Flow<PagingData<DeckCardListUiModel>> =
+        _filterOptions.flatMapLatest { searchResults.withCategoryHeaders(it.sortOrder) }
 
     /**
      * Called when the user enters a new search term.
@@ -116,9 +107,10 @@ class DeckCardsViewModel(
     }
 
     fun applyNewSortOptions(newSortOptions: List<String>) {
-        _filterOptions.update { it.copy(sortOrder = newSortOptions.ifEmpty {
-            listOf("set_type_id", "set_id", "set_position")
-        })
+        _filterOptions.update {
+            it.copy(sortOrder = newSortOptions.ifEmpty {
+                listOf("set_type_id", "set_id", "set_position")
+            })
         }
     }
 
@@ -135,13 +127,13 @@ class DeckCardsViewModel(
         ) }
     }
 
-    fun updateDeckInfo(deck: FullDeckState, extraSlots: List<String>) {
+    fun updateDeckInfo(deck: Deck, extraSlots: List<String>) {
         _deckInfo.update {
             DeckInfo(
-                isUpgrade = deck.previousId != null,
-                background = deck.background,
-                specialty = deck.specialty,
-                rewards = deck.campaignRewards ?: emptyList(),
+                isUpgrade = deck.previousDeck != null,
+                background = deck.deckMeta.background,
+                specialty = deck.deckMeta.specialty,
+                rewards = deck.campaignInfo?.campaignRewards ?: emptyList(),
                 extraSlots = extraSlots,
                 taboo = deck.tabooSetId,
             )
@@ -149,16 +141,14 @@ class DeckCardsViewModel(
     }
 
     fun updateShowAllSpoilers(newValue: Boolean) {
-        _showAllSpoilers.update { newValue }
+        _showAllSpoilers.value = newValue
     }
 
     fun onTypeIndexChanged(newIndex: Int) {
-        if (newIndex != -1) _typeIndex.update {
-            newIndex
-        }
+        _typeIndex.value = newIndex
     }
 
     fun setPackIds(packIds: List<String>) {
-        _packIds.update { listOf("core") + packIds }
+        _packIds.value = listOf("core") + packIds
     }
 }

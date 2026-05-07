@@ -61,12 +61,12 @@
   <string name="update_cards_button">Mettre à jour les cartes</string>
   <string name="rules_button">Règles</string>
   <string name="authentication_failed_toast">Authentification échouée.</string>
-  <string name="invalid_password_toast">Mot de passe invalide. Il doit contenir au moins 6 caractères.</string>
-  <string name="invalid_email_toast">Adresse e-mail invalide.</string>
+  <string name="invalid_password_text">Mot de passe invalide. Il doit contenir au moins 6 caractères.</string>
+  <string name="invalid_email_text">Adresse e-mail invalide.</string>
   <string name="account_successfully_deleted_toast">Compte supprimé avec succès.</string>
   <string name="invalid_credentials_toast">Identifiants invalides.</string>
-  <string name="handle_already_taken_toast">Ce nom est déjà pris.</string>
-  <string name="invalid_handle_toast">Nom invalide. Il doit comporter entre 2 et 22 caractères.</string>
+  <string name="handle_already_taken_text">Ce nom est déjà pris.</string>
+  <string name="invalid_handle_text">Nom invalide. Il doit comporter entre 2 et 22 caractères.</string>
   <string name="socials_title">Réseaux sociaux</string>
   <string name="socials_text">Discute avec d\'autres joueurs d\'Earthborne Rangers:</string>
   <string name="discord_button">Discord</string>
@@ -111,7 +111,7 @@
   <string name="new_deck">Nouveau Deck</string>
   <string name="custom_deck_tab">Deck personnalisé</string>
   <string name="starter_deck_tab">Deck de démarrage</string>
-  <string name="deck_creation_name_label">Nom</string>
+  <string name="name_label">Nom</string>
   <string name="deck_creation_name_placeholder">Donne un nom à ce Deck.</string>
   <string name="starter_deck_title">Choisis un Deck de démarrage :</string>
   <string name="upload_to_rangersdb">Charger sur RangersDB</string>
@@ -198,7 +198,7 @@
   //Deck Side Drawer
   <string name="deck_section_header">Deck</string>
   <string name="deck_section_deck_id">Deck #%s</string>
-  <string name="deck_section_notes">Notes</string>
+  <string name="section_notes">Notes</string>
   <string name="tools_section_header">Outils</string>
   <string name="tools_section_charts">Graphiques</string>
   <string name="campaign_section_header">Campagne</string>
@@ -215,7 +215,7 @@
   <string name="options_section_delete_deck">Supprimer le Deck</string>
   <string name="options_section_delete_current_deck">Supprimer la version actuelle</string>
   <string name="options_section_delete_deck_all_versions">Supprimer toutes les versions du Deck</string>
-  <string name="options_section_delete_deck_warning">Erreur : le Deck est utilisé dans une campagne !</string>
+  <string name="options_section_upload_deck_in_campaign_warning">Erreur : le Deck est utilisé dans une campagne !</string>
   <string name="delete_deck_text">Es-tu sûr de vouloir supprimer ce Deck ? Version : %d.</string>
 
   //Campaigns screen
@@ -285,7 +285,7 @@
   //Campaign screen
   <string name="current_location">Position actuelle</string>
   <string name="current_path_terrain">Type de terrain actuel</string>
-  <string name="current_path_terrain_none">Aucun</string>
+  <string name="text_none">Aucun</string>
   <string name="recorded_journey_button">Voyage enregistré</string>
   <string name="extend_campaign_button">Prolonger la campagne</string>
 
@@ -324,10 +324,9 @@
   //Rangers section
   <string name="rangers_section_header">— Rangers —</string>
   <string name="add_ranger_button">Ajouter un Ranger</string>
-  <string name="no_decks_for_add">Aucun déck approprié.</string>
 
-  //Settings section
-  <string name="settings_section_header">— Paramètres —</string>
+    //Settings section
+    <string name="settings_section_header">— Paramètres —</string>
   <string name="add_remove_players_button">Ajouter/retirer des joueurs</string>
   <string name="upload_campaign_button">Téléverser la campagne sur RangersDB</string>
   <string name="upload_campaign_warning">Erreur : cette campagne contient des decks !</string>
@@ -370,8 +369,6 @@
   <string name="diagnostics_clear_local_data_cleared">Les données locales ont été supprimées.</string>
   <string name="diagnostics_clear_coil_cache">Vider le cache d’images</string>
   <string name="diagnostics_clear_coil_cache_cleared">Le cache d’images a été vidé.</string>
-  <string name="diagnostics_clear_apollo_cache">Vider le cache réseau</string>
-  <string name="diagnostics_clear_apollo_cache_cleared">Le cache réseau a été vidé.</string>
 
   //loa campaign
   <string name="general_set_the_arcology">L\'Arcologie</string>

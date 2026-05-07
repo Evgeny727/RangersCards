@@ -34,6 +34,7 @@ fun RowWithEditableNumericValue(
     numericValue: Int
 ) {
     Row(
+        modifier = Modifier.padding(top = 8.dp, start = 8.dp, end = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

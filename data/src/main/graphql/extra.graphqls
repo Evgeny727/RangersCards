@@ -1,0 +1,8 @@
+extend schema
+@link(
+    url: "https://specs.apollo.dev/kotlin_labs/v0.5",
+    import: ["@fieldPolicy", "@typePolicy"]
+)
+
+extend type query_root @fieldPolicy(forField: "rangers_users_by_pk", keyArgs: "id")
+extend type rangers_users @typePolicy(keyFields: "id")

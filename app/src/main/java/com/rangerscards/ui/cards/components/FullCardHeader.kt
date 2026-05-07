@@ -28,22 +28,20 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import com.rangerscards.R
-import com.rangerscards.data.objects.ImageSrc
+import com.rangerscards.domain.model.CardApproaches
+import com.rangerscards.domain.model.CardAspect
+import com.rangerscards.objects.ImageSrc
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 
 @Composable
 fun FullCardHeader(
-    aspectId: String?,
-    aspectShortName: String?,
+    aspect: CardAspect?,
     cost: Int?,
     imageSrc: String?,
     name: String,
     presence: Int?,
-    approachConflict: Int?,
-    approachReason: Int?,
-    approachExploration: Int?,
-    approachConnection: Int?,
+    approaches: CardApproaches,
     isDarkTheme: Boolean
 ) {
     Column(
@@ -57,8 +55,7 @@ fun FullCardHeader(
                 .padding(end = 8.dp)
         ) {
             FullCardHeaderAspectContainer(
-                aspectId,
-                aspectShortName,
+                aspect,
                 cost,
                 imageSrc,
                 isDarkTheme,
@@ -77,10 +74,10 @@ fun FullCardHeader(
             if (presence != null) PresenceContainer(presence, isDarkTheme)
             ApproachContainer(
                 mapOf(
-                    R.drawable.connection to approachConnection,
-                    R.drawable.exploration to approachExploration,
-                    R.drawable.reason to approachReason,
-                    R.drawable.conflict to approachConflict,
+                    R.drawable.connection to approaches.connection,
+                    R.drawable.exploration to approaches.exploration,
+                    R.drawable.reason to approaches.reason,
+                    R.drawable.conflict to approaches.conflict,
                 ).mapNotNull { (res, value) ->
                     value?.let { res to it }
                 }.toMap(),
@@ -89,7 +86,7 @@ fun FullCardHeader(
         }
         HorizontalDivider(
             modifier = Modifier.fillMaxWidth(),
-            color = when(aspectId) {
+            color = when(aspect?.id) {
                 "AWA" -> CustomTheme.colors.green
                 "FIT" -> CustomTheme.colors.red
                 "FOC" -> CustomTheme.colors.blue
@@ -102,8 +99,7 @@ fun FullCardHeader(
 
 @Composable
 fun FullCardHeaderAspectContainer(
-    aspectId: String?,
-    aspectShortName: String?,
+    aspect: CardAspect?,
     cost: Int?,
     imageSrc: String?,
     isDarkTheme: Boolean,
@@ -111,7 +107,7 @@ fun FullCardHeaderAspectContainer(
     Surface(
         modifier = Modifier
             .size(56.dp),
-        color = when (aspectId) {
+        color = when (aspect?.id) {
             "AWA" -> CustomTheme.colors.green
             "FIT" -> CustomTheme.colors.red
             "FOC" -> CustomTheme.colors.blue
@@ -119,13 +115,13 @@ fun FullCardHeaderAspectContainer(
             else -> Color.Transparent
         },
     ) {
-        if (aspectId != null) {
+        if (aspect?.id != null) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.fillMaxSize()
             ) {
                 Icon(
-                    painterResource(when(aspectId) {
+                    painterResource(when(aspect.id) {
                         "AWA" -> R.drawable.awa_chakra
                         "FIT" -> R.drawable.fit_chakra
                         "FOC" -> R.drawable.foc_chakra
@@ -149,7 +145,7 @@ fun FullCardHeaderAspectContainer(
                         lineHeight = 30.sp,
                     )
                     Text(
-                        text = aspectShortName.toString(),
+                        text = aspect.shortName,
                         color = if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30,
                         fontFamily = Jost,
                         fontWeight = FontWeight.Bold,
@@ -162,7 +158,7 @@ fun FullCardHeaderAspectContainer(
         } else {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(ImageSrc.imageSrc + imageSrc)
+                    .data(ImageSrc.BASE_URL + imageSrc)
                     .build(),
                 placeholder = painterResource(id = R.drawable.per_ranger),
                 error = painterResource(id = R.drawable.per_ranger),

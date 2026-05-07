@@ -28,7 +28,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -38,38 +37,43 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
+import com.rangerscards.AppViewModel
 import com.rangerscards.R
-import com.rangerscards.data.database.campaign.CampaignListItemProjection
 import com.rangerscards.ui.campaigns.components.CampaignListItem
 import com.rangerscards.ui.components.RangersSearchOutlinedField
-import com.rangerscards.ui.settings.SettingsViewModel
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
+import com.rangerscards.utils.applyScaffoldPaddings
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.drop
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import com.rangerscards.domain.model.CampaignListItem as CampaignListItemModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CampaignsScreen(
     navigateToCampaign: (String) -> Unit,
     campaignsViewModel: CampaignsViewModel,
-    settingsViewModel: SettingsViewModel,
+    appViewModel: AppViewModel,
     isDarkTheme: Boolean,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
-    val user by settingsViewModel.userUiState.collectAsState()
-    val isRefreshing by campaignsViewModel.isRefreshing.collectAsState()
+    val user by appViewModel.userUiState.collectAsState()
+    val campaignsUiState by campaignsViewModel.campaignsUiState.collectAsState()
     val refreshState = rememberPullToRefreshState()
-    var userId by rememberSaveable { mutableStateOf("") }
+    var userId by rememberSaveable { mutableStateOf<String?>("") }
     val campaignsLazyItems = campaignsViewModel.searchResults.collectAsLazyPagingItems()
-    val context = LocalContext.current.applicationContext
-    LaunchedEffect(user.currentUser) {
-        if (userId != user.currentUser?.uid.toString()) {
-            campaignsViewModel.getAllNetworkCampaigns(user.currentUser, context)
-            userId = user.currentUser?.uid.toString()
+
+    LaunchedEffect(user.userInfo?.id) {
+        if (userId != user.userInfo?.id) {
+            campaignsViewModel.getAllNetworkCampaigns(user.userInfo?.id)
+            userId = user.userInfo?.id
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        campaignsViewModel.events.collect {
+            appViewModel.emitError(it.exception)
         }
     }
 
@@ -94,10 +98,7 @@ fun CampaignsScreen(
         modifier = modifier
             .background(CustomTheme.colors.l20)
             .fillMaxSize()
-            .padding(
-                top = contentPadding.calculateTopPadding(),
-                bottom = contentPadding.calculateBottomPadding()
-            ),
+            .applyScaffoldPaddings(contentPadding),
     ) {
         RangersSearchOutlinedField(
             query = searchQuery,
@@ -106,13 +107,13 @@ fun CampaignsScreen(
             onClearClicked = campaignsViewModel::clearSearchQuery
         )
         PullToRefreshBox(
-            isRefreshing = isRefreshing,
+            isRefreshing = campaignsUiState is CampaignsUiState.Loading,
             state = refreshState,
-            onRefresh = { campaignsViewModel.getAllNetworkCampaigns(user.currentUser, context) },
+            onRefresh = { campaignsViewModel.getAllNetworkCampaigns(user.userInfo?.id) },
             indicator = {
                 PullToRefreshDefaults.Indicator(
                     modifier = Modifier.align(Alignment.TopCenter),
-                    isRefreshing = isRefreshing,
+                    isRefreshing = campaignsUiState is CampaignsUiState.Loading,
                     containerColor = CustomTheme.colors.d10,
                     color = CustomTheme.colors.l30,
                     state = refreshState
@@ -127,7 +128,7 @@ fun CampaignsScreen(
                 state = listState,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                if (campaignsLazyItems.itemCount == 0 && campaignsLazyItems.loadState.isIdle) item {
+                if (campaignsLazyItems.itemCount == 0 && campaignsLazyItems.loadState.isIdle) item("no_results") {
                     Column(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -151,23 +152,20 @@ fun CampaignsScreen(
                 }
                 items(
                     count = campaignsLazyItems.itemCount,
-                    key = campaignsLazyItems.itemKey(CampaignListItemProjection::id),
+                    key = campaignsLazyItems.itemKey(CampaignListItemModel::id),
                     contentType = campaignsLazyItems.itemContentType { it }
                 ) { index ->
                     val item = campaignsLazyItems[index] ?: return@items
-                    val roleImages = campaignsViewModel.getRolesImages(
-                        item.latestDecks.jsonObject.values.mapNotNull { jsonArray ->
-                            jsonArray.jsonArray.getOrNull(1)?.jsonObject?.get("role")?.jsonPrimitive?.content
-                        }
-                    ).collectAsState(null)
+                    val roleImages = campaignsViewModel.getRolesImages(item.latestDecksRoles)
+                        .collectAsState(null)
                     CampaignListItem(
                         cycleId = item.cycleId,
                         name = item.name,
                         day = item.day,
                         currentLocation = item.currentLocation,
-                        rolesImages = roleImages.value ?: emptyList(),
-                        access = item.access,
-                        onClick = { navigateToCampaign.invoke(item.id) },
+                        rolesImages = roleImages.value ?: persistentListOf(),
+                        players = item.players,
+                        onClick = { navigateToCampaign(item.id) },
                         isDarkTheme = isDarkTheme
                     )
                 }

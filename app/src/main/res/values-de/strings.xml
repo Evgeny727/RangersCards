@@ -57,12 +57,12 @@
     <string name="update_cards_button">Karten aktualisieren</string>
     <string name="rules_button">Regeln</string>
     <string name="authentication_failed_toast">Authentifizierung fehlgeschlagen.</string>
-    <string name="invalid_password_toast">Ungültiges Passwort. Es muss mindestens 6 Zeichen lang sein.</string>
-    <string name="invalid_email_toast">Ungültige E-Mail-Adresse.</string>
+    <string name="invalid_password_text">Ungültiges Passwort. Es muss mindestens 6 Zeichen lang sein.</string>
+    <string name="invalid_email_text">Ungültige E-Mail-Adresse.</string>
     <string name="account_successfully_deleted_toast">Account successfully deleted.</string>
     <string name="invalid_credentials_toast">Ungültige Zugangsdaten.</string>
-    <string name="handle_already_taken_toast">Dieser Name ist leider schon vergeben.</string>
-    <string name="invalid_handle_toast">Ungültiger Name. Er muss zwischen 2 und 22 Zeichen lang sein.</string>
+    <string name="handle_already_taken_text">Dieser Name ist leider schon vergeben.</string>
+    <string name="invalid_handle_text">Ungültiger Name. Er muss zwischen 2 und 22 Zeichen lang sein.</string>
     <string name="socials_title">Soziale Netzwerke</string>
     <string name="socials_text">Chatte mit anderen Earthborne Rangers Spielern:</string>
     <string name="discord_button">Discord</string>
@@ -107,7 +107,7 @@
     <string name="new_deck">Neues Deck</string>
     <string name="custom_deck_tab">Eigenes Deck</string>
     <string name="starter_deck_tab">Einsteigerdeck</string>
-    <string name="deck_creation_name_label">Name</string>
+    <string name="name_label">Name</string>
     <string name="deck_creation_name_placeholder">Gib diesem Deck einen Namen.</string>
     <string name="starter_deck_title">Wähle ein Einsteigerdeck:</string>
     <string name="upload_to_rangersdb">Auf RangersDB erstellen</string>
@@ -192,7 +192,7 @@
     //Deck Side Drawer
     <string name="deck_section_header">Deck</string>
     <string name="deck_section_deck_id">Deck #%s</string>
-    <string name="deck_section_notes">Notes</string>
+    <string name="section_notes">Notes</string>
     <string name="tools_section_header">Tools</string>
     <string name="tools_section_charts">Charts</string>
     <string name="campaign_section_header">Kampagne</string>
@@ -209,7 +209,7 @@
     <string name="options_section_delete_deck">Deck löschen</string>
     <string name="options_section_delete_current_deck">Aktuelle Version löschen</string>
     <string name="options_section_delete_deck_all_versions">Alle Versionen des Decks löschen</string>
-    <string name="options_section_delete_deck_warning">Fehler: Deck wird in einer Kampagne verwendet!</string>
+    <string name="options_section_upload_deck_in_campaign_warning">Fehler: Deck wird in einer Kampagne verwendet!</string>
     <string name="delete_deck_text">Bist Du sicher, dass Du dieses Deck löschen willst? Version: %d.</string>
 
     //Campaigns screen
@@ -279,7 +279,7 @@
     //Campaign screen
     <string name="current_location">Aktuelle Position</string>
     <string name="current_path_terrain">Aktueller Terrain-Typ</string>
-    <string name="current_path_terrain_none">Keiner</string>
+    <string name="text_none">Keiner</string>
     <string name="recorded_journey_button">Aufgezeichnete Reise</string>
     <string name="extend_campaign_button">Kampagne verlängern</string>
 
@@ -318,7 +318,6 @@
     //Rangers section
     <string name="rangers_section_header">— Ranger —</string>
     <string name="add_ranger_button">Ranger hinzufügen</string>
-    <string name="no_decks_for_add">Keine geeigneten Decks.</string>
 
     //Settings section
     <string name="settings_section_header">— Einstellungen —</string>
@@ -366,11 +365,9 @@
     <string name="diagnostics_clear_local_data_cleared">Lokal gespeicherte Daten wurden gelöscht.</string>
     <string name="diagnostics_clear_coil_cache">Bild-Cache leeren</string>
     <string name="diagnostics_clear_coil_cache_cleared">Bild-Cache ist geleert.</string>
-    <string name="diagnostics_clear_apollo_cache">Netzwerk-Cache leeren</string>
-    <string name="diagnostics_clear_apollo_cache_cleared">Netzwerk-Cache ist geleert.</string>
 
-   //loa campaign
-   <string name="general_set_the_arcology">Die Arkologie</string>
+    //loa campaign
+    <string name="general_set_the_arcology">Die Arkologie</string>
     <string name="loa_expansion">Das Vermächtnis der Ahnen</string>
     <string name="ancient_ruins">Uralte Ruinen</string>
     <string name="flooded_ruins">Überschwemmte Ruinen</string>

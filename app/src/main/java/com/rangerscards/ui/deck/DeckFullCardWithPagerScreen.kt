@@ -15,9 +15,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,34 +38,30 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.rangerscards.R
-import com.rangerscards.ui.cards.CardsViewModel
 import com.rangerscards.ui.cards.components.FullCard
 import com.rangerscards.ui.components.RangersTopAppBar
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
+import com.rangerscards.utils.applyScaffoldPaddings
 
 @Composable
 fun DeckFullCardWithPagerScreen(
     navigateUp: () -> Unit,
     deckViewModel: DeckViewModel,
-    cardsViewModel: CardsViewModel,
     deckCardsViewModel: DeckCardsViewModel,
-    cardIndex: Int,
+    cardId: String,
     isDarkTheme: Boolean,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
-    val deck by deckViewModel.originalDeck.collectAsState()
-    cardsViewModel.setTabooId(deck?.tabooSetId != null)
+    val deck by deckViewModel.deck.collectAsState()
     val cardsLazyItems = deckCardsViewModel.searchResults.collectAsLazyPagingItems()
+    val cardIndex = cardsLazyItems.itemSnapshotList.items.indexOfFirst { it.id == cardId }
     val pagerState = rememberPagerState(initialPage = cardIndex) { cardsLazyItems.itemCount }
     val values by deckViewModel.updatableValues.collectAsState()
-    val slots = deckViewModel.slotsCardsFlow.collectAsState(null)
+    val slots = deckViewModel.slotsCards.collectAsState()
     Scaffold(
         containerColor = CustomTheme.colors.l30,
-        modifier = Modifier.padding(
-            top = contentPadding.calculateTopPadding(),
-            bottom = contentPadding.calculateBottomPadding()
-        ),
+        modifier = Modifier.applyScaffoldPaddings(contentPadding),
         topBar = {
             RangersTopAppBar(
                 title = "",
@@ -79,14 +76,11 @@ fun DeckFullCardWithPagerScreen(
             state = pagerState,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(
-                    top = innerPadding.calculateTopPadding(),
-                    bottom = innerPadding.calculateBottomPadding()
-                ),
+                .applyScaffoldPaddings(innerPadding),
         ) { page ->
-            val cardCode = cardsLazyItems[page]!!.code
-            val fullCard by cardsViewModel.getCardById(cardCode).collectAsState(null)
-            val slotInfo = slots.value?.firstOrNull { it.code == cardCode }
+            val cardCode = cardsLazyItems[page]?.code ?: return@HorizontalPager
+            val fullCard by deckViewModel.getCardById(cardCode, deck?.tabooSetId != null).collectAsState(null)
+            val slotInfo = slots.value.firstOrNull { it.code == cardCode }
             val isInExtraCards = (values?.extraSlots?.get(cardCode) ?: 0) >= 1
             Box(modifier = Modifier.fillMaxSize()) {
                 if (fullCard == null) Column(
@@ -101,45 +95,33 @@ fun DeckFullCardWithPagerScreen(
                         color = CustomTheme.colors.m
                     )
                 } else {
-                    LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
-                        item {
-                            FullCard(
-                                tabooId = fullCard!!.tabooId,
-                                aspectId = fullCard!!.aspectId,
-                                aspectShortName = fullCard!!.aspectShortName,
-                                cost = fullCard!!.cost,
-                                imageSrc = fullCard!!.imageSrc,
-                                realImageSrc = fullCard!!.realImageSrc,
-                                name = fullCard!!.name,
-                                presence = fullCard!!.presence,
-                                approachConflict = fullCard!!.approachConflict,
-                                approachReason = fullCard!!.approachReason,
-                                approachExploration = fullCard!!.approachExploration,
-                                approachConnection = fullCard!!.approachConnection,
-                                typeName = fullCard!!.typeName,
-                                typeId = fullCard!!.typeId,
-                                traits = fullCard!!.traits,
-                                equip = fullCard!!.equip,
-                                harm = fullCard!!.harm,
-                                progress = fullCard!!.progress,
-                                tokenPlurals = fullCard!!.tokenPlurals,
-                                tokenCount = fullCard!!.tokenCount,
-                                text = fullCard!!.text,
-                                flavor = fullCard!!.flavor,
-                                level = fullCard!!.level,
-                                setName = fullCard!!.setName,
-                                setSize = fullCard!!.setSize,
-                                setPosition = fullCard!!.setPosition,
-                                subsetSize = fullCard!!.subsetSize,
-                                subsetPosition = fullCard!!.subsetPosition,
-                                packShortName = fullCard!!.packShortName,
-                                sunChallenge = fullCard!!.sunChallenge,
-                                mountainChallenge = fullCard!!.mountainChallenge,
-                                crestChallenge = fullCard!!.crestChallenge,
-                                isDarkTheme = isDarkTheme
-                            )
-                        }
+                    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                        FullCard(
+                            tabooId = fullCard!!.tabooId,
+                            aspect = fullCard!!.aspect,
+                            cost = fullCard!!.cost,
+                            image = fullCard!!.image,
+                            name = fullCard!!.name,
+                            presence = fullCard!!.presence,
+                            approaches = fullCard!!.approaches,
+                            type = fullCard!!.type,
+                            traits = fullCard!!.traits,
+                            equip = fullCard!!.equip,
+                            harm = fullCard!!.harm,
+                            progress = fullCard!!.progress,
+                            tokens = fullCard!!.tokens,
+                            text = fullCard!!.text,
+                            flavor = fullCard!!.flavor,
+                            level = fullCard!!.level,
+                            set = fullCard!!.set,
+                            subset = fullCard!!.subset,
+                            packShortName = fullCard!!.packShortName,
+                            challenges = fullCard!!.challenges,
+                            isDarkTheme = isDarkTheme
+                        )
+                        Spacer(modifier = Modifier.height(80.dp))
                     }
+
                     // Overlay custom FABs in the bottom-end corner
                     Row(
                         modifier = Modifier

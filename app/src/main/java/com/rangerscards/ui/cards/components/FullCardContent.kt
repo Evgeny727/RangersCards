@@ -8,23 +8,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.rangerscards.domain.model.CardChallenges
+import com.rangerscards.domain.model.CardTokens
+import com.rangerscards.domain.model.CardType
 
 @Composable
 fun FullCardContent(
     aspectId: String?,
-    typeId: String?,
-    typeName: String?,
+    type: CardType,
     traits: String?,
     equip: Int?,
     harm: Int?,
     progress: Int?,
-    tokenPlurals: String?,
-    tokenCount: Int?,
+    tokens: CardTokens?,
     text: String?,
     flavor: String?,
-    sunChallenge: String?,
-    mountainChallenge: String?,
-    crestChallenge: String?,
+    challenges: CardChallenges,
     imageSrc: String?,
     isDarkTheme: Boolean
 ) {
@@ -38,16 +37,14 @@ fun FullCardContent(
         FullCardAdditionalContent(
             aspectId,
             traits,
-            typeId,
-            typeName,
+            type,
             equip,
             harm,
             progress,
-            tokenPlurals,
-            tokenCount,
+            tokens,
             isDarkTheme
         )
-        FullCardTextContent(aspectId, text, flavor, sunChallenge, mountainChallenge, crestChallenge, isDarkTheme)
+        FullCardTextContent(aspectId, text, flavor, challenges, isDarkTheme)
         FullCardImageContainer(imageSrc)
     }
 }

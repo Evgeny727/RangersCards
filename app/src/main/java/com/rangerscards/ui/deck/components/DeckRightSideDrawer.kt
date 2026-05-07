@@ -1,7 +1,6 @@
 package com.rangerscards.ui.deck.components
 
 import android.content.ClipData
-import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.core.animateIntOffsetAsState
@@ -34,7 +33,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.toClipEntry
 import androidx.compose.ui.res.painterResource
@@ -46,7 +44,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rangerscards.R
-import com.rangerscards.ui.components.RangersRadioButton
+import com.rangerscards.ui.settings.components.RangersRadioButton
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 import kotlinx.coroutines.launch
@@ -55,6 +53,7 @@ import kotlinx.coroutines.launch
 fun BoxScope.DeckRightSideDrawer(
     isOpen: Boolean,
     onClick: () -> Unit,
+    showMessage: suspend (String) -> Unit,
     isOwner: Boolean,
     deckName: String,
     deckId: String?,
@@ -63,9 +62,10 @@ fun BoxScope.DeckRightSideDrawer(
     isTabooSet: Boolean,
     toNotes: () -> Unit,
     toCharts: () -> Unit,
-    camp:  (() -> Unit)?,
+    camp: (() -> Unit)?,
     toPreviousDeck: (() -> Unit)?,
     toNextDeck: (() -> Unit)?,
+    toDeckHistory: (() -> Unit)?,
     cloneDeck: () -> Unit,
     upload: (() -> Unit)?,
     url: String?,
@@ -136,17 +136,16 @@ fun BoxScope.DeckRightSideDrawer(
 //                    )
                 }
             }
-            //TODO:Implement deck charts
-//            item {
-//                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-//                    DrawerSectionHeader(R.string.tools_section_header)
-//                    DrawerSectionButtonRow(
-//                        R.drawable.charts_32dp,
-//                        stringResource(R.string.tools_section_charts),
-//                        toCharts,
-//                    )
-//                }
-//            }
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DrawerSectionHeader(R.string.tools_section_header)
+                    DrawerSectionButtonRow(
+                        R.drawable.charts_32dp,
+                        stringResource(R.string.tools_section_charts),
+                        toCharts,
+                    )
+                }
+            }
             if (isOwner) item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     DrawerSectionHeader(R.string.campaign_section_header)
@@ -173,6 +172,15 @@ fun BoxScope.DeckRightSideDrawer(
                             toNextDeck,
                         )
                     }
+                    if (toDeckHistory != null) {
+                        if (camp != null || toPreviousDeck != null || toNextDeck != null)
+                            HorizontalDivider(color = CustomTheme.colors.l10)
+                        DrawerSectionButtonRow(
+                            R.drawable.cards_32dp,
+                            stringResource(R.string.campaign_section_deck_history),
+                            toDeckHistory,
+                        )
+                    }
                 }
             }
             item {
@@ -191,15 +199,18 @@ fun BoxScope.DeckRightSideDrawer(
                                 stringResource(if (url == null) R.string.upload_to_rangersdb
                                 else R.string.view_on_rangersdb),
                                 upload,
-                                url = url
+                                url = url,
+                                showMessage = showMessage,
                             )
                         }
-                        HorizontalDivider(color = CustomTheme.colors.l10)
-                        DrawerSectionButtonRow(
-                            R.drawable.delete_32dp,
-                            stringResource(R.string.options_section_delete_deck),
-                            deleteDeck,
-                        )
+                        if (toNextDeck == null) {
+                            HorizontalDivider(color = CustomTheme.colors.l10)
+                            DrawerSectionButtonRow(
+                                R.drawable.delete_32dp,
+                                stringResource(R.string.options_section_delete_deck),
+                                deleteDeck,
+                            )
+                        }
                     }
                 }
             }
@@ -240,28 +251,24 @@ fun DrawerSectionButtonRow(
     additionalText: String? = null,
     radioButton: Boolean? = null,
     url: String? = null,
+    showMessage: (suspend (String) -> Unit)? = null,
 ) {
     val clipboard = LocalClipboard.current
-    val context = LocalContext.current
     val successMessage = stringResource(R.string.copy_link_to_rangersdb)
     val coroutine = rememberCoroutineScope()
     Row(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
             .combinedClickable(
                 enabled = isClickable,
                 onClick = onClick,
-                onLongClick = if (url != null) {{
+                onLongClick = if (url != null) { {
                     val clipData = ClipData.newPlainText(/* label = */ "URL", url)
                     coroutine.launch {
                         clipboard.setClipEntry(clipData.toClipEntry())
-                    }.invokeOnCompletion {
-                        Toast.makeText(
-                            context,
-                            successMessage,
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        showMessage?.invoke(successMessage)
                     }
-                }} else { {} }
+                } } else null
             ),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -269,7 +276,9 @@ fun DrawerSectionButtonRow(
             painterResource(id = iconResId),
             contentDescription = null,
             tint = CustomTheme.colors.m,
-            modifier = Modifier.size(32.dp).padding(end = 4.dp)
+            modifier = Modifier
+                .size(32.dp)
+                .padding(end = 4.dp)
         )
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -294,7 +303,7 @@ fun DrawerSectionButtonRow(
         }
         if (radioButton != null) RangersRadioButton(
             selected = radioButton,
-            onClick = onClick,
+            onClick = { onClick },
             enabled = isClickable,
             modifier = Modifier.size(12.dp)
         )

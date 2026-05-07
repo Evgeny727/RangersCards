@@ -25,7 +25,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rangerscards.R
-import com.rangerscards.data.objects.CardTextParser
+import com.rangerscards.domain.model.CardChallenges
+import com.rangerscards.objects.CardTextParser
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 
@@ -34,9 +35,7 @@ fun FullCardTextContent(
     aspectId: String?,
     text: String?,
     flavor: String?,
-    sunChallenge: String?,
-    mountainChallenge: String?,
-    crestChallenge: String?,
+    challenges: CardChallenges,
     isDarkTheme: Boolean,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -91,7 +90,7 @@ fun FullCardTextContent(
                 }
             }
         }
-        if (sunChallenge != null) Surface(
+        if (challenges.sun != null) Surface(
             modifier = Modifier.fillMaxWidth(),
             color = CustomTheme.colors.orange,
         ) {
@@ -110,7 +109,7 @@ fun FullCardTextContent(
                     modifier = Modifier.fillMaxWidth().padding(8.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    val annotatedText = CardTextParser.parseCustomText(sunChallenge, aspectId)
+                    val annotatedText = CardTextParser.parseCustomText(challenges.sun, aspectId)
                     BasicText(
                         text = annotatedText,
                         inlineContent = CardTextParser.inlineIconsMap(if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30),
@@ -125,7 +124,7 @@ fun FullCardTextContent(
                 }
             }
         }
-        if (mountainChallenge != null) Surface(
+        if (challenges.mountain != null) Surface(
             modifier = Modifier.fillMaxWidth(),
             color = CustomTheme.colors.blue,
         ) {
@@ -144,7 +143,7 @@ fun FullCardTextContent(
                     modifier = Modifier.fillMaxWidth().padding(8.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    val annotatedText = CardTextParser.parseCustomText(mountainChallenge, aspectId)
+                    val annotatedText = CardTextParser.parseCustomText(challenges.mountain, aspectId)
                     BasicText(
                         text = annotatedText,
                         inlineContent = CardTextParser.inlineIconsMap(if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30),
@@ -159,7 +158,7 @@ fun FullCardTextContent(
                 }
             }
         }
-        if (crestChallenge != null) Surface(
+        if (challenges.crest != null) Surface(
             modifier = Modifier.fillMaxWidth(),
             color = CustomTheme.colors.red,
         ) {
@@ -178,7 +177,7 @@ fun FullCardTextContent(
                     modifier = Modifier.fillMaxWidth().padding(8.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    val annotatedText = CardTextParser.parseCustomText(crestChallenge, aspectId)
+                    val annotatedText = CardTextParser.parseCustomText(challenges.crest, aspectId)
                     BasicText(
                         text = annotatedText,
                         inlineContent = CardTextParser.inlineIconsMap(if (isDarkTheme) CustomTheme.colors.d30 else CustomTheme.colors.l30),

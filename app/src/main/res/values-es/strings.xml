@@ -60,12 +60,12 @@
     <string name="update_cards_button">Actualizar cartas</string>
     <string name="rules_button">Reglas</string>
     <string name="authentication_failed_toast">Fallo de autenticación.</string>
-    <string name="invalid_password_toast">Contraseña no válida. Debe tener como mínimo 6 carácteres.</string>
-    <string name="invalid_email_toast">Correo no válido.</string>
+    <string name="invalid_password_text">Contraseña no válida. Debe tener como mínimo 6 carácteres.</string>
+    <string name="invalid_email_text">Correo no válido.</string>
     <string name="account_successfully_deleted_toast">Cuenta eliminada correctamente.</string>
     <string name="invalid_credentials_toast">Credenciales incorrectas.</string>
-    <string name="handle_already_taken_toast">Lo siento, este nombre de usuario ya está en uso.</string>
-    <string name="invalid_handle_toast">Usuario no válido. Debe tener entre 2 y 22 carácteres.</string>
+    <string name="handle_already_taken_text">Lo siento, este nombre de usuario ya está en uso.</string>
+    <string name="invalid_handle_text">Usuario no válido. Debe tener entre 2 y 22 carácteres.</string>
     <string name="socials_title">Social</string>
     <string name="socials_text">Chatea con otros jugadores de Earthborne Rangers:</string>
     <string name="discord_button">Discord</string>
@@ -110,7 +110,7 @@
     <string name="new_deck">Nuevo mazo</string>
     <string name="custom_deck_tab">Mazo personalizado</string>
     <string name="starter_deck_tab">Mazo de inicio</string>
-    <string name="deck_creation_name_label">Nombre</string>
+    <string name="name_label">Nombre</string>
     <string name="deck_creation_name_placeholder">Añade un nombre para este mazo.</string>
     <string name="starter_deck_title">Elige un mazo de inicio:</string>
     <string name="upload_to_rangersdb">Subir a RangersDB</string>
@@ -197,7 +197,7 @@
     //Deck Side Drawer
     <string name="deck_section_header">Mazo</string>
     <string name="deck_section_deck_id">Mazo #%s</string>
-    <string name="deck_section_notes">Notas</string>
+    <string name="section_notes">Notas</string>
     <string name="tools_section_header">Herramientas</string>
     <string name="tools_section_charts">Gráficos</string>
     <string name="campaign_section_header">Campaña</string>
@@ -214,7 +214,7 @@
     <string name="options_section_delete_deck">Eliminar mazo</string>
     <string name="options_section_delete_current_deck">Eliminar versión actual</string>
     <string name="options_section_delete_deck_all_versions">Eliminar todas las versiones del mazo</string>
-    <string name="options_section_delete_deck_warning">Error: ¡Este mazo está en una campaña!</string>
+    <string name="options_section_upload_deck_in_campaign_warning">Error: ¡Este mazo está en una campaña!</string>
     <string name="delete_deck_text">¿Seguro que quieres eliminar este mazo? Version: %d.</string>
 
     //Campaigns screen
@@ -284,7 +284,7 @@
     //Campaign screen
     <string name="current_location">Localización actual</string>
     <string name="current_path_terrain">Terreno de Camino actual</string>
-    <string name="current_path_terrain_none">Ninguno</string>
+    <string name="text_none">Ninguno</string>
     <string name="recorded_journey_button">Registro de viaje</string>
     <string name="extend_campaign_button">Ampliar campaña</string>
 
@@ -323,7 +323,6 @@
     //Rangers section
     <string name="rangers_section_header">— Guardianes —</string>
     <string name="add_ranger_button">Añadir Guardian</string>
-    <string name="no_decks_for_add">No hay mazos elegibles.</string>
 
     //Settings section
     <string name="settings_section_header">— Configuración —</string>
@@ -369,8 +368,6 @@
     <string name="diagnostics_clear_local_data_cleared">Datos locales eliminados.</string>
     <string name="diagnostics_clear_coil_cache">Eliminar caché de imágenes</string>
     <string name="diagnostics_clear_coil_cache_cleared">Caché de imágenes eliminada.</string>
-    <string name="diagnostics_clear_apollo_cache">Eliminar caché de red</string>
-    <string name="diagnostics_clear_apollo_cache_cleared">Caché de red eliminada.</string>
 
     //loa campaign
     <string name="general_set_the_arcology">The Arcology</string>

@@ -1,0 +1,109 @@
+fragment UserProfile on rangers_users {
+  ...UserInfo
+  friends {
+    user {
+      ...UserInfo
+    }
+  }
+  sent_requests {
+    user {
+      ...UserInfo
+    }
+  }
+  received_requests {
+    user {
+      ...UserInfo
+    }
+  }
+}
+
+query getProfile($id: String!) {
+  profile: rangers_users_by_pk(id: $id) {
+    ...UserProfile
+  }
+  settings: rangers_user_settings_by_pk(user_id: $id) {
+    pack_collection
+    adhere_taboos
+  }
+}
+
+mutation setPackCollection($userId: String!, $pack_collection: jsonb!) {
+  collection: update_rangers_user_settings_by_pk(
+    pk_columns: { user_id: $userId }
+    _set: {
+      pack_collection: $pack_collection
+    }
+  ) {
+    pack_collection
+  }
+}
+
+mutation setAdhereTaboos($userId: String!, $adhereTaboos: Boolean!) {
+  taboos: update_rangers_user_settings_by_pk(
+    pk_columns: { user_id: $userId }
+    _set: {
+      adhere_taboos: $adhereTaboos
+    }
+  ) {
+    adhere_taboos
+  }
+}
+
+query getUsersInfoByHandle($handle: String!) {
+  profile: rangers_users(
+    where: {
+      handle: {
+        _ilike: $handle
+      }
+    }
+    limit: 50
+	) {
+    ...UserInfo
+  }
+}
+
+query getUserInfoByHandle($handle: String!) {
+  profile: rangers_users(
+    where: {
+      handle: {
+        _ilike: $handle
+      }
+    }
+    limit: 1
+  ) {
+    ...UserInfo
+  }
+}
+
+mutation sendFriendRequest($toUserId:String!) {
+  rangers_update_friend_request(
+    args: {
+      action: "request"
+      target_user_id: $toUserId
+    }
+  ) {
+    id
+  }
+}
+
+mutation acceptFriendRequest($toUserId:String!) {
+  rangers_update_friend_request(
+    args: {
+      action: "request"
+      target_user_id: $toUserId
+    }
+  ) {
+    id
+  }
+}
+
+mutation rejectFriendRequest($toUserId:String!) {
+  rangers_update_friend_request(
+    args: {
+      action: "revoke"
+      target_user_id: $toUserId
+    }
+  ) {
+    id
+  }
+}

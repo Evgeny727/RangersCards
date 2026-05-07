@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import com.rangerscards.R
-import com.rangerscards.data.objects.ImageSrc
+import com.rangerscards.objects.ImageSrc
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 
@@ -67,7 +67,7 @@ fun FullCardImageContainer(imageSrc: String?) {
         ) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(ImageSrc.imageSrc + imageSrc)
+                    .data(ImageSrc.BASE_URL + imageSrc)
                     .build(),
                 placeholder = painterResource(R.drawable.broken_image_32dp),
                 error = painterResource(R.drawable.broken_image_32dp),
@@ -81,7 +81,7 @@ fun FullCardImageContainer(imageSrc: String?) {
         ) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(ImageSrc.imageSrc + imageSrc)
+                    .data(ImageSrc.BASE_URL + imageSrc)
                     .build(),
                 placeholder = painterResource(R.drawable.broken_image_32dp),
                 error = painterResource(R.drawable.broken_image_32dp),
