@@ -90,6 +90,7 @@ fun CampaignScreen(
     campaign: Campaign?,
     user: User,
     isDarkTheme: Boolean,
+    isViewOnly: Boolean,
     navController: NavHostController,
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
@@ -102,7 +103,7 @@ fun CampaignScreen(
     }
     var isCampaignLogExpanded by rememberSaveable { mutableStateOf(false) }
     var campaignLogTypeIndex by rememberSaveable { mutableIntStateOf(0) }
-    var isCampaignMissionsOnlyActive by rememberSaveable { mutableStateOf(false) }
+    val isCampaignMissionsOnlyActive by campaignViewModel.isCampaignMissionsOnlyActive.collectAsState()
     // one state + connection per tab:
     val innerStates = List(5) { rememberLazyListState() }
     val innerConnections = innerStates.map { _ ->
@@ -140,7 +141,12 @@ fun CampaignScreen(
     }
     LaunchedEffect(campaignUiState) {
         when (val state = campaignUiState) {
-            CampaignUiState.Deleted -> navController.navigateUp()
+            is CampaignUiState.Deleted -> state.campaignId?.let { navController.navigate(
+                "${BottomNavScreen.Campaigns.route}/campaign/${state.campaignId}"
+            ) {
+                popUpTo(BottomNavScreen.Campaigns.startDestination) { inclusive = false }
+                launchSingleTop = true
+            } } ?: navController.navigateUp()
             is CampaignUiState.FriendDeckDownloaded -> navController.navigate(
                 "deck/${state.deckId}"
             ) { launchSingleTop = true }
@@ -277,6 +283,7 @@ fun CampaignScreen(
                 item("campaign_title") {
                     CampaignTitleRow(
                         campaign.name,
+                        isViewOnly = isViewOnly,
                         modifier = Modifier.padding(bottom = 8.dp)
                     ) { campaignNameEditing = campaign.name; showNameDialog = true }
                 }
@@ -295,7 +302,7 @@ fun CampaignScreen(
                         ) { launchSingleTop = true }
                     }
                 }
-                if (campaign.currentDay >= 30 && !campaign.extendedCalendar) item("extend_button") {
+                if (campaign.currentDay >= 30 && !campaign.extendedCalendar && !isViewOnly) item("extend_button") {
                     SquareButton(
                         stringId = R.string.extend_campaign_button,
                         leadingIcon = R.drawable.add_32dp,
@@ -315,68 +322,70 @@ fun CampaignScreen(
                         ) { launchSingleTop = true }
                     }
                 }
-                item("travel_section") {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max).padding(bottom = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        key("travelButton") {
-                            SquareButton(
-                                stringId = R.string.travel_button,
-                                leadingIcon = R.drawable.travel_32dp,
-                                iconColor = CustomTheme.colors.m,
-                                textColor = CustomTheme.colors.d30,
-                                buttonColor = ButtonDefaults.buttonColors().copy(
-                                    containerColor = CustomTheme.colors.l15
-                                ),
-                                onClick = { navController.navigate(
-                                    "${BottomNavScreen.Campaigns.route}/campaign/travel"
-                                ) {
-                                    launchSingleTop = true
-                                } },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight()
-                            )
-                        }
-                        if ((campaign.currentDay != 30 || campaign.extendedCalendar)
-                            && campaign.currentDay != 60) key("endDayButton") {
-                            SquareButton(
-                                stringId = R.string.end_the_day,
-                                leadingIcon = R.drawable.camp_32dp,
-                                iconColor = CustomTheme.colors.d20,
-                                textColor = CustomTheme.colors.d30,
-                                buttonColor = ButtonDefaults.buttonColors().copy(
-                                    containerColor = CustomTheme.colors.l10
-                                ),
-                                onClick = { navController.navigate(
-                                    "${BottomNavScreen.Campaigns.route}/campaign/endDay"
-                                ) {
-                                    launchSingleTop = true
-                                } },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight()
-                            )
+                if (!isViewOnly) {
+                    item("travel_section") {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max).padding(bottom = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            key("travelButton") {
+                                SquareButton(
+                                    stringId = R.string.travel_button,
+                                    leadingIcon = R.drawable.travel_32dp,
+                                    iconColor = CustomTheme.colors.m,
+                                    textColor = CustomTheme.colors.d30,
+                                    buttonColor = ButtonDefaults.buttonColors().copy(
+                                        containerColor = CustomTheme.colors.l15
+                                    ),
+                                    onClick = { navController.navigate(
+                                        "${BottomNavScreen.Campaigns.route}/campaign/travel"
+                                    ) {
+                                        launchSingleTop = true
+                                    } },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight()
+                                )
+                            }
+                            if ((campaign.currentDay != 30 || campaign.extendedCalendar)
+                                && campaign.currentDay != 60) key("endDayButton") {
+                                SquareButton(
+                                    stringId = R.string.end_the_day,
+                                    leadingIcon = R.drawable.camp_32dp,
+                                    iconColor = CustomTheme.colors.d20,
+                                    textColor = CustomTheme.colors.d30,
+                                    buttonColor = ButtonDefaults.buttonColors().copy(
+                                        containerColor = CustomTheme.colors.l10
+                                    ),
+                                    onClick = { navController.navigate(
+                                        "${BottomNavScreen.Campaigns.route}/campaign/endDay"
+                                    ) {
+                                        launchSingleTop = true
+                                    } },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight()
+                                )
+                            }
                         }
                     }
-                }
-                item("challengeDeckButton") {
-                    SquareButton(
-                        stringId = R.string.challenge_deck_title,
-                        leadingIcon = R.drawable.cards_32dp,
-                        iconColor = CustomTheme.colors.m,
-                        textColor = CustomTheme.colors.d30,
-                        buttonColor = ButtonDefaults.buttonColors().copy(
-                            containerColor = CustomTheme.colors.l20
-                        ),
-                        onClick = {
-                            navController.navigate(
-                                "${BottomNavScreen.Campaigns.route}/campaign/${campaign.id}/challengeDeck"
-                            ) { launchSingleTop = true }
-                        },
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
-                    )
+                    item("challengeDeckButton") {
+                        SquareButton(
+                            stringId = R.string.challenge_deck_title,
+                            leadingIcon = R.drawable.cards_32dp,
+                            iconColor = CustomTheme.colors.m,
+                            textColor = CustomTheme.colors.d30,
+                            buttonColor = ButtonDefaults.buttonColors().copy(
+                                containerColor = CustomTheme.colors.l20
+                            ),
+                            onClick = {
+                                navController.navigate(
+                                    "${BottomNavScreen.Campaigns.route}/campaign/${campaign.id}/challengeDeck"
+                                ) { launchSingleTop = true }
+                            },
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                        )
+                    }
                 }
                 item("campaign_log") {
                     Surface(
@@ -445,7 +454,7 @@ fun CampaignScreen(
                                         missions = remember(campaign.missions, isCampaignMissionsOnlyActive) {
                                             campaign.missions.filter {
                                                 mission -> !isCampaignMissionsOnlyActive || !mission.completed
-                                            }.distinctBy { it.name }.sortedBy { it.day }.toImmutableList()
+                                            }.toImmutableList()
                                         },
                                         onClick = { navController.navigate(
                                             "${BottomNavScreen.Campaigns.route}/campaign/mission/${Uri.encode(it)}")
@@ -453,7 +462,8 @@ fun CampaignScreen(
                                             launchSingleTop = true
                                         } },
                                         isOnlyActive = isCampaignMissionsOnlyActive,
-                                        onActiveClick = { value -> isCampaignMissionsOnlyActive = value },
+                                        onActiveClick = campaignViewModel::saveCampaignMissionsPreference,
+                                        isViewOnly = isViewOnly,
                                         state = innerStates[campaignLogTypeIndex],
                                         modifier = Modifier.nestedScroll(innerConnections[campaignLogTypeIndex]),
                                     )
@@ -493,13 +503,13 @@ fun CampaignScreen(
                                                         level = reward.level,
                                                         isDarkTheme = isDarkTheme,
                                                         currentAmount = if (isAdded) 2 else 0,
-                                                        onRemoveClick = {
+                                                        onRemoveClick = if (!isViewOnly) { {
                                                             campaignViewModel.removeCampaignReward(reward.id)
-                                                        },
+                                                        } } else null,
                                                         onRemoveEnabled = isAdded,
-                                                        onAddClick = {
+                                                        onAddClick = if (!isViewOnly) { {
                                                             campaignViewModel.addCampaignReward(reward.id)
-                                                        },
+                                                        } } else null,
                                                         onAddEnabled = !isAdded,
                                                         onClick = {
                                                             navController.navigate(
@@ -520,13 +530,14 @@ fun CampaignScreen(
                                             launchSingleTop = true
                                         } },
                                         events = remember(campaign.events) {
-                                            campaign.events.distinctBy { it.name }.sortedBy { it.name }.toImmutableList()
+                                            campaign.events.toImmutableList()
                                         },
                                         onClick = { navController.navigate(
                                             "${BottomNavScreen.Campaigns.route}/campaign/event/${Uri.encode(it)}"
                                         ) {
                                             launchSingleTop = true
                                         } },
+                                        isViewOnly = isViewOnly,
                                         state = innerStates[campaignLogTypeIndex],
                                         modifier = Modifier.nestedScroll(innerConnections[campaignLogTypeIndex]),
                                     )
@@ -542,6 +553,7 @@ fun CampaignScreen(
                                         ) {
                                             launchSingleTop = true
                                         } },
+                                        isViewOnly = isViewOnly,
                                         state = innerStates[campaignLogTypeIndex],
                                         modifier = Modifier.nestedScroll(innerConnections[campaignLogTypeIndex]),
                                     )
@@ -553,69 +565,72 @@ fun CampaignScreen(
                                         } },
                                         removedSets = campaignViewModel.getRemovedSetsInfo(),
                                         removed = remember(campaign.removed) {
-                                            campaign.removed.distinctBy { it.name }.toImmutableList()
+                                            campaign.removed.toImmutableList()
                                         },
                                         onRemove = { removedName ->
                                             campaignViewModel.updateCampaignRemoved(removedName)
                                         },
+                                        isViewOnly = isViewOnly,
                                         state = innerStates[campaignLogTypeIndex],
-                                        nestedConnectionModifier = Modifier.nestedScroll(innerConnections[campaignLogTypeIndex]),
+                                        modifier = Modifier.nestedScroll(innerConnections[campaignLogTypeIndex]),
                                     )
                                 }
                             }
                         }
                     }
                 }
-                item("rangers_section") {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = stringResource(R.string.rangers_section_header),
-                            color = CustomTheme.colors.d10,
-                            fontFamily = Jost,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 18.sp,
-                            lineHeight = 20.sp,
+                if (!isViewOnly) {
+                    item("rangers_section") {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = stringResource(R.string.rangers_section_header),
+                                color = CustomTheme.colors.d10,
+                                fontFamily = Jost,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 18.sp,
+                                lineHeight = 20.sp,
+                            )
+                        }
+                    }
+                    items(campaign.decks, { deck -> deck.id }) { deck ->
+                        val role by campaignViewModel.getRole(deck.meta.roleId).collectAsState(null)
+                        DeckListItem(
+                            meta = deck.meta,
+                            imageSrc = role?.realImageSrc,
+                            name = deck.name,
+                            roleName = role?.name,
+                            onClick = {
+                                if (!campaign.uploaded || user.userInfo?.id == deck.user.id)
+                                    navController.navigate("deck/${deck.id}") { launchSingleTop = true }
+                                else campaignViewModel.downloadFriendDeck(deck.id)
+                            },
+                            isCampaign = false,
+                            userName = if (deck.user.name == "null") "" else deck.user.name,
+                            onRemoveDeck = if (!campaign.uploaded || user.userInfo?.id == deck.user.id) {
+                                { campaignViewModel.removeDeckCampaign(deck.id) }
+                            } else null
                         )
                     }
-                }
-                items(campaign.decks, { deck -> deck.id }) { deck ->
-                    val role by campaignViewModel.getRole(deck.meta.roleId).collectAsState(null)
-                    DeckListItem(
-                        meta = deck.meta,
-                        imageSrc = role?.realImageSrc,
-                        name = deck.name,
-                        roleName = role?.name,
-                        onClick = {
-                            if (!campaign.uploaded || user.userInfo?.id == deck.user.id)
-                                navController.navigate("deck/${deck.id}") { launchSingleTop = true }
-                            else campaignViewModel.downloadFriendDeck(deck.id)
-                        },
-                        isCampaign = false,
-                        userName = if (deck.user.name == "null") "" else deck.user.name,
-                        onRemoveDeck = if (!campaign.uploaded || user.userInfo?.id == deck.user.id) {
-                            { campaignViewModel.removeDeckCampaign(deck.id) }
-                        } else null
-                    )
-                }
-                item("add_ranger_button") {
-                    SquareButton(
-                        stringId = R.string.add_ranger_button,
-                        leadingIcon = R.drawable.add_32dp,
-                        iconColor = CustomTheme.colors.m,
-                        textColor = CustomTheme.colors.d30,
-                        buttonColor = ButtonDefaults.buttonColors().copy(
-                            containerColor = CustomTheme.colors.l20
-                        ),
-                        onClick = {
-                            navController.navigate(
-                            "${BottomNavScreen.Campaigns.route}/campaign/addRanger"
-                            ) { launchSingleTop = true }
-                        },
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
-                    )
+                    item("add_ranger_button") {
+                        SquareButton(
+                            stringId = R.string.add_ranger_button,
+                            leadingIcon = R.drawable.add_32dp,
+                            iconColor = CustomTheme.colors.m,
+                            textColor = CustomTheme.colors.d30,
+                            buttonColor = ButtonDefaults.buttonColors().copy(
+                                containerColor = CustomTheme.colors.l20
+                            ),
+                            onClick = {
+                                navController.navigate(
+                                    "${BottomNavScreen.Campaigns.route}/campaign/addRanger"
+                                ) { launchSingleTop = true }
+                            },
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                        )
+                    }
                 }
                 item("settings_section") {
                     CampaignSettingsSection(
@@ -624,8 +639,9 @@ fun CampaignScreen(
                         ) {
                             launchSingleTop = true
                         } },
-                        onUploadCampaign = if (!campaign.uploaded && user.userInfo != null) { {
-                            campaignViewModel.uploadCampaign()
+                        onUploadCampaign = if (!campaign.uploaded && user.userInfo != null &&
+                            campaign.previousCampaignId != null) { {
+                                campaignViewModel.uploadCampaign()
                         } } else null,
                         onDeleteOrLeaveCampaign = { showConfirmationDialog = true },
                         onCampaignExpansions = if (CampaignMaps.campaignExpansionsMap[campaign.cycleId]?.isNotEmpty() == true) {
@@ -633,8 +649,25 @@ fun CampaignScreen(
                                 "${BottomNavScreen.Campaigns.route}/campaign/expansions"
                             ) { launchSingleTop = true } }
                         } else null,
+                        onPreviousCampaign = if (campaign.previousCampaignId != null) { {
+                            navController.navigate(
+                                "${BottomNavScreen.Campaigns.route}/campaign/${campaign.previousCampaignId}"
+                            ) {
+                                popUpTo(BottomNavScreen.Campaigns.startDestination) { inclusive = false }
+                                launchSingleTop = true
+                            }
+                        } } else null,
+                        onNextCampaign = if (campaign.nextCampaignId != null) { {
+                            navController.navigate(
+                                "${BottomNavScreen.Campaigns.route}/campaign/${campaign.nextCampaignId}"
+                            ) {
+                                popUpTo(BottomNavScreen.Campaigns.startDestination) { inclusive = false }
+                                launchSingleTop = true
+                            }
+                        } } else null,
                         isOwner = isOwner,
-                        isUploaded = campaign.uploaded
+                        isUploaded = campaign.uploaded,
+                        isViewOnly = isViewOnly
                     )
                 }
             }

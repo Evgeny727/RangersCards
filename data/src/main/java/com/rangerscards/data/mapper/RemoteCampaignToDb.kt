@@ -47,7 +47,7 @@ fun RemoteCampaign.toDbCampaign(): Campaign =
             put(it.user!!.id, it.user.userInfo.handle)
         } },
         nextCampaignId = next_campaign_id?.toString(),
-        previousCampaignId = previous_campaign?.toString()
+        previousCampaignId = previous_campaign?.id?.toString()
     )
 /**
  * Extension function to convert list of [GetMyCampaignsQuery.Campaign] to list of [Campaign]

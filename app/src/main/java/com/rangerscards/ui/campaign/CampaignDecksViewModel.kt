@@ -35,7 +35,7 @@ class CampaignDecksViewModel @Inject constructor(
         combine(_searchQuery, _uploaded, _userId) { query, uploaded, userId ->
             Triple(query.trim(), uploaded, userId)
         }.flatMapLatest { (query, uploaded, userId) ->
-            searchDecksUseCase(query, userId, uploaded)
+            searchDecksUseCase(query, userId, uploaded, true)
         }.cachedIn(viewModelScope)
 
     fun setUploaded(uploaded: Boolean) {

@@ -32,11 +32,12 @@ fun CampaignNotes(
     onAdd: () -> Unit,
     notes: ImmutableList<CampaignNote>,
     onClick: (Int) -> Unit,
+    isViewOnly: Boolean,
     state: LazyListState,
     modifier: Modifier
 ) {
     Column {
-        SquareButton(
+        if (!isViewOnly) SquareButton(
             stringId = R.string.add_note_button,
             leadingIcon = R.drawable.add_circle_32dp,
             iconColor = CustomTheme.colors.m,
@@ -56,7 +57,7 @@ fun CampaignNotes(
             notes.forEachIndexed { index, note ->
                 item("${note.day} - ${note.text}") {
                     Column(
-                        modifier = Modifier.fillMaxWidth().clickable { onClick(index) },
+                        modifier = Modifier.fillMaxWidth().clickable(!isViewOnly) { onClick(index) },
                     ) {
                         Text(
                             text = stringResource(R.string.campaigns_current_day, note.day),

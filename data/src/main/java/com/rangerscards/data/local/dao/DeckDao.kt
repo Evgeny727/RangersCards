@@ -43,15 +43,26 @@ interface DeckDao {
     suspend fun deleteAllLocalDecks()
 
     @Query("SELECT id, user_handle, name, meta, campaign_name FROM deck WHERE next_id IS NULL " +
-            "AND (uploaded = :uploaded OR :uploaded is NULL) AND (user_id = :userId OR user_id = '') ORDER BY updated_at DESC"
+            "AND (uploaded = :uploaded OR :uploaded is NULL) AND (user_id = :userId OR user_id = '') " +
+            "AND (:notInCampaign is NULL OR campaign_id IS NULL) ORDER BY updated_at DESC"
     )
-    fun getAllDecks(userId: String, uploaded: Boolean? = null): PagingSource<Int, DeckListItemProjection>
+    fun getAllDecks(
+        userId: String,
+        uploaded: Boolean?,
+        notInCampaign: Boolean?
+    ): PagingSource<Int, DeckListItemProjection>
 
     @Query("SELECT id, user_handle, name, meta, campaign_name FROM deck WHERE next_id IS NULL " +
             " AND (uploaded = :uploaded OR :uploaded is NULL) AND name LIKE :query " +
-            "AND (user_id = :userId OR user_id = '') ORDER BY updated_at DESC"
+            "AND (user_id = :userId OR user_id = '') AND (:notInCampaign is NULL OR campaign_id IS NULL) " +
+            "ORDER BY updated_at DESC"
     )
-    fun searchDecks(query: String, userId: String, uploaded: Boolean? = null): PagingSource<Int, DeckListItemProjection>
+    fun searchDecks(
+        query: String,
+        userId: String,
+        uploaded: Boolean?,
+        notInCampaign: Boolean?
+    ): PagingSource<Int, DeckListItemProjection>
 
     @Transaction
     suspend fun syncDecks(networkData: List<Deck>) {

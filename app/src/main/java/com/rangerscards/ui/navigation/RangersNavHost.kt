@@ -920,6 +920,7 @@ fun RangersNavHost(
                         val campaignViewModel: CampaignViewModel = hiltViewModel(backStackEntry)
                         val user by appViewModel.userUiState.collectAsState()
                         val campaign by campaignViewModel.campaign.collectAsState()
+                        val isViewOnly by campaignViewModel.isViewOnly.collectAsState()
                         if (cardsState !is CardsSyncState.Loading) {
                             CampaignScreen(
                                 emitError = appViewModel::emitError,
@@ -927,6 +928,7 @@ fun RangersNavHost(
                                 campaign = campaign,
                                 user = user,
                                 isDarkTheme = isDarkTheme,
+                                isViewOnly = isViewOnly,
                                 navController = navController,
                                 contentPadding = innerPadding
                             )
@@ -935,7 +937,7 @@ fun RangersNavHost(
                         }
                         title = if (campaign != null) stringResource(CampaignMaps.campaignCyclesMap[campaign!!.cycleId] ?: R.string.core_cycle)
                         else ""
-                        actions = {
+                        actions = if (!isViewOnly) { {
                             IconButton(
                                 onClick = {
                                     navController.navigate(
@@ -956,7 +958,7 @@ fun RangersNavHost(
                                 )
                             }
                             //TODO:Add navigation to campaign guide screen
-                        }
+                        } } else null
                         switch = null
                 }
                 dialog("${BottomNavScreen.Campaigns.route}/campaign/expansions") { backStackEntry ->
@@ -985,6 +987,7 @@ fun RangersNavHost(
                     val dayInfoId = backStackEntry.arguments?.getInt(dayInfoIdArgument)
                     if (dayInfoId != null) {
                         val campaign by campaignViewModel.campaign.collectAsState()
+                        val isViewOnly by campaignViewModel.isViewOnly.collectAsState()
                         if (campaign != null) {
                             DayInfoDialog(
                                 campaign = campaign!!,
@@ -992,6 +995,7 @@ fun RangersNavHost(
                                 setCampaignCalendar = campaignViewModel::setCampaignCalendar,
                                 dayId = dayInfoId,
                                 isDarkTheme = isDarkTheme,
+                                isViewOnly = isViewOnly,
                                 onBack = navController::navigateUp,
                             )
                         } else navController.navigateUp()

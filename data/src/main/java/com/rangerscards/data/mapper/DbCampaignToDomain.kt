@@ -77,7 +77,7 @@ internal fun JsonElement.toNotes(): ImmutableList<CampaignNote> =
             value["note"]!!.jsonPrimitive.content,
             value["crossed_out"]?.jsonPrimitive?.content.toBoolean(),
         )
-    }.toImmutableList()
+    }.sortedBy { it.day }.toImmutableList()
 
 internal fun JsonElement.toMissions(): ImmutableList<CampaignMission> =
     jsonArray.map { mission ->
@@ -89,7 +89,7 @@ internal fun JsonElement.toMissions(): ImmutableList<CampaignMission> =
                 ?: listOf(false, false, false),
             value["completed"]?.jsonPrimitive?.content.toBoolean()
         )
-    }.toImmutableList()
+    }.distinctBy { it.name }.sortedBy { it.day }.toImmutableList()
 
 internal fun JsonElement.toEvents(): ImmutableList<CampaignEvent> =
     jsonArray.map { event ->
@@ -99,7 +99,7 @@ internal fun JsonElement.toEvents(): ImmutableList<CampaignEvent> =
             value["crossed_out"]?.jsonPrimitive?.content.toBoolean(),
             value["marks"]?.jsonPrimitive?.content?.toInt() ?: 0
         )
-    }.toImmutableList()
+    }.distinctBy { it.name }.sortedBy { it.name }.toImmutableList()
 
 internal fun JsonElement.toRemoved(): ImmutableList<CampaignRemoved> =
     jsonArray.map { removed ->
@@ -108,7 +108,7 @@ internal fun JsonElement.toRemoved(): ImmutableList<CampaignRemoved> =
             value["name"]!!.jsonPrimitive.content,
             value["set_id"]?.jsonPrimitive?.content ?: ""
         )
-    }.toImmutableList()
+    }.distinctBy { it.name }.toImmutableList()
 
 internal fun JsonElement.toHistory(): ImmutableList<CampaignHistory> =
     jsonArray.map { history ->

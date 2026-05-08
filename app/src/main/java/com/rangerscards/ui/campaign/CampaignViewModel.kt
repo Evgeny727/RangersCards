@@ -25,6 +25,7 @@ import com.rangerscards.domain.repository.CampaignsRepository
 import com.rangerscards.domain.repository.CardsRepository
 import com.rangerscards.domain.repository.DecksRepository
 import com.rangerscards.domain.repository.RemoteUpdateAction
+import com.rangerscards.domain.repository.UserPreferencesRepository
 import com.rangerscards.domain.usecase.GetCampaignRewardsUseCase
 import com.rangerscards.objects.CampaignMaps
 import com.rangerscards.objects.Path
@@ -47,6 +48,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -66,7 +68,7 @@ data class Quadruple<A, B, C, D>(
 sealed interface CampaignUiState {
     object Idle : CampaignUiState
     object Loading : CampaignUiState
-    object Deleted : CampaignUiState
+    data class Deleted(val campaignId: String?) : CampaignUiState
     data class FriendDeckDownloaded(val deckId: String) : CampaignUiState
     data class CampaignUploaded(val campaignId: String) : CampaignUiState
 }
@@ -76,6 +78,7 @@ class CampaignViewModel @Inject constructor(
     private val campaignsRepository: CampaignsRepository,
     private val decksRepository: DecksRepository,
     private val cardsRepository: CardsRepository,
+    private val userPreferencesRepository: UserPreferencesRepository,
     private val getCampaignRewardsUseCase: GetCampaignRewardsUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -92,6 +95,12 @@ class CampaignViewModel @Inject constructor(
 
     private var _campaignUiState = MutableStateFlow<CampaignUiState>(CampaignUiState.Idle)
     val campaignUiState: StateFlow<CampaignUiState> = _campaignUiState.asStateFlow()
+
+    val isViewOnly = campaign.map { it?.nextCampaignId != null }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = false
+    )
 
     private val _events = MutableSharedFlow<UiErrorState>(
         replay = 0,
@@ -137,6 +146,19 @@ class CampaignViewModel @Inject constructor(
 
     fun onRewardsQueryClear() {
         _rewardsQuery.value = ""
+    }
+
+    val isCampaignMissionsOnlyActive = userPreferencesRepository.showOnlyActiveMissions
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = false
+        )
+
+    fun saveCampaignMissionsPreference(value: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.saveCampaignMissionsPreference(value)
+        }
     }
 
     fun updateCampaignName(newName: String) {
@@ -519,7 +541,9 @@ class CampaignViewModel @Inject constructor(
                 result.onFailure {
                     emitError(it)
                     _campaignUiState.value = CampaignUiState.Idle
-                }.onSuccess { _campaignUiState.value = CampaignUiState.Deleted }
+                }.onSuccess {
+                    _campaignUiState.value = CampaignUiState.Deleted(it as? String)
+                }
             }
         }
     }
@@ -656,8 +680,12 @@ class CampaignViewModel @Inject constructor(
     }
 
     fun getAllRemovedSets(): Map<String, Pair<Int?, Int>> {
-        val cycleId = campaign.value!!.cycleId
-        val maps = CampaignMaps.generalSetsMap(cycleId) + CampaignMaps.getMapLocations(false, cycleId)
+        val campaign = campaign.value
+        campaign ?: return mapOf()
+        val cycleId = campaign.cycleId
+        val expansions = campaign.expansions
+        val maps = CampaignMaps.generalSetsMap(cycleId) +
+                CampaignMaps.getMapLocations(false, cycleId, expansions)
         val paths = Path.entries.filter { it.cycles.contains(cycleId) && it.value != "none" }
         val sets = mutableMapOf<String, Pair<Int?, Int>>()
         maps.forEach { (key, value) ->

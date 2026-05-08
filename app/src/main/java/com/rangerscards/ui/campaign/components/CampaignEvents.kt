@@ -31,11 +31,12 @@ fun CampaignEvents(
     onAdd: () -> Unit,
     events: ImmutableList<CampaignEvent>,
     onClick: (String) -> Unit,
+    isViewOnly: Boolean,
     state: LazyListState,
     modifier: Modifier
 ) {
     Column {
-        SquareButton(
+        if (!isViewOnly) SquareButton(
             stringId = R.string.record_event_button,
             leadingIcon = R.drawable.add_circle_32dp,
             iconColor = CustomTheme.colors.m,
@@ -56,7 +57,7 @@ fun CampaignEvents(
                 item(event.name) {
                     val checks = "\u2713".repeat(event.marks)
                     Column(
-                        modifier = Modifier.fillMaxWidth().clickable { onClick.invoke(event.name) }
+                        modifier = Modifier.fillMaxWidth().clickable(!isViewOnly) { onClick.invoke(event.name) }
                     ) {
                         Text(
                             text = if (checks.isNotEmpty()) "${event.name} $checks" else event.name,

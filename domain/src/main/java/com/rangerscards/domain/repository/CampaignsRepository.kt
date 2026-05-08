@@ -38,7 +38,7 @@ interface CampaignsRepository {
 
     suspend fun leaveCampaign(campaignId: String, userId: String): Result<Unit>
 
-    suspend fun deleteCampaignById(id: String, uploaded: Boolean): Result<Unit>
+    suspend fun deleteCampaignById(id: String, uploaded: Boolean): Result<String?>
 
     suspend fun upsertChallengeDeck(campaignId: String, challengeDeckIds: List<Int>)
 

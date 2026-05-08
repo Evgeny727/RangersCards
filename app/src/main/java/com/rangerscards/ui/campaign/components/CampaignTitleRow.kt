@@ -21,7 +21,12 @@ import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 
 @Composable
-fun CampaignTitleRow(title: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun CampaignTitleRow(
+    title: String,
+    isViewOnly: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -42,7 +47,7 @@ fun CampaignTitleRow(title: String, modifier: Modifier = Modifier, onClick: () -
             lineHeight = 22.sp,
             modifier = Modifier.weight(1f)
         )
-        IconButton(
+        if (!isViewOnly) IconButton(
             onClick = onClick,
             colors = IconButtonDefaults.iconButtonColors().copy(containerColor = Color.Transparent),
             modifier = Modifier.size(32.dp),

@@ -23,8 +23,11 @@ fun CampaignSettingsSection(
     onUploadCampaign: (() -> Unit)?,
     onDeleteOrLeaveCampaign: () -> Unit,
     onCampaignExpansions: (() -> Unit)?,
+    onPreviousCampaign: (() -> Unit)?,
+    onNextCampaign: (() -> Unit)?,
     isOwner: Boolean,
     isUploaded: Boolean,
+    isViewOnly: Boolean,
 ) {
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(
@@ -40,7 +43,7 @@ fun CampaignSettingsSection(
                 lineHeight = 20.sp,
             )
         }
-        if (isUploaded) SquareButton(
+        if (isUploaded && !isViewOnly) SquareButton(
             stringId = R.string.add_remove_players_button,
             leadingIcon = R.drawable.add_circle_32dp,
             iconColor = CustomTheme.colors.m,
@@ -50,7 +53,27 @@ fun CampaignSettingsSection(
             ),
             onClick = onAddOrRemovePlayers,
         )
-        if (onUploadCampaign != null) SquareButton(
+        if (onPreviousCampaign != null) SquareButton(
+            stringId = R.string.campaign_previous,
+            leadingIcon = R.drawable.arrow_back_32dp,
+            iconColor = CustomTheme.colors.m,
+            textColor = CustomTheme.colors.d30,
+            buttonColor = ButtonDefaults.buttonColors().copy(
+                containerColor = CustomTheme.colors.l20
+            ),
+            onClick = onPreviousCampaign,
+        )
+        if (onNextCampaign != null) SquareButton(
+            stringId = R.string.campaign_next,
+            leadingIcon = R.drawable.arrow_forward_32dp,
+            iconColor = CustomTheme.colors.m,
+            textColor = CustomTheme.colors.d30,
+            buttonColor = ButtonDefaults.buttonColors().copy(
+                containerColor = CustomTheme.colors.l20
+            ),
+            onClick = onNextCampaign,
+        )
+        if (onUploadCampaign != null && !isViewOnly) SquareButton(
             stringId = R.string.upload_to_rangersdb,
             leadingIcon = R.drawable.language_32dp,
             iconColor = CustomTheme.colors.m,
@@ -60,7 +83,7 @@ fun CampaignSettingsSection(
             ),
             onClick = onUploadCampaign,
         )
-        if (onCampaignExpansions != null) SquareButton(
+        if (onCampaignExpansions != null && !isViewOnly) SquareButton(
             stringId = R.string.campaign_expansions,
             leadingIcon = R.drawable.settings_32dp,
             iconColor = CustomTheme.colors.m,
@@ -70,7 +93,7 @@ fun CampaignSettingsSection(
             ),
             onClick = onCampaignExpansions,
         )
-        SquareButton(
+        if (!isViewOnly) SquareButton(
             stringId = if (isOwner) R.string.delete_campaign_button else R.string.leave_campaign_button,
             leadingIcon = R.drawable.delete_32dp,
             iconColor = CustomTheme.colors.warn,

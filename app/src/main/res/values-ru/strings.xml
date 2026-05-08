@@ -298,6 +298,8 @@
     <string name="no_uploaded_decks_for_add">У вас нет подходящих загруженных колод.</string>
     <string name="settings_section_header">— Настройки —</string>
     <string name="add_remove_players_button">Добавить/удалить игроков</string>
+    <string name="campaign_previous">Предыдущая кампания</string>
+    <string name="campaign_next">Следующая кампания</string>
     <string name="upload_campaign_button">Загрузить на RangersDB</string>
     <string name="upload_campaign_warning">Ошибка: Кампания содержит колоды!</string>
     <string name="delete_campaign_button">Удалить кампанию</string>

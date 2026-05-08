@@ -11,6 +11,8 @@ interface UserPreferencesRepository {
     val cardsUpdatedAt: Flow<String>
     val sortOrder: Flow<List<String>>
 
+    val showOnlyActiveMissions: Flow<Boolean>
+
     suspend fun saveThemePreference(theme: Int)
     suspend fun saveCardsUpdatedTimestamp(timestamp: String)
     suspend fun saveIncludeEnglishSearchResults(isIncludeEnglishSearchResults: Boolean)
@@ -18,4 +20,5 @@ interface UserPreferencesRepository {
     suspend fun saveCollectionPreference(collection: List<String>)
     suspend fun saveTabooAndCollectionPreference(taboo: Boolean, collection: List<String>)
     suspend fun saveSortOrderPreference(sortOrder: List<String>)
+    suspend fun saveCampaignMissionsPreference(showOnlyActiveMissions: Boolean)
 }

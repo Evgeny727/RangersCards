@@ -106,6 +106,18 @@ class UserPreferencesRepositoryImpl @Inject constructor(
             preferences[CARDS_SORT_ORDER]?.split(",")?.filter { it.isNotBlank() }?.toImmutableList() ?: persistentListOf()
         }
 
+    override val showOnlyActiveMissions: Flow<Boolean> = dataStore.data
+        .catch {
+            if (it is IOException) {
+                Log.e(TAG, "Error reading preferences.", it)
+                emit(emptyPreferences())
+            } else {
+                throw it
+            }
+        }.map { preferences ->
+            preferences[SHOW_ONLY_ACTIVE_MISSIONS] ?: false
+        }
+
     private companion object {
         val THEME = intPreferencesKey("theme")
         const val TAG = "UserPreferencesRepo"
@@ -114,6 +126,7 @@ class UserPreferencesRepositoryImpl @Inject constructor(
         val TABOO = booleanPreferencesKey("taboo")
         val COLLECTION = stringPreferencesKey("collection")
         val CARDS_SORT_ORDER = stringPreferencesKey("cards_sort_order")
+        val SHOW_ONLY_ACTIVE_MISSIONS = booleanPreferencesKey("show_only_active_missions")
     }
 
     override suspend fun saveThemePreference(theme: Int) {
@@ -156,6 +169,12 @@ class UserPreferencesRepositoryImpl @Inject constructor(
     override suspend fun saveSortOrderPreference(sortOrder: List<String>) {
         dataStore.edit { preferences ->
             preferences[CARDS_SORT_ORDER] = sortOrder.joinToString(",")
+        }
+    }
+
+    override suspend fun saveCampaignMissionsPreference(showOnlyActiveMissions: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[SHOW_ONLY_ACTIVE_MISSIONS] = showOnlyActiveMissions
         }
     }
 }
