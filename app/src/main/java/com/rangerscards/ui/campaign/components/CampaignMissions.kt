@@ -40,6 +40,7 @@ fun CampaignMissions(
     onClick: (String) -> Unit,
     isOnlyActive: Boolean = false,
     onActiveClick: (Boolean) -> Unit,
+    isViewOnly: Boolean,
     state: LazyListState,
     modifier: Modifier
 ) {
@@ -50,7 +51,7 @@ fun CampaignMissions(
             modifier = Modifier.fillMaxWidth().padding(8.dp),
             isSelected = isOnlyActive
         )
-        SquareButton(
+        if (!isViewOnly) SquareButton(
             stringId = R.string.add_mission_button,
             leadingIcon = R.drawable.add_circle_32dp,
             iconColor = CustomTheme.colors.m,
@@ -70,7 +71,7 @@ fun CampaignMissions(
             missions.forEach { mission ->
                 item(mission.name) {
                     Column(
-                        modifier = Modifier.fillMaxWidth().clickable { onClick(mission.name) },
+                        modifier = Modifier.fillMaxWidth().clickable(!isViewOnly) { onClick(mission.name) },
                     ) {
                         Text(
                             text = stringResource(R.string.campaigns_current_day, mission.day),

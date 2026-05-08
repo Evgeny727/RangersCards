@@ -355,24 +355,30 @@ class CampaignsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun leaveCampaign(campaignId: String, userId: String) = runCatching {
-        campaignsRemoteDataSource.leaveCampaign(campaignId.toInt(), userId)
+        campaignsRemoteDataSource.leaveCampaign(campaignId.toInt(), userId).dataAssertNoErrors
         campaignDao.deleteCampaignById(campaignId)
     }
 
     override suspend fun deleteCampaignById(id: String, uploaded: Boolean) = runCatching {
+        val campaign = campaignDao.getCampaignById(id)!!
         if (uploaded) {
-            val updatedData = campaignsRemoteDataSource
-                .deleteCampaign(id.toInt())
-                .dataAssertNoErrors.rangers_remove_campaign
-                .map { it.campaign.toDbCampaign() }
-                .filter { it.id != id }
+            campaignsRemoteDataSource.deleteCampaign(id.toInt()).dataAssertNoErrors
 
             db.withTransaction {
-                campaignDao.upsertAllCampaigns(updatedData)
+                campaign.previousCampaignId?.let {
+                    val previousCampaign = campaignDao.getCampaignById(it)!!
+                    campaignDao.updateCampaign(
+                        previousCampaign.copy(
+                            latestDecks = campaign.latestDecks,
+                            updatedAt = getCurrentDateTime(),
+                            nextCampaignId = null
+                        )
+                    )
+                }
                 campaignDao.deleteCampaignById(id)
             }
+            campaign.previousCampaignId
         } else {
-            val campaign = campaignDao.getCampaignById(id)!!
             val currentTime = getCurrentDateTime()
             val decks = deckDao.getDecksById(campaign.latestDecks.jsonObject.keys.toList())
 
@@ -403,6 +409,7 @@ class CampaignsRepositoryImpl @Inject constructor(
                 }
                 campaignDao.deleteCampaignById(id)
             }
+            campaign.previousCampaignId
         }
     }
 

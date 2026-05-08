@@ -52,6 +52,7 @@ fun CampaignRewardFullScreen(
     val campaignState by campaignViewModel.campaign.collectAsState()
     val rewards by campaignViewModel.rewards.collectAsState()
     val pagerState = rememberPagerState(initialPage = cardIndex) { rewards.size }
+    val isViewOnly by campaignViewModel.isViewOnly.collectAsState()
     HorizontalPager(
         state = pagerState,
         modifier = Modifier
@@ -108,7 +109,7 @@ fun CampaignRewardFullScreen(
                     )
                 }
                 // Overlay custom FABs in the bottom-end corner
-                Row(
+                if (!isViewOnly) Row(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(16.dp)

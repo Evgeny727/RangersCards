@@ -31,7 +31,6 @@ import com.rangerscards.R
 import com.rangerscards.domain.model.Campaign
 import com.rangerscards.objects.CampaignMaps
 import com.rangerscards.objects.Weather
-import com.rangerscards.ui.campaign.CampaignViewModel
 import com.rangerscards.ui.campaign.DayInfo
 import com.rangerscards.ui.components.RangersDialogWithContent
 import com.rangerscards.ui.components.SquareButton
@@ -52,6 +51,7 @@ fun DayInfoDialog(
     setCampaignCalendar: (Int, List<String>) -> Unit,
     dayId: Int,
     isDarkTheme: Boolean,
+    isViewOnly: Boolean,
     onBack: () -> Unit,
 ) {
     val groupedDays = remember { groupDaysByWeather().values }
@@ -95,7 +95,7 @@ fun DayInfoDialog(
                             lineHeight = 18.sp,
                             modifier = Modifier.weight(1f)
                         )
-                        if (fixedGuides?.firstOrNull { it.day == dayId }?.guides?.contains(guideEntry) != true) {
+                        if (!isViewOnly && fixedGuides?.firstOrNull { it.day == dayId }?.guides?.contains(guideEntry) != true) {
                             IconButton(
                                 onClick = { guideEntryEditing = guideEntry
                                     guideEntryPrevious = guideEntry
@@ -135,7 +135,7 @@ fun DayInfoDialog(
                 }
             }
         }
-        SquareButton(
+        if (!isViewOnly) SquareButton(
             stringId = R.string.add_guide_entry_button,
             leadingIcon = R.drawable.add_32dp,
             onClick = { showInputDialog = DayInfoDialog.Add },

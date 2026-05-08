@@ -37,8 +37,9 @@ fun CampaignRemovedCards(
     removedSets: ImmutableMap<String, Pair<Int?, Int>>,
     removed: ImmutableList<CampaignRemoved>,
     onRemove: (String) -> Unit,
+    isViewOnly: Boolean,
     state: LazyListState,
-    nestedConnectionModifier: Modifier
+    modifier: Modifier
 ) {
     Column {
         Text(
@@ -50,7 +51,7 @@ fun CampaignRemovedCards(
             lineHeight = 18.sp,
             modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
         )
-        SquareButton(
+        if (!isViewOnly) SquareButton(
             stringId = R.string.remove_card_button,
             leadingIcon = R.drawable.add_circle_32dp,
             iconColor = CustomTheme.colors.m,
@@ -63,7 +64,7 @@ fun CampaignRemovedCards(
         )
         LazyColumn(
             state = state,
-            modifier = nestedConnectionModifier.fillMaxWidth(),
+            modifier = modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(8.dp)
         ) {
@@ -107,7 +108,7 @@ fun CampaignRemovedCards(
                                 )
                             }
                         }
-                        IconButton(
+                        if (!isViewOnly) IconButton(
                             onClick = { onRemove.invoke(removed.name) },
                             colors = IconButtonDefaults.iconButtonColors()
                                 .copy(containerColor = Color.Transparent),
