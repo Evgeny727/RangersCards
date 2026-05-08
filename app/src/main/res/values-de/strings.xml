@@ -334,6 +334,8 @@
     //Settings section
     <string name="settings_section_header">— Einstellungen —</string>
     <string name="add_remove_players_button">Spieler hinzufügen/entfernen</string>
+    <string name="campaign_previous">Vorherige Kampagne</string>
+    <string name="campaign_next">Nächste Kampagne</string>
     <string name="upload_campaign_button">Zu RangersDB hochladen</string>
     <string name="upload_campaign_warning">Fehler: Diese Kampagne ist bereits mit Decks verknüpft!</string>
     <string name="delete_campaign_button">Kampagne löschen</string>
@@ -515,7 +517,7 @@
     <string name="aspect_card_divider_header">Aspekt</string>
     <string name="equip_card_divider_header">Last</string>
 
-    <string name="campaign_expansions">Campaign expansions</string>
+    <string name="campaign_expansions">Kampagnen-Erweiterungen</string>
 
     <string name="cards_update_available_header">Aktualisierte Karten</string>
     <string name="cards_update_available_text">Aktualisierte Karten verfügbar.</string>
