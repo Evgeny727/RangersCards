@@ -240,7 +240,7 @@ class DeckViewModel @Inject constructor(
         }
         val allIds = (addedCards + removedCards + addedCollectionCards + returnedCollectionCards).keys
         val allCardsMap = cardsRepository.getChangedDeckCardsById(allIds.toList(), tabooSetId)
-            .associateBy { it.id }
+            .associateBy { it.code }
 
         return persistentListOf(
             ChangedCardsCategory(

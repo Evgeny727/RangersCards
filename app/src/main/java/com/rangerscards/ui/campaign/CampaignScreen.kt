@@ -640,7 +640,7 @@ fun CampaignScreen(
                             launchSingleTop = true
                         } },
                         onUploadCampaign = if (!campaign.uploaded && user.userInfo != null &&
-                            campaign.previousCampaignId != null) { {
+                            campaign.previousCampaignId == null) { {
                                 campaignViewModel.uploadCampaign()
                         } } else null,
                         onDeleteOrLeaveCampaign = { showConfirmationDialog = true },
