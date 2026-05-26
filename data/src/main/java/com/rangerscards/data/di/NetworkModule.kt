@@ -9,8 +9,8 @@ import com.apollographql.apollo.interceptor.RetryOnErrorInterceptor
 import com.apollographql.apollo.network.NetworkMonitor
 import com.apollographql.apollo.network.http.HttpInterceptor
 import com.apollographql.apollo.network.http.HttpInterceptorChain
-import com.apollographql.apollo.network.ws.SubscriptionWsProtocol
-import com.apollographql.apollo.network.ws.WebSocketNetworkTransport
+import com.apollographql.apollo.network.websocket.GraphQLWsProtocol
+import com.apollographql.apollo.network.websocket.WebSocketNetworkTransport
 import com.google.firebase.auth.FirebaseAuth
 import com.rangerscards.data.objects.JsonElementAdapter
 import com.rangerscards.data.remote.AuthTokenProvider
@@ -20,7 +20,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.delay
 import javax.inject.Singleton
 
 const val SERVER_URL = "gapi.rangersdb.com/v1/graphql"
@@ -44,14 +43,10 @@ object NetworkModule {
         .subscriptionNetworkTransport(
             WebSocketNetworkTransport.Builder()
                 .serverUrl("wss://$SERVER_URL")
-                .protocol(SubscriptionWsProtocol.Factory(connectionPayload = suspend {
+                .wsProtocol(GraphQLWsProtocol(connectionPayload = suspend {
                     val token = authTokenProvider.getToken(true)
                     mapOf("headers" to mapOf("Authorization" to "Bearer $token"))
                 }))
-                .reopenWhen { _, attempt ->
-                    delay(attempt * 1000)
-                    attempt < 5
-                }
                 .build()
         )
         .addHttpInterceptor( object : HttpInterceptor {
