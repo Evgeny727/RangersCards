@@ -84,6 +84,7 @@ import com.rangerscards.utils.applyScaffoldPaddings
 import com.rangerscards.utils.openLink
 import kotlinx.collections.immutable.persistentListOf
 import java.util.Locale
+import androidx.compose.ui.platform.LocalLocale
 
 enum class DialogType {
     Save,
@@ -772,7 +773,7 @@ fun DeckScreen(
                     }
                 }
                 val isTabooSet = remember(deck?.tabooSetId) { deck?.tabooSetId != null }
-                val locale = Locale.getDefault().language.take(2)
+                val locale = LocalLocale.current.platformLocale.language.take(2)
                 val supportedLocale = if (SUPPORTED_LANGUAGES.contains(locale)) locale
                 else ""
                 val context = LocalContext.current
