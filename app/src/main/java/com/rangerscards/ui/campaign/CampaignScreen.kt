@@ -147,9 +147,12 @@ fun CampaignScreen(
                 popUpTo(BottomNavScreen.Campaigns.startDestination) { inclusive = false }
                 launchSingleTop = true
             } } ?: navController.navigateUp()
-            is CampaignUiState.FriendDeckDownloaded -> navController.navigate(
-                "deck/${state.deckId}"
-            ) { launchSingleTop = true }
+            is CampaignUiState.FriendDeckDownloaded -> {
+                campaignViewModel.resetCampaignUiState()
+                navController.navigate(
+                    "deck/${state.deckId}"
+                ) { launchSingleTop = true }
+            }
             is CampaignUiState.CampaignUploaded -> navController.navigate(
                 "${BottomNavScreen.Campaigns.route}/campaign/${state.campaignId}"
             ) {

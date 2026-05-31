@@ -102,6 +102,10 @@ class CampaignViewModel @Inject constructor(
         initialValue = false
     )
 
+    fun resetCampaignUiState() {
+        _campaignUiState.value = CampaignUiState.Idle
+    }
+
     private val _events = MutableSharedFlow<UiErrorState>(
         replay = 0,
         extraBufferCapacity = 1

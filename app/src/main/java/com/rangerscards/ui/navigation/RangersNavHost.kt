@@ -658,12 +658,12 @@ fun RangersNavHost(
                     route = "deck/card/{$cardIdArgument}",
                     arguments = listOf(navArgument(cardIdArgument) { type = NavType.StringType })
                 ) { backStackEntry ->
-                    val parentEntry = remember(backStackEntry) {
-                        navController.getBackStackEntry("deck/{$deckIdArgument}")
-                    }
-                    val deckViewModel: DeckViewModel = hiltViewModel(parentEntry)
                     val cardCode = backStackEntry.arguments?.getString(cardIdArgument)
                     if (cardCode != null) {
+                        val parentEntry = remember(backStackEntry) {
+                            navController.getBackStackEntry("deck/{$deckIdArgument}")
+                        }
+                        val deckViewModel: DeckViewModel = hiltViewModel(parentEntry)
                         DeckFullCardScreen(
                             navigateUp = navController::navigateUp,
                             deckViewModel = deckViewModel,
