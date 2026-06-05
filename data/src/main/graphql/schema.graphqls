@@ -4,12 +4,280 @@ schema {
   subscription: subscription_root
 }
 
+"""
+Boolean expression to compare columns of type "Boolean". All fields are combined with logical 'AND'.
+"""
+input Boolean_comparison_exp {
+  _eq: Boolean
+  _gt: Boolean
+  _gte: Boolean
+  _in: [Boolean!]
+  _is_null: Boolean
+  _lt: Boolean
+  _lte: Boolean
+  _neq: Boolean
+  _nin: [Boolean!]
+}
+
+input CreateCampaignInput {
+  campaignId: String!
+  guided: Boolean
+  linked: LinkedCampaignId
+}
+
+type CreateCampaignOutput {
+  campaignId: Int!
+  campaignIdA: Int
+  campaignIdB: Int
+}
+
+input CreateDeckInput {
+  description: String
+  ignoreDeckLimitSlots: jsonb!
+  investigator: String!
+  meta: jsonb
+  name: String!
+  problem: String
+  slots: jsonb!
+  tabooSetId: Int
+  tags: String
+}
+
+type CreateDeckOutput {
+  deck: arkhamdb_deck
+  deckId: String!
+}
+
+type DeckId {
+  campaignId: Int!
+  id: Int!
+}
+
+input DeleteCampaignInput {
+  campaignId: String!
+  serverId: Int!
+}
+
+type DeleteCampaignOutput {
+  campaignId: Int!
+}
+
+input DeleteDeckInput {
+  deckId: Int!
+  deleteAllVersions: Boolean!
+}
+
+type DeleteDeckOutput {
+  success: Boolean!
+}
+
+enum EditAccessAction {
+  grant
+  revoke
+}
+
+input EditCampaignAccessInput {
+  action: EditAccessAction!
+  campaignId: String!
+  serverId: Int!
+  users: [String!]!
+}
+
+type EditCampaignAccessOutput {
+  campaignId: Int!
+}
+
+enum FriendRequestAction {
+  request
+  revoke
+}
+
+input FriendRequestInput {
+  action: FriendRequestAction!
+  userId: String!
+}
+
+type FriendRequestOutput {
+  success: Boolean!
+}
+
+"""
+Boolean expression to compare columns of type "Int". All fields are combined with logical 'AND'.
+"""
+input Int_comparison_exp {
+  _eq: Int
+  _gt: Int
+  _gte: Int
+  _in: [Int!]
+  _is_null: Boolean
+  _lt: Int
+  _lte: Int
+  _neq: Int
+  _nin: [Int!]
+}
+
+input LinkedCampaignId {
+  campaignIdA: String!
+  campaignIdB: String!
+}
+
+input LoginInput {
+  code: String!
+  redirectUri: String!
+  state: String!
+}
+
+type LoginOutput {
+  success: Boolean!
+}
+
+type LogoutOutput {
+  success: Boolean!
+}
+
+input MigrateLoginInput {
+  accessToken: String!
+  refreshToken: String!
+}
+
+type MigrateLoginOutput {
+  success: Boolean!
+}
+
+input RefreshDecksInput {
+  force: Boolean!
+}
+
+type RefreshDecksOutput {
+  updated: Boolean!
+}
+
+"""
+Boolean expression to compare columns of type "String". All fields are combined with logical 'AND'.
+"""
+input String_array_comparison_exp {
+  """is the array contained in the given array value"""
+  _contained_in: [String!]
+
+  """does the array contain the given value"""
+  _contains: [String!]
+  _eq: [String!]
+  _gt: [String!]
+  _gte: [String!]
+  _in: [[String!]!]
+  _is_null: Boolean
+  _lt: [String!]
+  _lte: [String!]
+  _neq: [String!]
+  _nin: [[String!]!]
+}
+
+"""
+Boolean expression to compare columns of type "String". All fields are combined with logical 'AND'.
+"""
+input String_comparison_exp {
+  _eq: String
+  _gt: String
+  _gte: String
+
+  """does the column match the given case-insensitive pattern"""
+  _ilike: String
+  _in: [String!]
+
+  """
+  does the column match the given POSIX regular expression, case insensitive
+  """
+  _iregex: String
+  _is_null: Boolean
+
+  """does the column match the given pattern"""
+  _like: String
+  _lt: String
+  _lte: String
+  _neq: String
+
+  """does the column NOT match the given case-insensitive pattern"""
+  _nilike: String
+  _nin: [String!]
+
+  """
+  does the column NOT match the given POSIX regular expression, case insensitive
+  """
+  _niregex: String
+
+  """does the column NOT match the given pattern"""
+  _nlike: String
+
+  """
+  does the column NOT match the given POSIX regular expression, case sensitive
+  """
+  _nregex: String
+
+  """does the column NOT match the given SQL regular expression"""
+  _nsimilar: String
+
+  """
+  does the column match the given POSIX regular expression, case sensitive
+  """
+  _regex: String
+
+  """does the column match the given SQL regular expression"""
+  _similar: String
+}
+
+input UpdateHandleInput {
+  handle: String!
+  userId: String
+}
+
+type UpdateHandleOutput {
+  success: Boolean!
+  user: users
+  userId: String!
+}
+
+input UpgradeDeckInput {
+  deckId: Int!
+  exiles: jsonb
+  xp: Int!
+}
+
+type UpgradeDeckOutput {
+  deckId: Int!
+  upgradedDeckId: Int!
+}
+
+input UploadLocalCampaignDeckInput {
+  arkhamDbId: Int!
+  localDeckId: String!
+}
+
+type UploadLocalCampaignDeckOutput {
+  deckIds: [DeckId!]!
+}
+
+type UserSearchResult {
+  handle: String!
+  id: String!
+}
+
+input UsersSearchInput {
+  continueToken: String
+  search: String!
+}
+
+type UsersSearchOutput {
+  hasMore: String!
+  users: [UserSearchResult!]!
+}
+
 scalar _text
 
 """
 columns and relationships of "all_card"
 """
 type all_card {
+  advanced_for: String
   alt_art_investigator: Boolean
   alternate_of_code: String
   alternate_required_code: String
@@ -95,6 +363,7 @@ type all_card {
   illustrator: String
   imagesrc: String
   imageurl: String
+  investigator_id: String
   is_unique: Boolean
   linked: Boolean
 
@@ -143,12 +412,14 @@ type all_card {
     """filter the rows returned"""
     where: card_pack_bool_exp
   ): card_pack_aggregate!
+  parallel_of_code: String
   permanent: Boolean
   position: Int!
   preview: Boolean
   quantity: Int!
   real_back_flavor: String
   real_back_name: String
+  real_back_subname: String
   real_back_text: String
   real_back_traits: String
   real_customization_change: String
@@ -164,6 +435,8 @@ type all_card {
   real_taboo_text_change: String
   real_text: String
   real_traits: String
+  replacement_for: String
+  reprint_of_code: String
   restrictions(
     """JSON select path"""
     path: String
@@ -175,6 +448,15 @@ type all_card {
     path: String
   ): jsonb
   side_deck_requirements(
+    """JSON select path"""
+    path: String
+  ): jsonb
+  signature_for: String
+  simple_deck_requirements(
+    """JSON select path"""
+    path: String
+  ): jsonb
+  simple_side_deck_requirements(
     """JSON select path"""
     path: String
   ): jsonb
@@ -320,6 +602,8 @@ input all_card_append_input {
   restrictions: jsonb
   side_deck_options: jsonb
   side_deck_requirements: jsonb
+  simple_deck_requirements: jsonb
+  simple_side_deck_requirements: jsonb
   tags: jsonb
 }
 
@@ -404,6 +688,7 @@ input all_card_bool_exp {
   _and: [all_card_bool_exp!]
   _not: all_card_bool_exp
   _or: [all_card_bool_exp!]
+  advanced_for: String_comparison_exp
   alt_art_investigator: Boolean_comparison_exp
   alternate_of_code: String_comparison_exp
   alternate_required_code: String_comparison_exp
@@ -446,6 +731,7 @@ input all_card_bool_exp {
   illustrator: String_comparison_exp
   imagesrc: String_comparison_exp
   imageurl: String_comparison_exp
+  investigator_id: String_comparison_exp
   is_unique: Boolean_comparison_exp
   linked: Boolean_comparison_exp
   linked_card: all_card_bool_exp
@@ -456,12 +742,14 @@ input all_card_bool_exp {
   pack_position: Int_comparison_exp
   packs: card_pack_bool_exp
   packs_aggregate: card_pack_aggregate_bool_exp
+  parallel_of_code: String_comparison_exp
   permanent: Boolean_comparison_exp
   position: Int_comparison_exp
   preview: Boolean_comparison_exp
   quantity: Int_comparison_exp
   real_back_flavor: String_comparison_exp
   real_back_name: String_comparison_exp
+  real_back_subname: String_comparison_exp
   real_back_text: String_comparison_exp
   real_back_traits: String_comparison_exp
   real_customization_change: String_comparison_exp
@@ -477,11 +765,16 @@ input all_card_bool_exp {
   real_taboo_text_change: String_comparison_exp
   real_text: String_comparison_exp
   real_traits: String_comparison_exp
+  replacement_for: String_comparison_exp
+  reprint_of_code: String_comparison_exp
   restrictions: jsonb_comparison_exp
   sanity: Int_comparison_exp
   shroud: Int_comparison_exp
   side_deck_options: jsonb_comparison_exp
   side_deck_requirements: jsonb_comparison_exp
+  signature_for: String_comparison_exp
+  simple_deck_requirements: jsonb_comparison_exp
+  simple_side_deck_requirements: jsonb_comparison_exp
   skill_agility: Int_comparison_exp
   skill_combat: Int_comparison_exp
   skill_intellect: Int_comparison_exp
@@ -531,12 +824,13 @@ input all_card_delete_at_path_input {
   restrictions: [String!]
   side_deck_options: [String!]
   side_deck_requirements: [String!]
+  simple_deck_requirements: [String!]
+  simple_side_deck_requirements: [String!]
   tags: [String!]
 }
 
 """
-delete the array element with specified index (negative integers count from the
-end). throws an error if top level container is not an array
+delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
 """
 input all_card_delete_elem_input {
   customization_options: Int
@@ -545,6 +839,8 @@ input all_card_delete_elem_input {
   restrictions: Int
   side_deck_options: Int
   side_deck_requirements: Int
+  simple_deck_requirements: Int
+  simple_side_deck_requirements: Int
   tags: Int
 }
 
@@ -558,6 +854,8 @@ input all_card_delete_key_input {
   restrictions: String
   side_deck_options: String
   side_deck_requirements: String
+  simple_deck_requirements: String
+  simple_side_deck_requirements: String
   tags: String
 }
 
@@ -598,6 +896,7 @@ input all_card_inc_input {
 input type for inserting data into table "all_card"
 """
 input all_card_insert_input {
+  advanced_for: String
   alt_art_investigator: Boolean
   alternate_of_code: String
   alternate_required_code: String
@@ -639,6 +938,7 @@ input all_card_insert_input {
   illustrator: String
   imagesrc: String
   imageurl: String
+  investigator_id: String
   is_unique: Boolean
   linked: Boolean
   linked_card: all_card_obj_rel_insert_input
@@ -648,12 +948,14 @@ input all_card_insert_input {
   pack_code: String
   pack_position: Int
   packs: card_pack_arr_rel_insert_input
+  parallel_of_code: String
   permanent: Boolean
   position: Int
   preview: Boolean
   quantity: Int
   real_back_flavor: String
   real_back_name: String
+  real_back_subname: String
   real_back_text: String
   real_back_traits: String
   real_customization_change: String
@@ -669,11 +971,16 @@ input all_card_insert_input {
   real_taboo_text_change: String
   real_text: String
   real_traits: String
+  replacement_for: String
+  reprint_of_code: String
   restrictions: jsonb
   sanity: Int
   shroud: Int
   side_deck_options: jsonb
   side_deck_requirements: jsonb
+  signature_for: String
+  simple_deck_requirements: jsonb
+  simple_side_deck_requirements: jsonb
   skill_agility: Int
   skill_combat: Int
   skill_intellect: Int
@@ -699,6 +1006,7 @@ input all_card_insert_input {
 
 """aggregate max on columns"""
 type all_card_max_fields {
+  advanced_for: String
   alternate_of_code: String
   alternate_required_code: String
   back_illustrator: String
@@ -726,12 +1034,15 @@ type all_card_max_fields {
   illustrator: String
   imagesrc: String
   imageurl: String
+  investigator_id: String
   pack_code: String
   pack_position: Int
+  parallel_of_code: String
   position: Int
   quantity: Int
   real_back_flavor: String
   real_back_name: String
+  real_back_subname: String
   real_back_text: String
   real_back_traits: String
   real_customization_change: String
@@ -747,8 +1058,11 @@ type all_card_max_fields {
   real_taboo_text_change: String
   real_text: String
   real_traits: String
+  replacement_for: String
+  reprint_of_code: String
   sanity: Int
   shroud: Int
+  signature_for: String
   skill_agility: Int
   skill_combat: Int
   skill_intellect: Int
@@ -769,6 +1083,7 @@ type all_card_max_fields {
 order by max() on columns of table "all_card"
 """
 input all_card_max_order_by {
+  advanced_for: order_by
   alternate_of_code: order_by
   alternate_required_code: order_by
   back_illustrator: order_by
@@ -796,12 +1111,15 @@ input all_card_max_order_by {
   illustrator: order_by
   imagesrc: order_by
   imageurl: order_by
+  investigator_id: order_by
   pack_code: order_by
   pack_position: order_by
+  parallel_of_code: order_by
   position: order_by
   quantity: order_by
   real_back_flavor: order_by
   real_back_name: order_by
+  real_back_subname: order_by
   real_back_text: order_by
   real_back_traits: order_by
   real_customization_change: order_by
@@ -817,8 +1135,11 @@ input all_card_max_order_by {
   real_taboo_text_change: order_by
   real_text: order_by
   real_traits: order_by
+  replacement_for: order_by
+  reprint_of_code: order_by
   sanity: order_by
   shroud: order_by
+  signature_for: order_by
   skill_agility: order_by
   skill_combat: order_by
   skill_intellect: order_by
@@ -837,6 +1158,7 @@ input all_card_max_order_by {
 
 """aggregate min on columns"""
 type all_card_min_fields {
+  advanced_for: String
   alternate_of_code: String
   alternate_required_code: String
   back_illustrator: String
@@ -864,12 +1186,15 @@ type all_card_min_fields {
   illustrator: String
   imagesrc: String
   imageurl: String
+  investigator_id: String
   pack_code: String
   pack_position: Int
+  parallel_of_code: String
   position: Int
   quantity: Int
   real_back_flavor: String
   real_back_name: String
+  real_back_subname: String
   real_back_text: String
   real_back_traits: String
   real_customization_change: String
@@ -885,8 +1210,11 @@ type all_card_min_fields {
   real_taboo_text_change: String
   real_text: String
   real_traits: String
+  replacement_for: String
+  reprint_of_code: String
   sanity: Int
   shroud: Int
+  signature_for: String
   skill_agility: Int
   skill_combat: Int
   skill_intellect: Int
@@ -907,6 +1235,7 @@ type all_card_min_fields {
 order by min() on columns of table "all_card"
 """
 input all_card_min_order_by {
+  advanced_for: order_by
   alternate_of_code: order_by
   alternate_required_code: order_by
   back_illustrator: order_by
@@ -934,12 +1263,15 @@ input all_card_min_order_by {
   illustrator: order_by
   imagesrc: order_by
   imageurl: order_by
+  investigator_id: order_by
   pack_code: order_by
   pack_position: order_by
+  parallel_of_code: order_by
   position: order_by
   quantity: order_by
   real_back_flavor: order_by
   real_back_name: order_by
+  real_back_subname: order_by
   real_back_text: order_by
   real_back_traits: order_by
   real_customization_change: order_by
@@ -955,8 +1287,11 @@ input all_card_min_order_by {
   real_taboo_text_change: order_by
   real_text: order_by
   real_traits: order_by
+  replacement_for: order_by
+  reprint_of_code: order_by
   sanity: order_by
   shroud: order_by
+  signature_for: order_by
   skill_agility: order_by
   skill_combat: order_by
   skill_intellect: order_by
@@ -1005,6 +1340,7 @@ input all_card_on_conflict {
 
 """Ordering options when selecting data from "all_card"."""
 input all_card_order_by {
+  advanced_for: order_by
   alt_art_investigator: order_by
   alternate_of_code: order_by
   alternate_required_code: order_by
@@ -1046,6 +1382,7 @@ input all_card_order_by {
   illustrator: order_by
   imagesrc: order_by
   imageurl: order_by
+  investigator_id: order_by
   is_unique: order_by
   linked: order_by
   linked_card: all_card_order_by
@@ -1055,12 +1392,14 @@ input all_card_order_by {
   pack_code: order_by
   pack_position: order_by
   packs_aggregate: card_pack_aggregate_order_by
+  parallel_of_code: order_by
   permanent: order_by
   position: order_by
   preview: order_by
   quantity: order_by
   real_back_flavor: order_by
   real_back_name: order_by
+  real_back_subname: order_by
   real_back_text: order_by
   real_back_traits: order_by
   real_customization_change: order_by
@@ -1076,11 +1415,16 @@ input all_card_order_by {
   real_taboo_text_change: order_by
   real_text: order_by
   real_traits: order_by
+  replacement_for: order_by
+  reprint_of_code: order_by
   restrictions: order_by
   sanity: order_by
   shroud: order_by
   side_deck_options: order_by
   side_deck_requirements: order_by
+  signature_for: order_by
+  simple_deck_requirements: order_by
+  simple_side_deck_requirements: order_by
   skill_agility: order_by
   skill_combat: order_by
   skill_intellect: order_by
@@ -1117,6 +1461,8 @@ input all_card_prepend_input {
   restrictions: jsonb
   side_deck_options: jsonb
   side_deck_requirements: jsonb
+  simple_deck_requirements: jsonb
+  simple_side_deck_requirements: jsonb
   tags: jsonb
 }
 
@@ -1124,6 +1470,9 @@ input all_card_prepend_input {
 select columns of table "all_card"
 """
 enum all_card_select_column {
+  """column name"""
+  advanced_for
+
   """column name"""
   alt_art_investigator
 
@@ -1245,6 +1594,9 @@ enum all_card_select_column {
   imageurl
 
   """column name"""
+  investigator_id
+
+  """column name"""
   is_unique
 
   """column name"""
@@ -1263,6 +1615,9 @@ enum all_card_select_column {
   pack_position
 
   """column name"""
+  parallel_of_code
+
+  """column name"""
   permanent
 
   """column name"""
@@ -1279,6 +1634,9 @@ enum all_card_select_column {
 
   """column name"""
   real_back_name
+
+  """column name"""
+  real_back_subname
 
   """column name"""
   real_back_text
@@ -1326,6 +1684,12 @@ enum all_card_select_column {
   real_traits
 
   """column name"""
+  replacement_for
+
+  """column name"""
+  reprint_of_code
+
+  """column name"""
   restrictions
 
   """column name"""
@@ -1339,6 +1703,15 @@ enum all_card_select_column {
 
   """column name"""
   side_deck_requirements
+
+  """column name"""
+  signature_for
+
+  """column name"""
+  simple_deck_requirements
+
+  """column name"""
+  simple_side_deck_requirements
 
   """column name"""
   skill_agility
@@ -1511,6 +1884,7 @@ enum all_card_select_column_all_card_aggregate_bool_exp_bool_or_arguments_column
 input type for updating data in table "all_card"
 """
 input all_card_set_input {
+  advanced_for: String
   alt_art_investigator: Boolean
   alternate_of_code: String
   alternate_required_code: String
@@ -1551,18 +1925,21 @@ input all_card_set_input {
   illustrator: String
   imagesrc: String
   imageurl: String
+  investigator_id: String
   is_unique: Boolean
   linked: Boolean
   myriad: Boolean
   official: Boolean
   pack_code: String
   pack_position: Int
+  parallel_of_code: String
   permanent: Boolean
   position: Int
   preview: Boolean
   quantity: Int
   real_back_flavor: String
   real_back_name: String
+  real_back_subname: String
   real_back_text: String
   real_back_traits: String
   real_customization_change: String
@@ -1578,11 +1955,16 @@ input all_card_set_input {
   real_taboo_text_change: String
   real_text: String
   real_traits: String
+  replacement_for: String
+  reprint_of_code: String
   restrictions: jsonb
   sanity: Int
   shroud: Int
   side_deck_options: jsonb
   side_deck_requirements: jsonb
+  signature_for: String
+  simple_deck_requirements: jsonb
+  simple_side_deck_requirements: jsonb
   skill_agility: Int
   skill_combat: Int
   skill_intellect: Int
@@ -1808,6 +2190,7 @@ input all_card_stream_cursor_input {
 
 """Initial value of the column from where the streaming should start"""
 input all_card_stream_cursor_value_input {
+  advanced_for: String
   alt_art_investigator: Boolean
   alternate_of_code: String
   alternate_required_code: String
@@ -1848,18 +2231,21 @@ input all_card_stream_cursor_value_input {
   illustrator: String
   imagesrc: String
   imageurl: String
+  investigator_id: String
   is_unique: Boolean
   linked: Boolean
   myriad: Boolean
   official: Boolean
   pack_code: String
   pack_position: Int
+  parallel_of_code: String
   permanent: Boolean
   position: Int
   preview: Boolean
   quantity: Int
   real_back_flavor: String
   real_back_name: String
+  real_back_subname: String
   real_back_text: String
   real_back_traits: String
   real_customization_change: String
@@ -1875,11 +2261,16 @@ input all_card_stream_cursor_value_input {
   real_taboo_text_change: String
   real_text: String
   real_traits: String
+  replacement_for: String
+  reprint_of_code: String
   restrictions: jsonb
   sanity: Int
   shroud: Int
   side_deck_options: jsonb
   side_deck_requirements: jsonb
+  signature_for: String
+  simple_deck_requirements: jsonb
+  simple_side_deck_requirements: jsonb
   skill_agility: Int
   skill_combat: Int
   skill_intellect: Int
@@ -1970,6 +2361,7 @@ columns and relationships of "all_card_text"
 type all_card_text {
   back_flavor: String
   back_name: String
+  back_subname: String
   back_text: String
   back_traits: String
   backimageurl: String
@@ -2047,6 +2439,7 @@ input all_card_text_bool_exp {
   _or: [all_card_text_bool_exp!]
   back_flavor: String_comparison_exp
   back_name: String_comparison_exp
+  back_subname: String_comparison_exp
   back_text: String_comparison_exp
   back_traits: String_comparison_exp
   backimageurl: String_comparison_exp
@@ -2084,6 +2477,7 @@ input type for inserting data into table "all_card_text"
 input all_card_text_insert_input {
   back_flavor: String
   back_name: String
+  back_subname: String
   back_text: String
   back_traits: String
   backimageurl: String
@@ -2109,6 +2503,7 @@ input all_card_text_insert_input {
 type all_card_text_max_fields {
   back_flavor: String
   back_name: String
+  back_subname: String
   back_text: String
   back_traits: String
   backimageurl: String
@@ -2136,6 +2531,7 @@ order by max() on columns of table "all_card_text"
 input all_card_text_max_order_by {
   back_flavor: order_by
   back_name: order_by
+  back_subname: order_by
   back_text: order_by
   back_traits: order_by
   backimageurl: order_by
@@ -2161,6 +2557,7 @@ input all_card_text_max_order_by {
 type all_card_text_min_fields {
   back_flavor: String
   back_name: String
+  back_subname: String
   back_text: String
   back_traits: String
   backimageurl: String
@@ -2188,6 +2585,7 @@ order by min() on columns of table "all_card_text"
 input all_card_text_min_order_by {
   back_flavor: order_by
   back_name: order_by
+  back_subname: order_by
   back_text: order_by
   back_traits: order_by
   backimageurl: order_by
@@ -2233,6 +2631,7 @@ input all_card_text_on_conflict {
 input all_card_text_order_by {
   back_flavor: order_by
   back_name: order_by
+  back_subname: order_by
   back_text: order_by
   back_traits: order_by
   backimageurl: order_by
@@ -2269,6 +2668,9 @@ enum all_card_text_select_column {
 
   """column name"""
   back_name
+
+  """column name"""
+  back_subname
 
   """column name"""
   back_text
@@ -2334,6 +2736,7 @@ input type for updating data in table "all_card_text"
 input all_card_text_set_input {
   back_flavor: String
   back_name: String
+  back_subname: String
   back_text: String
   back_traits: String
   backimageurl: String
@@ -2370,6 +2773,7 @@ input all_card_text_stream_cursor_input {
 input all_card_text_stream_cursor_value_input {
   back_flavor: String
   back_name: String
+  back_subname: String
   back_text: String
   back_traits: String
   backimageurl: String
@@ -2400,6 +2804,9 @@ enum all_card_text_update_column {
 
   """column name"""
   back_name
+
+  """column name"""
+  back_subname
 
   """column name"""
   back_text
@@ -2471,6 +2878,9 @@ input all_card_text_updates {
 update columns of table "all_card"
 """
 enum all_card_update_column {
+  """column name"""
+  advanced_for
+
   """column name"""
   alt_art_investigator
 
@@ -2592,6 +3002,9 @@ enum all_card_update_column {
   imageurl
 
   """column name"""
+  investigator_id
+
+  """column name"""
   is_unique
 
   """column name"""
@@ -2610,6 +3023,9 @@ enum all_card_update_column {
   pack_position
 
   """column name"""
+  parallel_of_code
+
+  """column name"""
   permanent
 
   """column name"""
@@ -2626,6 +3042,9 @@ enum all_card_update_column {
 
   """column name"""
   real_back_name
+
+  """column name"""
+  real_back_subname
 
   """column name"""
   real_back_text
@@ -2673,6 +3092,12 @@ enum all_card_update_column {
   real_traits
 
   """column name"""
+  replacement_for
+
+  """column name"""
+  reprint_of_code
+
+  """column name"""
   restrictions
 
   """column name"""
@@ -2686,6 +3111,15 @@ enum all_card_update_column {
 
   """column name"""
   side_deck_requirements
+
+  """column name"""
+  signature_for
+
+  """column name"""
+  simple_deck_requirements
+
+  """column name"""
+  simple_side_deck_requirements
 
   """column name"""
   skill_agility
@@ -2838,8 +3272,7 @@ type all_card_updated_by_version_avg_fields {
 }
 
 """
-Boolean expression to filter rows from the table "all_card_updated_by_version".
-All fields are combined with a logical 'AND'.
+Boolean expression to filter rows from the table "all_card_updated_by_version". All fields are combined with a logical 'AND'.
 """
 input all_card_updated_by_version_bool_exp {
   _and: [all_card_updated_by_version_bool_exp!]
@@ -3255,8 +3688,7 @@ input all_card_updates {
   _delete_at_path: all_card_delete_at_path_input
 
   """
-  delete the array element with specified index (negative integers count from
-  the end). throws an error if top level container is not an array
+  delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
   """
   _delete_elem: all_card_delete_elem_input
 
@@ -3915,8 +4347,7 @@ input arkhamdb_deck_delete_at_path_input {
 }
 
 """
-delete the array element with specified index (negative integers count from the
-end). throws an error if top level container is not an array
+delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
 """
 input arkhamdb_deck_delete_elem_input {
   ignore_deck_limit_slots: Int
@@ -4244,8 +4675,7 @@ input arkhamdb_deck_updates {
   _delete_at_path: arkhamdb_deck_delete_at_path_input
 
   """
-  delete the array element with specified index (negative integers count from
-  the end). throws an error if top level container is not an array
+  delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
   """
   _delete_elem: arkhamdb_deck_delete_elem_input
 
@@ -4610,21 +5040,6 @@ input bigint_comparison_exp {
   _lte: bigint
   _neq: bigint
   _nin: [bigint!]
-}
-
-"""
-Boolean expression to compare columns of type "Boolean". All fields are combined with logical 'AND'.
-"""
-input Boolean_comparison_exp {
-  _eq: Boolean
-  _gt: Boolean
-  _gte: Boolean
-  _in: [Boolean!]
-  _is_null: Boolean
-  _lt: Boolean
-  _lte: Boolean
-  _neq: Boolean
-  _nin: [Boolean!]
 }
 
 """
@@ -5690,8 +6105,7 @@ input campaign_deck_delete_at_path_input {
 }
 
 """
-delete the array element with specified index (negative integers count from the
-end). throws an error if top level container is not an array
+delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
 """
 input campaign_deck_delete_elem_input {
   content: Int
@@ -6112,8 +6526,7 @@ input campaign_deck_updates {
   _delete_at_path: campaign_deck_delete_at_path_input
 
   """
-  delete the array element with specified index (negative integers count from
-  the end). throws an error if top level container is not an array
+  delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
   """
   _delete_elem: campaign_deck_delete_elem_input
 
@@ -6208,8 +6621,7 @@ input campaign_delete_at_path_input {
 }
 
 """
-delete the array element with specified index (negative integers count from the
-end). throws an error if top level container is not an array
+delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
 """
 input campaign_delete_elem_input {
   campaignNotes: Int
@@ -6786,6 +7198,7 @@ type campaign_investigator {
   """
   id: String
   investigator: String!
+  printing: String
   updated_at: timestamptz!
 }
 
@@ -6876,6 +7289,7 @@ input campaign_investigator_bool_exp {
   created_at: timestamptz_comparison_exp
   id: String_comparison_exp
   investigator: String_comparison_exp
+  printing: String_comparison_exp
   updated_at: timestamptz_comparison_exp
 }
 
@@ -6909,6 +7323,7 @@ input campaign_investigator_insert_input {
   campaign_id: Int
   created_at: timestamptz
   investigator: String
+  printing: String
   updated_at: timestamptz
 }
 
@@ -6922,6 +7337,7 @@ type campaign_investigator_max_fields {
   """
   id: String
   investigator: String
+  printing: String
   updated_at: timestamptz
 }
 
@@ -6932,6 +7348,7 @@ input campaign_investigator_max_order_by {
   campaign_id: order_by
   created_at: order_by
   investigator: order_by
+  printing: order_by
   updated_at: order_by
 }
 
@@ -6945,6 +7362,7 @@ type campaign_investigator_min_fields {
   """
   id: String
   investigator: String
+  printing: String
   updated_at: timestamptz
 }
 
@@ -6955,6 +7373,7 @@ input campaign_investigator_min_order_by {
   campaign_id: order_by
   created_at: order_by
   investigator: order_by
+  printing: order_by
   updated_at: order_by
 }
 
@@ -6985,6 +7404,7 @@ input campaign_investigator_order_by {
   created_at: order_by
   id: order_by
   investigator: order_by
+  printing: order_by
   updated_at: order_by
 }
 
@@ -7008,6 +7428,9 @@ enum campaign_investigator_select_column {
   investigator
 
   """column name"""
+  printing
+
+  """column name"""
   updated_at
 }
 
@@ -7018,6 +7441,7 @@ input campaign_investigator_set_input {
   campaign_id: Int
   created_at: timestamptz
   investigator: String
+  printing: String
   updated_at: timestamptz
 }
 
@@ -7073,6 +7497,7 @@ input campaign_investigator_stream_cursor_value_input {
   campaign_id: Int
   created_at: timestamptz
   investigator: String
+  printing: String
   updated_at: timestamptz
 }
 
@@ -7100,6 +7525,9 @@ enum campaign_investigator_update_column {
 
   """column name"""
   investigator
+
+  """column name"""
+  printing
 
   """column name"""
   updated_at
@@ -7519,8 +7947,7 @@ input campaign_updates {
   _delete_at_path: campaign_delete_at_path_input
 
   """
-  delete the array element with specified index (negative integers count from
-  the end). throws an error if top level container is not an array
+  delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
   """
   _delete_elem: campaign_delete_elem_input
 
@@ -8278,8 +8705,7 @@ input card_delete_at_path_input {
 }
 
 """
-delete the array element with specified index (negative integers count from the
-end). throws an error if top level container is not an array
+delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
 """
 input card_delete_elem_input {
   deck_options: Int
@@ -10691,8 +11117,7 @@ input card_updates {
   _delete_at_path: card_delete_at_path_input
 
   """
-  delete the array element with specified index (negative integers count from
-  the end). throws an error if top level container is not an array
+  delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
   """
   _delete_elem: card_delete_elem_input
 
@@ -10959,8 +11384,7 @@ input chaos_bag_result_delete_at_path_input {
 }
 
 """
-delete the array element with specified index (negative integers count from the
-end). throws an error if top level container is not an array
+delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
 """
 input chaos_bag_result_delete_elem_input {
   drawn: Int
@@ -11300,8 +11724,7 @@ input chaos_bag_result_updates {
   _delete_at_path: chaos_bag_result_delete_at_path_input
 
   """
-  delete the array element with specified index (negative integers count from
-  the end). throws an error if top level container is not an array
+  delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
   """
   _delete_elem: chaos_bag_result_delete_elem_input
 
@@ -11692,8 +12115,7 @@ input conquest_card_delete_at_path_input {
 }
 
 """
-delete the array element with specified index (negative integers count from the
-end). throws an error if top level container is not an array
+delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
 """
 input conquest_card_delete_elem_input {
   deck_rules: Int
@@ -13336,8 +13758,7 @@ input conquest_card_updates {
   _delete_at_path: conquest_card_delete_at_path_input
 
   """
-  delete the array element with specified index (negative integers count from
-  the end). throws an error if top level container is not an array
+  delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
   """
   _delete_elem: conquest_card_delete_elem_input
 
@@ -14766,8 +15187,7 @@ input conquest_deck_delete_at_path_input {
 }
 
 """
-delete the array element with specified index (negative integers count from the
-end). throws an error if top level container is not an array
+delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
 """
 input conquest_deck_delete_elem_input {
   meta: Int
@@ -15332,8 +15752,7 @@ input conquest_deck_updates {
   _delete_at_path: conquest_deck_delete_at_path_input
 
   """
-  delete the array element with specified index (negative integers count from
-  the end). throws an error if top level container is not an array
+  delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
   """
   _delete_elem: conquest_deck_delete_elem_input
 
@@ -17498,35 +17917,6 @@ input conquest_users_updates {
   where: conquest_users_bool_exp!
 }
 
-input CreateCampaignInput {
-  campaignId: String!
-  guided: Boolean
-  linked: LinkedCampaignId
-}
-
-type CreateCampaignOutput {
-  campaignId: Int!
-  campaignIdA: Int
-  campaignIdB: Int
-}
-
-input CreateDeckInput {
-  description: String
-  ignoreDeckLimitSlots: jsonb!
-  investigator: String!
-  meta: jsonb
-  name: String!
-  problem: String
-  slots: jsonb!
-  tabooSetId: Int
-  tags: String
-}
-
-type CreateDeckOutput {
-  deck: arkhamdb_deck
-  deckId: String!
-}
-
 """ordering argument of a cursor"""
 enum cursor_ordering {
   """ascending ordering of the cursor"""
@@ -17540,6 +17930,7 @@ enum cursor_ordering {
 columns and relationships of "cycle"
 """
 type cycle {
+  chapter: Int
   code: String!
   official: Boolean!
 
@@ -17645,6 +18036,7 @@ type cycle_aggregate_fields {
 
 """aggregate avg on columns"""
 type cycle_avg_fields {
+  chapter: Float
   position: Float
 }
 
@@ -17655,6 +18047,7 @@ input cycle_bool_exp {
   _and: [cycle_bool_exp!]
   _not: cycle_bool_exp
   _or: [cycle_bool_exp!]
+  chapter: Int_comparison_exp
   code: String_comparison_exp
   official: Boolean_comparison_exp
   packs: pack_bool_exp
@@ -17679,6 +18072,7 @@ enum cycle_constraint {
 input type for incrementing numeric columns in table "cycle"
 """
 input cycle_inc_input {
+  chapter: Int
   position: Int
 }
 
@@ -17686,6 +18080,7 @@ input cycle_inc_input {
 input type for inserting data into table "cycle"
 """
 input cycle_insert_input {
+  chapter: Int
   code: String
   official: Boolean
   packs: pack_arr_rel_insert_input
@@ -17696,6 +18091,7 @@ input cycle_insert_input {
 
 """aggregate max on columns"""
 type cycle_max_fields {
+  chapter: Int
   code: String
   position: Int
   real_name: String
@@ -17703,6 +18099,7 @@ type cycle_max_fields {
 
 """aggregate min on columns"""
 type cycle_min_fields {
+  chapter: Int
   code: String
   position: Int
   real_name: String
@@ -17971,6 +18368,7 @@ input cycle_on_conflict {
 
 """Ordering options when selecting data from "cycle"."""
 input cycle_order_by {
+  chapter: order_by
   code: order_by
   official: order_by
   packs_aggregate: pack_aggregate_order_by
@@ -17989,6 +18387,9 @@ select columns of table "cycle"
 """
 enum cycle_select_column {
   """column name"""
+  chapter
+
+  """column name"""
   code
 
   """column name"""
@@ -18005,6 +18406,7 @@ enum cycle_select_column {
 input type for updating data in table "cycle"
 """
 input cycle_set_input {
+  chapter: Int
   code: String
   official: Boolean
   position: Int
@@ -18013,16 +18415,19 @@ input cycle_set_input {
 
 """aggregate stddev on columns"""
 type cycle_stddev_fields {
+  chapter: Float
   position: Float
 }
 
 """aggregate stddev_pop on columns"""
 type cycle_stddev_pop_fields {
+  chapter: Float
   position: Float
 }
 
 """aggregate stddev_samp on columns"""
 type cycle_stddev_samp_fields {
+  chapter: Float
   position: Float
 }
 
@@ -18039,6 +18444,7 @@ input cycle_stream_cursor_input {
 
 """Initial value of the column from where the streaming should start"""
 input cycle_stream_cursor_value_input {
+  chapter: Int
   code: String
   official: Boolean
   position: Int
@@ -18047,6 +18453,7 @@ input cycle_stream_cursor_value_input {
 
 """aggregate sum on columns"""
 type cycle_sum_fields {
+  chapter: Int
   position: Int
 }
 
@@ -18054,6 +18461,9 @@ type cycle_sum_fields {
 update columns of table "cycle"
 """
 enum cycle_update_column {
+  """column name"""
+  chapter
+
   """column name"""
   code
 
@@ -18080,56 +18490,20 @@ input cycle_updates {
 
 """aggregate var_pop on columns"""
 type cycle_var_pop_fields {
+  chapter: Float
   position: Float
 }
 
 """aggregate var_samp on columns"""
 type cycle_var_samp_fields {
+  chapter: Float
   position: Float
 }
 
 """aggregate variance on columns"""
 type cycle_variance_fields {
+  chapter: Float
   position: Float
-}
-
-type DeckId {
-  campaignId: Int!
-  id: Int!
-}
-
-input DeleteCampaignInput {
-  campaignId: String!
-  serverId: Int!
-}
-
-type DeleteCampaignOutput {
-  campaignId: Int!
-}
-
-input DeleteDeckInput {
-  deckId: Int!
-  deleteAllVersions: Boolean!
-}
-
-type DeleteDeckOutput {
-  success: Boolean!
-}
-
-enum EditAccessAction {
-  grant
-  revoke
-}
-
-input EditCampaignAccessInput {
-  action: EditAccessAction!
-  campaignId: String!
-  serverId: Int!
-  users: [String!]!
-}
-
-type EditCampaignAccessOutput {
-  campaignId: Int!
 }
 
 """
@@ -19058,20 +19432,6 @@ input friend_status_updates {
   where: friend_status_bool_exp!
 }
 
-enum FriendRequestAction {
-  request
-  revoke
-}
-
-input FriendRequestInput {
-  action: FriendRequestAction!
-  userId: String!
-}
-
-type FriendRequestOutput {
-  success: Boolean!
-}
-
 """
 columns and relationships of "full_card"
 """
@@ -19419,8 +19779,7 @@ input full_card_delete_at_path_input {
 }
 
 """
-delete the array element with specified index (negative integers count from the
-end). throws an error if top level container is not an array
+delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
 """
 input full_card_delete_elem_input {
   deck_options: Int
@@ -20770,8 +21129,7 @@ input full_card_updates {
   _delete_at_path: full_card_delete_at_path_input
 
   """
-  delete the array element with specified index (negative integers count from
-  the end). throws an error if top level container is not an array
+  delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
   """
   _delete_elem: full_card_delete_elem_input
 
@@ -21626,8 +21984,7 @@ input guide_input_delete_at_path_input {
 }
 
 """
-delete the array element with specified index (negative integers count from the
-end). throws an error if top level container is not an array
+delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
 """
 input guide_input_delete_elem_input {
   payload: Int
@@ -21930,8 +22287,7 @@ input guide_input_updates {
   _delete_at_path: guide_input_delete_at_path_input
 
   """
-  delete the array element with specified index (negative integers count from
-  the end). throws an error if top level container is not an array
+  delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
   """
   _delete_elem: guide_input_delete_elem_input
 
@@ -21993,21 +22349,6 @@ order by variance() on columns of table "guide_input"
 input guide_input_variance_order_by {
   campaign_id: order_by
   inserted_idx: order_by
-}
-
-"""
-Boolean expression to compare columns of type "Int". All fields are combined with logical 'AND'.
-"""
-input Int_comparison_exp {
-  _eq: Int
-  _gt: Int
-  _gte: Int
-  _in: [Int!]
-  _is_null: Boolean
-  _lt: Int
-  _lte: Int
-  _neq: Int
-  _nin: [Int!]
 }
 
 """
@@ -22217,8 +22558,7 @@ input investigator_data_delete_at_path_input {
 }
 
 """
-delete the array element with specified index (negative integers count from the
-end). throws an error if top level container is not an array
+delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
 """
 input investigator_data_delete_elem_input {
   addedCards: Int
@@ -22676,8 +23016,7 @@ input investigator_data_updates {
   _delete_at_path: investigator_data_delete_at_path_input
 
   """
-  delete the array element with specified index (negative integers count from
-  the end). throws an error if top level container is not an array
+  delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
   """
   _delete_elem: investigator_data_delete_elem_input
 
@@ -23121,11 +23460,6 @@ input latest_decks_variance_order_by {
   id: order_by
 }
 
-input LinkedCampaignId {
-  campaignIdA: String!
-  campaignIdB: String!
-}
-
 """
 columns and relationships of "local_decks"
 """
@@ -23447,29 +23781,6 @@ order by variance() on columns of table "local_decks"
 input local_decks_variance_order_by {
   campaign_id: order_by
   id: order_by
-}
-
-input LoginInput {
-  code: String!
-  redirectUri: String!
-  state: String!
-}
-
-type LoginOutput {
-  success: Boolean!
-}
-
-type LogoutOutput {
-  success: Boolean!
-}
-
-input MigrateLoginInput {
-  accessToken: String!
-  refreshToken: String!
-}
-
-type MigrateLoginOutput {
-  success: Boolean!
 }
 
 """mutation root"""
@@ -24224,6 +24535,71 @@ type mutation_root {
     """filter the rows which have to be deleted"""
     where: local_decks_bool_exp!
   ): local_decks_mutation_response
+
+  """
+  delete data from the table: "oauth_access_tokens"
+  """
+  delete_oauth_access_tokens(
+    """filter the rows which have to be deleted"""
+    where: oauth_access_tokens_bool_exp!
+  ): oauth_access_tokens_mutation_response
+
+  """
+  delete single row from the table: "oauth_access_tokens"
+  """
+  delete_oauth_access_tokens_by_pk(id: uuid!): oauth_access_tokens
+
+  """
+  delete data from the table: "oauth_authorization_codes"
+  """
+  delete_oauth_authorization_codes(
+    """filter the rows which have to be deleted"""
+    where: oauth_authorization_codes_bool_exp!
+  ): oauth_authorization_codes_mutation_response
+
+  """
+  delete single row from the table: "oauth_authorization_codes"
+  """
+  delete_oauth_authorization_codes_by_pk(id: uuid!): oauth_authorization_codes
+
+  """
+  delete data from the table: "oauth_clients"
+  """
+  delete_oauth_clients(
+    """filter the rows which have to be deleted"""
+    where: oauth_clients_bool_exp!
+  ): oauth_clients_mutation_response
+
+  """
+  delete single row from the table: "oauth_clients"
+  """
+  delete_oauth_clients_by_pk(id: uuid!): oauth_clients
+
+  """
+  delete data from the table: "oauth_refresh_tokens"
+  """
+  delete_oauth_refresh_tokens(
+    """filter the rows which have to be deleted"""
+    where: oauth_refresh_tokens_bool_exp!
+  ): oauth_refresh_tokens_mutation_response
+
+  """
+  delete single row from the table: "oauth_refresh_tokens"
+  """
+  delete_oauth_refresh_tokens_by_pk(id: uuid!): oauth_refresh_tokens
+
+  """
+  delete data from the table: "oauth_scopes"
+  """
+  delete_oauth_scopes(
+    """filter the rows which have to be deleted"""
+    where: oauth_scopes_bool_exp!
+  ): oauth_scopes_mutation_response
+
+  """
+  delete single row from the table: "oauth_scopes"
+  """
+  delete_oauth_scopes_by_pk(id: String!): oauth_scopes
 
   """
   delete data from the table: "pack"
@@ -26062,6 +26438,116 @@ type mutation_root {
   ): local_decks
 
   """
+  insert data into the table: "oauth_access_tokens"
+  """
+  insert_oauth_access_tokens(
+    """the rows to be inserted"""
+    objects: [oauth_access_tokens_insert_input!]!
+
+    """upsert condition"""
+    on_conflict: oauth_access_tokens_on_conflict
+  ): oauth_access_tokens_mutation_response
+
+  """
+  insert a single row into the table: "oauth_access_tokens"
+  """
+  insert_oauth_access_tokens_one(
+    """the row to be inserted"""
+    object: oauth_access_tokens_insert_input!
+
+    """upsert condition"""
+    on_conflict: oauth_access_tokens_on_conflict
+  ): oauth_access_tokens
+
+  """
+  insert data into the table: "oauth_authorization_codes"
+  """
+  insert_oauth_authorization_codes(
+    """the rows to be inserted"""
+    objects: [oauth_authorization_codes_insert_input!]!
+
+    """upsert condition"""
+    on_conflict: oauth_authorization_codes_on_conflict
+  ): oauth_authorization_codes_mutation_response
+
+  """
+  insert a single row into the table: "oauth_authorization_codes"
+  """
+  insert_oauth_authorization_codes_one(
+    """the row to be inserted"""
+    object: oauth_authorization_codes_insert_input!
+
+    """upsert condition"""
+    on_conflict: oauth_authorization_codes_on_conflict
+  ): oauth_authorization_codes
+
+  """
+  insert data into the table: "oauth_clients"
+  """
+  insert_oauth_clients(
+    """the rows to be inserted"""
+    objects: [oauth_clients_insert_input!]!
+
+    """upsert condition"""
+    on_conflict: oauth_clients_on_conflict
+  ): oauth_clients_mutation_response
+
+  """
+  insert a single row into the table: "oauth_clients"
+  """
+  insert_oauth_clients_one(
+    """the row to be inserted"""
+    object: oauth_clients_insert_input!
+
+    """upsert condition"""
+    on_conflict: oauth_clients_on_conflict
+  ): oauth_clients
+
+  """
+  insert data into the table: "oauth_refresh_tokens"
+  """
+  insert_oauth_refresh_tokens(
+    """the rows to be inserted"""
+    objects: [oauth_refresh_tokens_insert_input!]!
+
+    """upsert condition"""
+    on_conflict: oauth_refresh_tokens_on_conflict
+  ): oauth_refresh_tokens_mutation_response
+
+  """
+  insert a single row into the table: "oauth_refresh_tokens"
+  """
+  insert_oauth_refresh_tokens_one(
+    """the row to be inserted"""
+    object: oauth_refresh_tokens_insert_input!
+
+    """upsert condition"""
+    on_conflict: oauth_refresh_tokens_on_conflict
+  ): oauth_refresh_tokens
+
+  """
+  insert data into the table: "oauth_scopes"
+  """
+  insert_oauth_scopes(
+    """the rows to be inserted"""
+    objects: [oauth_scopes_insert_input!]!
+
+    """upsert condition"""
+    on_conflict: oauth_scopes_on_conflict
+  ): oauth_scopes_mutation_response
+
+  """
+  insert a single row into the table: "oauth_scopes"
+  """
+  insert_oauth_scopes_one(
+    """the row to be inserted"""
+    object: oauth_scopes_insert_input!
+
+    """upsert condition"""
+    on_conflict: oauth_scopes_on_conflict
+  ): oauth_scopes
+
+  """
   insert data into the table: "pack"
   """
   insert_pack(
@@ -27326,8 +27812,7 @@ type mutation_root {
     _delete_at_path: all_card_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: all_card_delete_elem_input
 
@@ -27362,8 +27847,7 @@ type mutation_root {
     _delete_at_path: all_card_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: all_card_delete_elem_input
 
@@ -27534,8 +28018,7 @@ type mutation_root {
     _delete_at_path: arkhamdb_deck_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: arkhamdb_deck_delete_elem_input
 
@@ -27570,8 +28053,7 @@ type mutation_root {
     _delete_at_path: arkhamdb_deck_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: arkhamdb_deck_delete_elem_input
 
@@ -27634,8 +28116,7 @@ type mutation_root {
     _delete_at_path: campaign_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: campaign_delete_elem_input
 
@@ -27704,8 +28185,7 @@ type mutation_root {
     _delete_at_path: campaign_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: campaign_delete_elem_input
 
@@ -27738,8 +28218,7 @@ type mutation_root {
     _delete_at_path: campaign_deck_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: campaign_deck_delete_elem_input
 
@@ -27774,8 +28253,7 @@ type mutation_root {
     _delete_at_path: campaign_deck_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: campaign_deck_delete_elem_input
 
@@ -27908,8 +28386,7 @@ type mutation_root {
     _delete_at_path: card_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: card_delete_elem_input
 
@@ -27944,8 +28421,7 @@ type mutation_root {
     _delete_at_path: card_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: card_delete_elem_input
 
@@ -28194,8 +28670,7 @@ type mutation_root {
     _delete_at_path: chaos_bag_result_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: chaos_bag_result_delete_elem_input
 
@@ -28230,8 +28705,7 @@ type mutation_root {
     _delete_at_path: chaos_bag_result_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: chaos_bag_result_delete_elem_input
 
@@ -28300,8 +28774,7 @@ type mutation_root {
     _delete_at_path: conquest_card_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: conquest_card_delete_elem_input
 
@@ -28336,8 +28809,7 @@ type mutation_root {
     _delete_at_path: conquest_card_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: conquest_card_delete_elem_input
 
@@ -28502,8 +28974,7 @@ type mutation_root {
     _delete_at_path: conquest_deck_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: conquest_deck_delete_elem_input
 
@@ -28538,8 +29009,7 @@ type mutation_root {
     _delete_at_path: conquest_deck_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: conquest_deck_delete_elem_input
 
@@ -29164,8 +29634,7 @@ type mutation_root {
     _delete_at_path: full_card_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: full_card_delete_elem_input
 
@@ -29200,8 +29669,7 @@ type mutation_root {
     _delete_at_path: full_card_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: full_card_delete_elem_input
 
@@ -29332,8 +29800,7 @@ type mutation_root {
     _delete_at_path: guide_input_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: guide_input_delete_elem_input
 
@@ -29368,8 +29835,7 @@ type mutation_root {
     _delete_at_path: guide_input_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: guide_input_delete_elem_input
 
@@ -29410,8 +29876,7 @@ type mutation_root {
     _delete_at_path: investigator_data_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: investigator_data_delete_elem_input
 
@@ -29446,8 +29911,7 @@ type mutation_root {
     _delete_at_path: investigator_data_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: investigator_data_delete_elem_input
 
@@ -29520,11 +29984,172 @@ type mutation_root {
   ): [local_decks_mutation_response]
 
   """
+  update data of the table: "oauth_access_tokens"
+  """
+  update_oauth_access_tokens(
+    """sets the columns of the filtered rows to the given values"""
+    _set: oauth_access_tokens_set_input
+
+    """filter the rows which have to be updated"""
+    where: oauth_access_tokens_bool_exp!
+  ): oauth_access_tokens_mutation_response
+
+  """
+  update single row of the table: "oauth_access_tokens"
+  """
+  update_oauth_access_tokens_by_pk(
+    """sets the columns of the filtered rows to the given values"""
+    _set: oauth_access_tokens_set_input
+    pk_columns: oauth_access_tokens_pk_columns_input!
+  ): oauth_access_tokens
+
+  """
+  update multiples rows of table: "oauth_access_tokens"
+  """
+  update_oauth_access_tokens_many(
+    """updates to execute, in order"""
+    updates: [oauth_access_tokens_updates!]!
+  ): [oauth_access_tokens_mutation_response]
+
+  """
+  update data of the table: "oauth_authorization_codes"
+  """
+  update_oauth_authorization_codes(
+    """sets the columns of the filtered rows to the given values"""
+    _set: oauth_authorization_codes_set_input
+
+    """filter the rows which have to be updated"""
+    where: oauth_authorization_codes_bool_exp!
+  ): oauth_authorization_codes_mutation_response
+
+  """
+  update single row of the table: "oauth_authorization_codes"
+  """
+  update_oauth_authorization_codes_by_pk(
+    """sets the columns of the filtered rows to the given values"""
+    _set: oauth_authorization_codes_set_input
+    pk_columns: oauth_authorization_codes_pk_columns_input!
+  ): oauth_authorization_codes
+
+  """
+  update multiples rows of table: "oauth_authorization_codes"
+  """
+  update_oauth_authorization_codes_many(
+    """updates to execute, in order"""
+    updates: [oauth_authorization_codes_updates!]!
+  ): [oauth_authorization_codes_mutation_response]
+
+  """
+  update data of the table: "oauth_clients"
+  """
+  update_oauth_clients(
+    """sets the columns of the filtered rows to the given values"""
+    _set: oauth_clients_set_input
+
+    """filter the rows which have to be updated"""
+    where: oauth_clients_bool_exp!
+  ): oauth_clients_mutation_response
+
+  """
+  update single row of the table: "oauth_clients"
+  """
+  update_oauth_clients_by_pk(
+    """sets the columns of the filtered rows to the given values"""
+    _set: oauth_clients_set_input
+    pk_columns: oauth_clients_pk_columns_input!
+  ): oauth_clients
+
+  """
+  update multiples rows of table: "oauth_clients"
+  """
+  update_oauth_clients_many(
+    """updates to execute, in order"""
+    updates: [oauth_clients_updates!]!
+  ): [oauth_clients_mutation_response]
+
+  """
+  update data of the table: "oauth_refresh_tokens"
+  """
+  update_oauth_refresh_tokens(
+    """sets the columns of the filtered rows to the given values"""
+    _set: oauth_refresh_tokens_set_input
+
+    """filter the rows which have to be updated"""
+    where: oauth_refresh_tokens_bool_exp!
+  ): oauth_refresh_tokens_mutation_response
+
+  """
+  update single row of the table: "oauth_refresh_tokens"
+  """
+  update_oauth_refresh_tokens_by_pk(
+    """sets the columns of the filtered rows to the given values"""
+    _set: oauth_refresh_tokens_set_input
+    pk_columns: oauth_refresh_tokens_pk_columns_input!
+  ): oauth_refresh_tokens
+
+  """
+  update multiples rows of table: "oauth_refresh_tokens"
+  """
+  update_oauth_refresh_tokens_many(
+    """updates to execute, in order"""
+    updates: [oauth_refresh_tokens_updates!]!
+  ): [oauth_refresh_tokens_mutation_response]
+
+  """
+  update data of the table: "oauth_scopes"
+  """
+  update_oauth_scopes(
+    """sets the columns of the filtered rows to the given values"""
+    _set: oauth_scopes_set_input
+
+    """filter the rows which have to be updated"""
+    where: oauth_scopes_bool_exp!
+  ): oauth_scopes_mutation_response
+
+  """
+  update single row of the table: "oauth_scopes"
+  """
+  update_oauth_scopes_by_pk(
+    """sets the columns of the filtered rows to the given values"""
+    _set: oauth_scopes_set_input
+    pk_columns: oauth_scopes_pk_columns_input!
+  ): oauth_scopes
+
+  """
+  update multiples rows of table: "oauth_scopes"
+  """
+  update_oauth_scopes_many(
+    """updates to execute, in order"""
+    updates: [oauth_scopes_updates!]!
+  ): [oauth_scopes_mutation_response]
+
+  """
   update data of the table: "pack"
   """
   update_pack(
+    """append existing jsonb value of filtered columns with new jsonb value"""
+    _append: pack_append_input
+
+    """
+    delete the field or element with specified path (for JSON arrays, negative integers count from the end)
+    """
+    _delete_at_path: pack_delete_at_path_input
+
+    """
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
+    """
+    _delete_elem: pack_delete_elem_input
+
+    """
+    delete key/value pair or string element. key/value pairs are matched based on their key value
+    """
+    _delete_key: pack_delete_key_input
+
     """increments the numeric columns with given value of the filtered values"""
     _inc: pack_inc_input
+
+    """prepend existing jsonb value of filtered columns with new jsonb value"""
+    _prepend: pack_prepend_input
 
     """sets the columns of the filtered rows to the given values"""
     _set: pack_set_input
@@ -29537,8 +30162,29 @@ type mutation_root {
   update single row of the table: "pack"
   """
   update_pack_by_pk(
+    """append existing jsonb value of filtered columns with new jsonb value"""
+    _append: pack_append_input
+
+    """
+    delete the field or element with specified path (for JSON arrays, negative integers count from the end)
+    """
+    _delete_at_path: pack_delete_at_path_input
+
+    """
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
+    """
+    _delete_elem: pack_delete_elem_input
+
+    """
+    delete key/value pair or string element. key/value pairs are matched based on their key value
+    """
+    _delete_key: pack_delete_key_input
+
     """increments the numeric columns with given value of the filtered values"""
     _inc: pack_inc_input
+
+    """prepend existing jsonb value of filtered columns with new jsonb value"""
+    _prepend: pack_prepend_input
 
     """sets the columns of the filtered rows to the given values"""
     _set: pack_set_input
@@ -29706,8 +30352,7 @@ type mutation_root {
     _delete_at_path: rangers_campaign_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: rangers_campaign_delete_elem_input
 
@@ -29776,8 +30421,7 @@ type mutation_root {
     _delete_at_path: rangers_campaign_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: rangers_campaign_delete_elem_input
 
@@ -29818,8 +30462,7 @@ type mutation_root {
     _delete_at_path: rangers_card_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: rangers_card_delete_elem_input
 
@@ -29854,8 +30497,7 @@ type mutation_root {
     _delete_at_path: rangers_card_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: rangers_card_delete_elem_input
 
@@ -29958,8 +30600,7 @@ type mutation_root {
     _delete_at_path: rangers_deck_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: rangers_deck_delete_elem_input
 
@@ -29994,8 +30635,7 @@ type mutation_root {
     _delete_at_path: rangers_deck_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: rangers_deck_delete_elem_input
 
@@ -30334,8 +30974,7 @@ type mutation_root {
     _delete_at_path: rangers_search_deck_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: rangers_search_deck_delete_elem_input
 
@@ -30811,8 +31450,7 @@ type mutation_root {
     _delete_at_path: rangers_user_settings_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: rangers_user_settings_delete_elem_input
 
@@ -30844,8 +31482,7 @@ type mutation_root {
     _delete_at_path: rangers_user_settings_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: rangers_user_settings_delete_elem_input
 
@@ -31080,8 +31717,7 @@ type mutation_root {
     _delete_at_path: user_settings_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: user_settings_delete_elem_input
 
@@ -31113,8 +31749,7 @@ type mutation_root {
     _delete_at_path: user_settings_delete_at_path_input
 
     """
-    delete the array element with specified index (negative integers count from
-    the end). throws an error if top level container is not an array
+    delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
     """
     _delete_elem: user_settings_delete_elem_input
 
@@ -31168,6 +31803,1186 @@ type mutation_root {
   ): [users_mutation_response]
   upgradeArkhamDbDeck(args: UpgradeDeckInput!): UpgradeDeckOutput
   uploadLocalCampaignDeck(args: UploadLocalCampaignDeckInput!): UploadLocalCampaignDeckOutput
+}
+
+"""
+columns and relationships of "oauth_access_tokens"
+"""
+type oauth_access_tokens {
+  client_id: String!
+  created_at: timestamptz!
+  expires_at: timestamptz!
+  id: uuid!
+  revoked: Boolean!
+  scope: String!
+  token: String!
+  user_id: String!
+}
+
+"""
+aggregated selection of "oauth_access_tokens"
+"""
+type oauth_access_tokens_aggregate {
+  aggregate: oauth_access_tokens_aggregate_fields
+  nodes: [oauth_access_tokens!]!
+}
+
+"""
+aggregate fields of "oauth_access_tokens"
+"""
+type oauth_access_tokens_aggregate_fields {
+  count(columns: [oauth_access_tokens_select_column!], distinct: Boolean): Int!
+  max: oauth_access_tokens_max_fields
+  min: oauth_access_tokens_min_fields
+}
+
+"""
+Boolean expression to filter rows from the table "oauth_access_tokens". All fields are combined with a logical 'AND'.
+"""
+input oauth_access_tokens_bool_exp {
+  _and: [oauth_access_tokens_bool_exp!]
+  _not: oauth_access_tokens_bool_exp
+  _or: [oauth_access_tokens_bool_exp!]
+  client_id: String_comparison_exp
+  created_at: timestamptz_comparison_exp
+  expires_at: timestamptz_comparison_exp
+  id: uuid_comparison_exp
+  revoked: Boolean_comparison_exp
+  scope: String_comparison_exp
+  token: String_comparison_exp
+  user_id: String_comparison_exp
+}
+
+"""
+unique or primary key constraints on table "oauth_access_tokens"
+"""
+enum oauth_access_tokens_constraint {
+  """
+  unique or primary key constraint on columns "id"
+  """
+  oauth_access_tokens_pkey
+
+  """
+  unique or primary key constraint on columns "token"
+  """
+  oauth_access_tokens_token_key
+}
+
+"""
+input type for inserting data into table "oauth_access_tokens"
+"""
+input oauth_access_tokens_insert_input {
+  client_id: String
+  created_at: timestamptz
+  expires_at: timestamptz
+  id: uuid
+  revoked: Boolean
+  scope: String
+  token: String
+  user_id: String
+}
+
+"""aggregate max on columns"""
+type oauth_access_tokens_max_fields {
+  client_id: String
+  created_at: timestamptz
+  expires_at: timestamptz
+  id: uuid
+  scope: String
+  token: String
+  user_id: String
+}
+
+"""aggregate min on columns"""
+type oauth_access_tokens_min_fields {
+  client_id: String
+  created_at: timestamptz
+  expires_at: timestamptz
+  id: uuid
+  scope: String
+  token: String
+  user_id: String
+}
+
+"""
+response of any mutation on the table "oauth_access_tokens"
+"""
+type oauth_access_tokens_mutation_response {
+  """number of rows affected by the mutation"""
+  affected_rows: Int!
+
+  """data from the rows affected by the mutation"""
+  returning: [oauth_access_tokens!]!
+}
+
+"""
+on_conflict condition type for table "oauth_access_tokens"
+"""
+input oauth_access_tokens_on_conflict {
+  constraint: oauth_access_tokens_constraint!
+  update_columns: [oauth_access_tokens_update_column!]! = []
+  where: oauth_access_tokens_bool_exp
+}
+
+"""Ordering options when selecting data from "oauth_access_tokens"."""
+input oauth_access_tokens_order_by {
+  client_id: order_by
+  created_at: order_by
+  expires_at: order_by
+  id: order_by
+  revoked: order_by
+  scope: order_by
+  token: order_by
+  user_id: order_by
+}
+
+"""primary key columns input for table: oauth_access_tokens"""
+input oauth_access_tokens_pk_columns_input {
+  id: uuid!
+}
+
+"""
+select columns of table "oauth_access_tokens"
+"""
+enum oauth_access_tokens_select_column {
+  """column name"""
+  client_id
+
+  """column name"""
+  created_at
+
+  """column name"""
+  expires_at
+
+  """column name"""
+  id
+
+  """column name"""
+  revoked
+
+  """column name"""
+  scope
+
+  """column name"""
+  token
+
+  """column name"""
+  user_id
+}
+
+"""
+input type for updating data in table "oauth_access_tokens"
+"""
+input oauth_access_tokens_set_input {
+  client_id: String
+  created_at: timestamptz
+  expires_at: timestamptz
+  id: uuid
+  revoked: Boolean
+  scope: String
+  token: String
+  user_id: String
+}
+
+"""
+Streaming cursor of the table "oauth_access_tokens"
+"""
+input oauth_access_tokens_stream_cursor_input {
+  """Stream column input with initial value"""
+  initial_value: oauth_access_tokens_stream_cursor_value_input!
+
+  """cursor ordering"""
+  ordering: cursor_ordering
+}
+
+"""Initial value of the column from where the streaming should start"""
+input oauth_access_tokens_stream_cursor_value_input {
+  client_id: String
+  created_at: timestamptz
+  expires_at: timestamptz
+  id: uuid
+  revoked: Boolean
+  scope: String
+  token: String
+  user_id: String
+}
+
+"""
+update columns of table "oauth_access_tokens"
+"""
+enum oauth_access_tokens_update_column {
+  """column name"""
+  client_id
+
+  """column name"""
+  created_at
+
+  """column name"""
+  expires_at
+
+  """column name"""
+  id
+
+  """column name"""
+  revoked
+
+  """column name"""
+  scope
+
+  """column name"""
+  token
+
+  """column name"""
+  user_id
+}
+
+input oauth_access_tokens_updates {
+  """sets the columns of the filtered rows to the given values"""
+  _set: oauth_access_tokens_set_input
+
+  """filter the rows which have to be updated"""
+  where: oauth_access_tokens_bool_exp!
+}
+
+"""
+columns and relationships of "oauth_authorization_codes"
+"""
+type oauth_authorization_codes {
+  client_id: String!
+  code: String!
+  code_challenge: String
+  code_challenge_method: String
+  created_at: timestamptz!
+  expires_at: timestamptz!
+  id: uuid!
+  redirect_uri: String!
+  scope: String!
+  used: Boolean!
+  user_id: String!
+}
+
+"""
+aggregated selection of "oauth_authorization_codes"
+"""
+type oauth_authorization_codes_aggregate {
+  aggregate: oauth_authorization_codes_aggregate_fields
+  nodes: [oauth_authorization_codes!]!
+}
+
+"""
+aggregate fields of "oauth_authorization_codes"
+"""
+type oauth_authorization_codes_aggregate_fields {
+  count(columns: [oauth_authorization_codes_select_column!], distinct: Boolean): Int!
+  max: oauth_authorization_codes_max_fields
+  min: oauth_authorization_codes_min_fields
+}
+
+"""
+Boolean expression to filter rows from the table "oauth_authorization_codes". All fields are combined with a logical 'AND'.
+"""
+input oauth_authorization_codes_bool_exp {
+  _and: [oauth_authorization_codes_bool_exp!]
+  _not: oauth_authorization_codes_bool_exp
+  _or: [oauth_authorization_codes_bool_exp!]
+  client_id: String_comparison_exp
+  code: String_comparison_exp
+  code_challenge: String_comparison_exp
+  code_challenge_method: String_comparison_exp
+  created_at: timestamptz_comparison_exp
+  expires_at: timestamptz_comparison_exp
+  id: uuid_comparison_exp
+  redirect_uri: String_comparison_exp
+  scope: String_comparison_exp
+  used: Boolean_comparison_exp
+  user_id: String_comparison_exp
+}
+
+"""
+unique or primary key constraints on table "oauth_authorization_codes"
+"""
+enum oauth_authorization_codes_constraint {
+  """
+  unique or primary key constraint on columns "code"
+  """
+  oauth_authorization_codes_code_key
+
+  """
+  unique or primary key constraint on columns "id"
+  """
+  oauth_authorization_codes_pkey
+}
+
+"""
+input type for inserting data into table "oauth_authorization_codes"
+"""
+input oauth_authorization_codes_insert_input {
+  client_id: String
+  code: String
+  code_challenge: String
+  code_challenge_method: String
+  created_at: timestamptz
+  expires_at: timestamptz
+  id: uuid
+  redirect_uri: String
+  scope: String
+  used: Boolean
+  user_id: String
+}
+
+"""aggregate max on columns"""
+type oauth_authorization_codes_max_fields {
+  client_id: String
+  code: String
+  code_challenge: String
+  code_challenge_method: String
+  created_at: timestamptz
+  expires_at: timestamptz
+  id: uuid
+  redirect_uri: String
+  scope: String
+  user_id: String
+}
+
+"""aggregate min on columns"""
+type oauth_authorization_codes_min_fields {
+  client_id: String
+  code: String
+  code_challenge: String
+  code_challenge_method: String
+  created_at: timestamptz
+  expires_at: timestamptz
+  id: uuid
+  redirect_uri: String
+  scope: String
+  user_id: String
+}
+
+"""
+response of any mutation on the table "oauth_authorization_codes"
+"""
+type oauth_authorization_codes_mutation_response {
+  """number of rows affected by the mutation"""
+  affected_rows: Int!
+
+  """data from the rows affected by the mutation"""
+  returning: [oauth_authorization_codes!]!
+}
+
+"""
+on_conflict condition type for table "oauth_authorization_codes"
+"""
+input oauth_authorization_codes_on_conflict {
+  constraint: oauth_authorization_codes_constraint!
+  update_columns: [oauth_authorization_codes_update_column!]! = []
+  where: oauth_authorization_codes_bool_exp
+}
+
+"""Ordering options when selecting data from "oauth_authorization_codes"."""
+input oauth_authorization_codes_order_by {
+  client_id: order_by
+  code: order_by
+  code_challenge: order_by
+  code_challenge_method: order_by
+  created_at: order_by
+  expires_at: order_by
+  id: order_by
+  redirect_uri: order_by
+  scope: order_by
+  used: order_by
+  user_id: order_by
+}
+
+"""primary key columns input for table: oauth_authorization_codes"""
+input oauth_authorization_codes_pk_columns_input {
+  id: uuid!
+}
+
+"""
+select columns of table "oauth_authorization_codes"
+"""
+enum oauth_authorization_codes_select_column {
+  """column name"""
+  client_id
+
+  """column name"""
+  code
+
+  """column name"""
+  code_challenge
+
+  """column name"""
+  code_challenge_method
+
+  """column name"""
+  created_at
+
+  """column name"""
+  expires_at
+
+  """column name"""
+  id
+
+  """column name"""
+  redirect_uri
+
+  """column name"""
+  scope
+
+  """column name"""
+  used
+
+  """column name"""
+  user_id
+}
+
+"""
+input type for updating data in table "oauth_authorization_codes"
+"""
+input oauth_authorization_codes_set_input {
+  client_id: String
+  code: String
+  code_challenge: String
+  code_challenge_method: String
+  created_at: timestamptz
+  expires_at: timestamptz
+  id: uuid
+  redirect_uri: String
+  scope: String
+  used: Boolean
+  user_id: String
+}
+
+"""
+Streaming cursor of the table "oauth_authorization_codes"
+"""
+input oauth_authorization_codes_stream_cursor_input {
+  """Stream column input with initial value"""
+  initial_value: oauth_authorization_codes_stream_cursor_value_input!
+
+  """cursor ordering"""
+  ordering: cursor_ordering
+}
+
+"""Initial value of the column from where the streaming should start"""
+input oauth_authorization_codes_stream_cursor_value_input {
+  client_id: String
+  code: String
+  code_challenge: String
+  code_challenge_method: String
+  created_at: timestamptz
+  expires_at: timestamptz
+  id: uuid
+  redirect_uri: String
+  scope: String
+  used: Boolean
+  user_id: String
+}
+
+"""
+update columns of table "oauth_authorization_codes"
+"""
+enum oauth_authorization_codes_update_column {
+  """column name"""
+  client_id
+
+  """column name"""
+  code
+
+  """column name"""
+  code_challenge
+
+  """column name"""
+  code_challenge_method
+
+  """column name"""
+  created_at
+
+  """column name"""
+  expires_at
+
+  """column name"""
+  id
+
+  """column name"""
+  redirect_uri
+
+  """column name"""
+  scope
+
+  """column name"""
+  used
+
+  """column name"""
+  user_id
+}
+
+input oauth_authorization_codes_updates {
+  """sets the columns of the filtered rows to the given values"""
+  _set: oauth_authorization_codes_set_input
+
+  """filter the rows which have to be updated"""
+  where: oauth_authorization_codes_bool_exp!
+}
+
+"""
+columns and relationships of "oauth_clients"
+"""
+type oauth_clients {
+  client_id: String!
+  client_name: String!
+  client_secret: String!
+  created_at: timestamptz!
+  id: uuid!
+  owner_id: String!
+  redirect_uris: [String!]!
+  updated_at: timestamptz!
+}
+
+"""
+aggregated selection of "oauth_clients"
+"""
+type oauth_clients_aggregate {
+  aggregate: oauth_clients_aggregate_fields
+  nodes: [oauth_clients!]!
+}
+
+"""
+aggregate fields of "oauth_clients"
+"""
+type oauth_clients_aggregate_fields {
+  count(columns: [oauth_clients_select_column!], distinct: Boolean): Int!
+  max: oauth_clients_max_fields
+  min: oauth_clients_min_fields
+}
+
+"""
+Boolean expression to filter rows from the table "oauth_clients". All fields are combined with a logical 'AND'.
+"""
+input oauth_clients_bool_exp {
+  _and: [oauth_clients_bool_exp!]
+  _not: oauth_clients_bool_exp
+  _or: [oauth_clients_bool_exp!]
+  client_id: String_comparison_exp
+  client_name: String_comparison_exp
+  client_secret: String_comparison_exp
+  created_at: timestamptz_comparison_exp
+  id: uuid_comparison_exp
+  owner_id: String_comparison_exp
+  redirect_uris: String_array_comparison_exp
+  updated_at: timestamptz_comparison_exp
+}
+
+"""
+unique or primary key constraints on table "oauth_clients"
+"""
+enum oauth_clients_constraint {
+  """
+  unique or primary key constraint on columns "client_id"
+  """
+  oauth_clients_client_id_key
+
+  """
+  unique or primary key constraint on columns "id"
+  """
+  oauth_clients_pkey
+}
+
+"""
+input type for inserting data into table "oauth_clients"
+"""
+input oauth_clients_insert_input {
+  client_id: String
+  client_name: String
+  client_secret: String
+  created_at: timestamptz
+  id: uuid
+  owner_id: String
+  redirect_uris: [String!]
+  updated_at: timestamptz
+}
+
+"""aggregate max on columns"""
+type oauth_clients_max_fields {
+  client_id: String
+  client_name: String
+  client_secret: String
+  created_at: timestamptz
+  id: uuid
+  owner_id: String
+  redirect_uris: [String!]
+  updated_at: timestamptz
+}
+
+"""aggregate min on columns"""
+type oauth_clients_min_fields {
+  client_id: String
+  client_name: String
+  client_secret: String
+  created_at: timestamptz
+  id: uuid
+  owner_id: String
+  redirect_uris: [String!]
+  updated_at: timestamptz
+}
+
+"""
+response of any mutation on the table "oauth_clients"
+"""
+type oauth_clients_mutation_response {
+  """number of rows affected by the mutation"""
+  affected_rows: Int!
+
+  """data from the rows affected by the mutation"""
+  returning: [oauth_clients!]!
+}
+
+"""
+on_conflict condition type for table "oauth_clients"
+"""
+input oauth_clients_on_conflict {
+  constraint: oauth_clients_constraint!
+  update_columns: [oauth_clients_update_column!]! = []
+  where: oauth_clients_bool_exp
+}
+
+"""Ordering options when selecting data from "oauth_clients"."""
+input oauth_clients_order_by {
+  client_id: order_by
+  client_name: order_by
+  client_secret: order_by
+  created_at: order_by
+  id: order_by
+  owner_id: order_by
+  redirect_uris: order_by
+  updated_at: order_by
+}
+
+"""primary key columns input for table: oauth_clients"""
+input oauth_clients_pk_columns_input {
+  id: uuid!
+}
+
+"""
+select columns of table "oauth_clients"
+"""
+enum oauth_clients_select_column {
+  """column name"""
+  client_id
+
+  """column name"""
+  client_name
+
+  """column name"""
+  client_secret
+
+  """column name"""
+  created_at
+
+  """column name"""
+  id
+
+  """column name"""
+  owner_id
+
+  """column name"""
+  redirect_uris
+
+  """column name"""
+  updated_at
+}
+
+"""
+input type for updating data in table "oauth_clients"
+"""
+input oauth_clients_set_input {
+  client_id: String
+  client_name: String
+  client_secret: String
+  created_at: timestamptz
+  id: uuid
+  owner_id: String
+  redirect_uris: [String!]
+  updated_at: timestamptz
+}
+
+"""
+Streaming cursor of the table "oauth_clients"
+"""
+input oauth_clients_stream_cursor_input {
+  """Stream column input with initial value"""
+  initial_value: oauth_clients_stream_cursor_value_input!
+
+  """cursor ordering"""
+  ordering: cursor_ordering
+}
+
+"""Initial value of the column from where the streaming should start"""
+input oauth_clients_stream_cursor_value_input {
+  client_id: String
+  client_name: String
+  client_secret: String
+  created_at: timestamptz
+  id: uuid
+  owner_id: String
+  redirect_uris: [String!]
+  updated_at: timestamptz
+}
+
+"""
+update columns of table "oauth_clients"
+"""
+enum oauth_clients_update_column {
+  """column name"""
+  client_id
+
+  """column name"""
+  client_name
+
+  """column name"""
+  client_secret
+
+  """column name"""
+  created_at
+
+  """column name"""
+  id
+
+  """column name"""
+  owner_id
+
+  """column name"""
+  redirect_uris
+
+  """column name"""
+  updated_at
+}
+
+input oauth_clients_updates {
+  """sets the columns of the filtered rows to the given values"""
+  _set: oauth_clients_set_input
+
+  """filter the rows which have to be updated"""
+  where: oauth_clients_bool_exp!
+}
+
+"""
+columns and relationships of "oauth_refresh_tokens"
+"""
+type oauth_refresh_tokens {
+  access_token_id: uuid
+  client_id: String!
+  created_at: timestamptz!
+  expires_at: timestamptz!
+  id: uuid!
+  revoked: Boolean!
+  scope: String!
+  token: String!
+  user_id: String!
+}
+
+"""
+aggregated selection of "oauth_refresh_tokens"
+"""
+type oauth_refresh_tokens_aggregate {
+  aggregate: oauth_refresh_tokens_aggregate_fields
+  nodes: [oauth_refresh_tokens!]!
+}
+
+"""
+aggregate fields of "oauth_refresh_tokens"
+"""
+type oauth_refresh_tokens_aggregate_fields {
+  count(columns: [oauth_refresh_tokens_select_column!], distinct: Boolean): Int!
+  max: oauth_refresh_tokens_max_fields
+  min: oauth_refresh_tokens_min_fields
+}
+
+"""
+Boolean expression to filter rows from the table "oauth_refresh_tokens". All fields are combined with a logical 'AND'.
+"""
+input oauth_refresh_tokens_bool_exp {
+  _and: [oauth_refresh_tokens_bool_exp!]
+  _not: oauth_refresh_tokens_bool_exp
+  _or: [oauth_refresh_tokens_bool_exp!]
+  access_token_id: uuid_comparison_exp
+  client_id: String_comparison_exp
+  created_at: timestamptz_comparison_exp
+  expires_at: timestamptz_comparison_exp
+  id: uuid_comparison_exp
+  revoked: Boolean_comparison_exp
+  scope: String_comparison_exp
+  token: String_comparison_exp
+  user_id: String_comparison_exp
+}
+
+"""
+unique or primary key constraints on table "oauth_refresh_tokens"
+"""
+enum oauth_refresh_tokens_constraint {
+  """
+  unique or primary key constraint on columns "id"
+  """
+  oauth_refresh_tokens_pkey
+
+  """
+  unique or primary key constraint on columns "token"
+  """
+  oauth_refresh_tokens_token_key
+}
+
+"""
+input type for inserting data into table "oauth_refresh_tokens"
+"""
+input oauth_refresh_tokens_insert_input {
+  access_token_id: uuid
+  client_id: String
+  created_at: timestamptz
+  expires_at: timestamptz
+  id: uuid
+  revoked: Boolean
+  scope: String
+  token: String
+  user_id: String
+}
+
+"""aggregate max on columns"""
+type oauth_refresh_tokens_max_fields {
+  access_token_id: uuid
+  client_id: String
+  created_at: timestamptz
+  expires_at: timestamptz
+  id: uuid
+  scope: String
+  token: String
+  user_id: String
+}
+
+"""aggregate min on columns"""
+type oauth_refresh_tokens_min_fields {
+  access_token_id: uuid
+  client_id: String
+  created_at: timestamptz
+  expires_at: timestamptz
+  id: uuid
+  scope: String
+  token: String
+  user_id: String
+}
+
+"""
+response of any mutation on the table "oauth_refresh_tokens"
+"""
+type oauth_refresh_tokens_mutation_response {
+  """number of rows affected by the mutation"""
+  affected_rows: Int!
+
+  """data from the rows affected by the mutation"""
+  returning: [oauth_refresh_tokens!]!
+}
+
+"""
+on_conflict condition type for table "oauth_refresh_tokens"
+"""
+input oauth_refresh_tokens_on_conflict {
+  constraint: oauth_refresh_tokens_constraint!
+  update_columns: [oauth_refresh_tokens_update_column!]! = []
+  where: oauth_refresh_tokens_bool_exp
+}
+
+"""Ordering options when selecting data from "oauth_refresh_tokens"."""
+input oauth_refresh_tokens_order_by {
+  access_token_id: order_by
+  client_id: order_by
+  created_at: order_by
+  expires_at: order_by
+  id: order_by
+  revoked: order_by
+  scope: order_by
+  token: order_by
+  user_id: order_by
+}
+
+"""primary key columns input for table: oauth_refresh_tokens"""
+input oauth_refresh_tokens_pk_columns_input {
+  id: uuid!
+}
+
+"""
+select columns of table "oauth_refresh_tokens"
+"""
+enum oauth_refresh_tokens_select_column {
+  """column name"""
+  access_token_id
+
+  """column name"""
+  client_id
+
+  """column name"""
+  created_at
+
+  """column name"""
+  expires_at
+
+  """column name"""
+  id
+
+  """column name"""
+  revoked
+
+  """column name"""
+  scope
+
+  """column name"""
+  token
+
+  """column name"""
+  user_id
+}
+
+"""
+input type for updating data in table "oauth_refresh_tokens"
+"""
+input oauth_refresh_tokens_set_input {
+  access_token_id: uuid
+  client_id: String
+  created_at: timestamptz
+  expires_at: timestamptz
+  id: uuid
+  revoked: Boolean
+  scope: String
+  token: String
+  user_id: String
+}
+
+"""
+Streaming cursor of the table "oauth_refresh_tokens"
+"""
+input oauth_refresh_tokens_stream_cursor_input {
+  """Stream column input with initial value"""
+  initial_value: oauth_refresh_tokens_stream_cursor_value_input!
+
+  """cursor ordering"""
+  ordering: cursor_ordering
+}
+
+"""Initial value of the column from where the streaming should start"""
+input oauth_refresh_tokens_stream_cursor_value_input {
+  access_token_id: uuid
+  client_id: String
+  created_at: timestamptz
+  expires_at: timestamptz
+  id: uuid
+  revoked: Boolean
+  scope: String
+  token: String
+  user_id: String
+}
+
+"""
+update columns of table "oauth_refresh_tokens"
+"""
+enum oauth_refresh_tokens_update_column {
+  """column name"""
+  access_token_id
+
+  """column name"""
+  client_id
+
+  """column name"""
+  created_at
+
+  """column name"""
+  expires_at
+
+  """column name"""
+  id
+
+  """column name"""
+  revoked
+
+  """column name"""
+  scope
+
+  """column name"""
+  token
+
+  """column name"""
+  user_id
+}
+
+input oauth_refresh_tokens_updates {
+  """sets the columns of the filtered rows to the given values"""
+  _set: oauth_refresh_tokens_set_input
+
+  """filter the rows which have to be updated"""
+  where: oauth_refresh_tokens_bool_exp!
+}
+
+"""
+columns and relationships of "oauth_scopes"
+"""
+type oauth_scopes {
+  created_at: timestamptz!
+  description: String!
+  id: String!
+}
+
+"""
+aggregated selection of "oauth_scopes"
+"""
+type oauth_scopes_aggregate {
+  aggregate: oauth_scopes_aggregate_fields
+  nodes: [oauth_scopes!]!
+}
+
+"""
+aggregate fields of "oauth_scopes"
+"""
+type oauth_scopes_aggregate_fields {
+  count(columns: [oauth_scopes_select_column!], distinct: Boolean): Int!
+  max: oauth_scopes_max_fields
+  min: oauth_scopes_min_fields
+}
+
+"""
+Boolean expression to filter rows from the table "oauth_scopes". All fields are combined with a logical 'AND'.
+"""
+input oauth_scopes_bool_exp {
+  _and: [oauth_scopes_bool_exp!]
+  _not: oauth_scopes_bool_exp
+  _or: [oauth_scopes_bool_exp!]
+  created_at: timestamptz_comparison_exp
+  description: String_comparison_exp
+  id: String_comparison_exp
+}
+
+"""
+unique or primary key constraints on table "oauth_scopes"
+"""
+enum oauth_scopes_constraint {
+  """
+  unique or primary key constraint on columns "id"
+  """
+  oauth_scopes_pkey
+}
+
+"""
+input type for inserting data into table "oauth_scopes"
+"""
+input oauth_scopes_insert_input {
+  created_at: timestamptz
+  description: String
+  id: String
+}
+
+"""aggregate max on columns"""
+type oauth_scopes_max_fields {
+  created_at: timestamptz
+  description: String
+  id: String
+}
+
+"""aggregate min on columns"""
+type oauth_scopes_min_fields {
+  created_at: timestamptz
+  description: String
+  id: String
+}
+
+"""
+response of any mutation on the table "oauth_scopes"
+"""
+type oauth_scopes_mutation_response {
+  """number of rows affected by the mutation"""
+  affected_rows: Int!
+
+  """data from the rows affected by the mutation"""
+  returning: [oauth_scopes!]!
+}
+
+"""
+on_conflict condition type for table "oauth_scopes"
+"""
+input oauth_scopes_on_conflict {
+  constraint: oauth_scopes_constraint!
+  update_columns: [oauth_scopes_update_column!]! = []
+  where: oauth_scopes_bool_exp
+}
+
+"""Ordering options when selecting data from "oauth_scopes"."""
+input oauth_scopes_order_by {
+  created_at: order_by
+  description: order_by
+  id: order_by
+}
+
+"""primary key columns input for table: oauth_scopes"""
+input oauth_scopes_pk_columns_input {
+  id: String!
+}
+
+"""
+select columns of table "oauth_scopes"
+"""
+enum oauth_scopes_select_column {
+  """column name"""
+  created_at
+
+  """column name"""
+  description
+
+  """column name"""
+  id
+}
+
+"""
+input type for updating data in table "oauth_scopes"
+"""
+input oauth_scopes_set_input {
+  created_at: timestamptz
+  description: String
+  id: String
+}
+
+"""
+Streaming cursor of the table "oauth_scopes"
+"""
+input oauth_scopes_stream_cursor_input {
+  """Stream column input with initial value"""
+  initial_value: oauth_scopes_stream_cursor_value_input!
+
+  """cursor ordering"""
+  ordering: cursor_ordering
+}
+
+"""Initial value of the column from where the streaming should start"""
+input oauth_scopes_stream_cursor_value_input {
+  created_at: timestamptz
+  description: String
+  id: String
+}
+
+"""
+update columns of table "oauth_scopes"
+"""
+enum oauth_scopes_update_column {
+  """column name"""
+  created_at
+
+  """column name"""
+  description
+
+  """column name"""
+  id
+}
+
+input oauth_scopes_updates {
+  """sets the columns of the filtered rows to the given values"""
+  _set: oauth_scopes_set_input
+
+  """filter the rows which have to be updated"""
+  where: oauth_scopes_bool_exp!
 }
 
 """column ordering options"""
@@ -31230,6 +33045,7 @@ type pack {
     """filter the rows returned"""
     where: all_card_bool_exp
   ): all_card_aggregate!
+  chapter: Int
   code: String!
 
   """An object relationship"""
@@ -31238,6 +33054,12 @@ type pack {
   official: Boolean!
   position: Int!
   real_name: String!
+  replaced: Boolean
+  reprint: Boolean
+  reprint_packs(
+    """JSON select path"""
+    path: String
+  ): jsonb
 
   """An array relationship"""
   translations(
@@ -31274,6 +33096,7 @@ type pack {
     """filter the rows returned"""
     where: pack_name_bool_exp
   ): pack_name_aggregate!
+  type: String
 }
 
 """
@@ -31345,6 +33168,11 @@ input pack_aggregate_order_by {
   variance: pack_variance_order_by
 }
 
+"""append existing jsonb value of filtered columns with new jsonb value"""
+input pack_append_input {
+  reprint_packs: jsonb
+}
+
 """
 input type for inserting array relation for remote table "pack"
 """
@@ -31357,6 +33185,7 @@ input pack_arr_rel_insert_input {
 
 """aggregate avg on columns"""
 type pack_avg_fields {
+  chapter: Float
   position: Float
 }
 
@@ -31364,6 +33193,7 @@ type pack_avg_fields {
 order by avg() on columns of table "pack"
 """
 input pack_avg_order_by {
+  chapter: order_by
   position: order_by
 }
 
@@ -31376,14 +33206,19 @@ input pack_bool_exp {
   _or: [pack_bool_exp!]
   cards: all_card_bool_exp
   cards_aggregate: all_card_aggregate_bool_exp
+  chapter: Int_comparison_exp
   code: String_comparison_exp
   cycle: cycle_bool_exp
   cycle_code: String_comparison_exp
   official: Boolean_comparison_exp
   position: Int_comparison_exp
   real_name: String_comparison_exp
+  replaced: Boolean_comparison_exp
+  reprint: Boolean_comparison_exp
+  reprint_packs: jsonb_comparison_exp
   translations: pack_name_bool_exp
   translations_aggregate: pack_name_aggregate_bool_exp
+  type: String_comparison_exp
 }
 
 """
@@ -31397,9 +33232,31 @@ enum pack_constraint {
 }
 
 """
+delete the field or element with specified path (for JSON arrays, negative integers count from the end)
+"""
+input pack_delete_at_path_input {
+  reprint_packs: [String!]
+}
+
+"""
+delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
+"""
+input pack_delete_elem_input {
+  reprint_packs: Int
+}
+
+"""
+delete key/value pair or string element. key/value pairs are matched based on their key value
+"""
+input pack_delete_key_input {
+  reprint_packs: String
+}
+
+"""
 input type for incrementing numeric columns in table "pack"
 """
 input pack_inc_input {
+  chapter: Int
   position: Int
 }
 
@@ -31408,49 +33265,62 @@ input type for inserting data into table "pack"
 """
 input pack_insert_input {
   cards: all_card_arr_rel_insert_input
+  chapter: Int
   code: String
   cycle: cycle_obj_rel_insert_input
   cycle_code: String
   official: Boolean
   position: Int
   real_name: String
+  replaced: Boolean
+  reprint: Boolean
+  reprint_packs: jsonb
   translations: pack_name_arr_rel_insert_input
+  type: String
 }
 
 """aggregate max on columns"""
 type pack_max_fields {
+  chapter: Int
   code: String
   cycle_code: String
   position: Int
   real_name: String
+  type: String
 }
 
 """
 order by max() on columns of table "pack"
 """
 input pack_max_order_by {
+  chapter: order_by
   code: order_by
   cycle_code: order_by
   position: order_by
   real_name: order_by
+  type: order_by
 }
 
 """aggregate min on columns"""
 type pack_min_fields {
+  chapter: Int
   code: String
   cycle_code: String
   position: Int
   real_name: String
+  type: String
 }
 
 """
 order by min() on columns of table "pack"
 """
 input pack_min_order_by {
+  chapter: order_by
   code: order_by
   cycle_code: order_by
   position: order_by
   real_name: order_by
+  type: order_by
 }
 
 """
@@ -31717,13 +33587,18 @@ input pack_on_conflict {
 """Ordering options when selecting data from "pack"."""
 input pack_order_by {
   cards_aggregate: all_card_aggregate_order_by
+  chapter: order_by
   code: order_by
   cycle: cycle_order_by
   cycle_code: order_by
   official: order_by
   position: order_by
   real_name: order_by
+  replaced: order_by
+  reprint: order_by
+  reprint_packs: order_by
   translations_aggregate: pack_name_aggregate_order_by
+  type: order_by
 }
 
 """primary key columns input for table: pack"""
@@ -31731,10 +33606,18 @@ input pack_pk_columns_input {
   code: String!
 }
 
+"""prepend existing jsonb value of filtered columns with new jsonb value"""
+input pack_prepend_input {
+  reprint_packs: jsonb
+}
+
 """
 select columns of table "pack"
 """
 enum pack_select_column {
+  """column name"""
+  chapter
+
   """column name"""
   code
 
@@ -31749,6 +33632,18 @@ enum pack_select_column {
 
   """column name"""
   real_name
+
+  """column name"""
+  replaced
+
+  """column name"""
+  reprint
+
+  """column name"""
+  reprint_packs
+
+  """column name"""
+  type
 }
 
 """
@@ -31757,6 +33652,12 @@ select "pack_aggregate_bool_exp_bool_and_arguments_columns" columns of table "pa
 enum pack_select_column_pack_aggregate_bool_exp_bool_and_arguments_columns {
   """column name"""
   official
+
+  """column name"""
+  replaced
+
+  """column name"""
+  reprint
 }
 
 """
@@ -31765,21 +33666,33 @@ select "pack_aggregate_bool_exp_bool_or_arguments_columns" columns of table "pac
 enum pack_select_column_pack_aggregate_bool_exp_bool_or_arguments_columns {
   """column name"""
   official
+
+  """column name"""
+  replaced
+
+  """column name"""
+  reprint
 }
 
 """
 input type for updating data in table "pack"
 """
 input pack_set_input {
+  chapter: Int
   code: String
   cycle_code: String
   official: Boolean
   position: Int
   real_name: String
+  replaced: Boolean
+  reprint: Boolean
+  reprint_packs: jsonb
+  type: String
 }
 
 """aggregate stddev on columns"""
 type pack_stddev_fields {
+  chapter: Float
   position: Float
 }
 
@@ -31787,11 +33700,13 @@ type pack_stddev_fields {
 order by stddev() on columns of table "pack"
 """
 input pack_stddev_order_by {
+  chapter: order_by
   position: order_by
 }
 
 """aggregate stddev_pop on columns"""
 type pack_stddev_pop_fields {
+  chapter: Float
   position: Float
 }
 
@@ -31799,11 +33714,13 @@ type pack_stddev_pop_fields {
 order by stddev_pop() on columns of table "pack"
 """
 input pack_stddev_pop_order_by {
+  chapter: order_by
   position: order_by
 }
 
 """aggregate stddev_samp on columns"""
 type pack_stddev_samp_fields {
+  chapter: Float
   position: Float
 }
 
@@ -31811,6 +33728,7 @@ type pack_stddev_samp_fields {
 order by stddev_samp() on columns of table "pack"
 """
 input pack_stddev_samp_order_by {
+  chapter: order_by
   position: order_by
 }
 
@@ -31827,15 +33745,21 @@ input pack_stream_cursor_input {
 
 """Initial value of the column from where the streaming should start"""
 input pack_stream_cursor_value_input {
+  chapter: Int
   code: String
   cycle_code: String
   official: Boolean
   position: Int
   real_name: String
+  replaced: Boolean
+  reprint: Boolean
+  reprint_packs: jsonb
+  type: String
 }
 
 """aggregate sum on columns"""
 type pack_sum_fields {
+  chapter: Int
   position: Int
 }
 
@@ -31843,6 +33767,7 @@ type pack_sum_fields {
 order by sum() on columns of table "pack"
 """
 input pack_sum_order_by {
+  chapter: order_by
   position: order_by
 }
 
@@ -31850,6 +33775,9 @@ input pack_sum_order_by {
 update columns of table "pack"
 """
 enum pack_update_column {
+  """column name"""
+  chapter
+
   """column name"""
   code
 
@@ -31864,11 +33792,44 @@ enum pack_update_column {
 
   """column name"""
   real_name
+
+  """column name"""
+  replaced
+
+  """column name"""
+  reprint
+
+  """column name"""
+  reprint_packs
+
+  """column name"""
+  type
 }
 
 input pack_updates {
+  """append existing jsonb value of filtered columns with new jsonb value"""
+  _append: pack_append_input
+
+  """
+  delete the field or element with specified path (for JSON arrays, negative integers count from the end)
+  """
+  _delete_at_path: pack_delete_at_path_input
+
+  """
+  delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
+  """
+  _delete_elem: pack_delete_elem_input
+
+  """
+  delete key/value pair or string element. key/value pairs are matched based on their key value
+  """
+  _delete_key: pack_delete_key_input
+
   """increments the numeric columns with given value of the filtered values"""
   _inc: pack_inc_input
+
+  """prepend existing jsonb value of filtered columns with new jsonb value"""
+  _prepend: pack_prepend_input
 
   """sets the columns of the filtered rows to the given values"""
   _set: pack_set_input
@@ -31879,6 +33840,7 @@ input pack_updates {
 
 """aggregate var_pop on columns"""
 type pack_var_pop_fields {
+  chapter: Float
   position: Float
 }
 
@@ -31886,11 +33848,13 @@ type pack_var_pop_fields {
 order by var_pop() on columns of table "pack"
 """
 input pack_var_pop_order_by {
+  chapter: order_by
   position: order_by
 }
 
 """aggregate var_samp on columns"""
 type pack_var_samp_fields {
+  chapter: Float
   position: Float
 }
 
@@ -31898,11 +33862,13 @@ type pack_var_samp_fields {
 order by var_samp() on columns of table "pack"
 """
 input pack_var_samp_order_by {
+  chapter: order_by
   position: order_by
 }
 
 """aggregate variance on columns"""
 type pack_variance_fields {
+  chapter: Float
   position: Float
 }
 
@@ -31910,6 +33876,7 @@ type pack_variance_fields {
 order by variance() on columns of table "pack"
 """
 input pack_variance_order_by {
+  chapter: order_by
   position: order_by
 }
 
@@ -34500,6 +36467,227 @@ type query_root {
     """filter the rows returned"""
     where: local_decks_bool_exp
   ): local_decks_aggregate!
+
+  """
+  fetch data from the table: "oauth_access_tokens"
+  """
+  oauth_access_tokens(
+    """distinct select on columns"""
+    distinct_on: [oauth_access_tokens_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [oauth_access_tokens_order_by!]
+
+    """filter the rows returned"""
+    where: oauth_access_tokens_bool_exp
+  ): [oauth_access_tokens!]!
+
+  """
+  fetch aggregated fields from the table: "oauth_access_tokens"
+  """
+  oauth_access_tokens_aggregate(
+    """distinct select on columns"""
+    distinct_on: [oauth_access_tokens_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [oauth_access_tokens_order_by!]
+
+    """filter the rows returned"""
+    where: oauth_access_tokens_bool_exp
+  ): oauth_access_tokens_aggregate!
+
+  """
+  fetch data from the table: "oauth_access_tokens" using primary key columns
+  """
+  oauth_access_tokens_by_pk(id: uuid!): oauth_access_tokens
+
+  """
+  fetch data from the table: "oauth_authorization_codes"
+  """
+  oauth_authorization_codes(
+    """distinct select on columns"""
+    distinct_on: [oauth_authorization_codes_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [oauth_authorization_codes_order_by!]
+
+    """filter the rows returned"""
+    where: oauth_authorization_codes_bool_exp
+  ): [oauth_authorization_codes!]!
+
+  """
+  fetch aggregated fields from the table: "oauth_authorization_codes"
+  """
+  oauth_authorization_codes_aggregate(
+    """distinct select on columns"""
+    distinct_on: [oauth_authorization_codes_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [oauth_authorization_codes_order_by!]
+
+    """filter the rows returned"""
+    where: oauth_authorization_codes_bool_exp
+  ): oauth_authorization_codes_aggregate!
+
+  """
+  fetch data from the table: "oauth_authorization_codes" using primary key columns
+  """
+  oauth_authorization_codes_by_pk(id: uuid!): oauth_authorization_codes
+
+  """
+  fetch data from the table: "oauth_clients"
+  """
+  oauth_clients(
+    """distinct select on columns"""
+    distinct_on: [oauth_clients_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [oauth_clients_order_by!]
+
+    """filter the rows returned"""
+    where: oauth_clients_bool_exp
+  ): [oauth_clients!]!
+
+  """
+  fetch aggregated fields from the table: "oauth_clients"
+  """
+  oauth_clients_aggregate(
+    """distinct select on columns"""
+    distinct_on: [oauth_clients_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [oauth_clients_order_by!]
+
+    """filter the rows returned"""
+    where: oauth_clients_bool_exp
+  ): oauth_clients_aggregate!
+
+  """fetch data from the table: "oauth_clients" using primary key columns"""
+  oauth_clients_by_pk(id: uuid!): oauth_clients
+
+  """
+  fetch data from the table: "oauth_refresh_tokens"
+  """
+  oauth_refresh_tokens(
+    """distinct select on columns"""
+    distinct_on: [oauth_refresh_tokens_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [oauth_refresh_tokens_order_by!]
+
+    """filter the rows returned"""
+    where: oauth_refresh_tokens_bool_exp
+  ): [oauth_refresh_tokens!]!
+
+  """
+  fetch aggregated fields from the table: "oauth_refresh_tokens"
+  """
+  oauth_refresh_tokens_aggregate(
+    """distinct select on columns"""
+    distinct_on: [oauth_refresh_tokens_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [oauth_refresh_tokens_order_by!]
+
+    """filter the rows returned"""
+    where: oauth_refresh_tokens_bool_exp
+  ): oauth_refresh_tokens_aggregate!
+
+  """
+  fetch data from the table: "oauth_refresh_tokens" using primary key columns
+  """
+  oauth_refresh_tokens_by_pk(id: uuid!): oauth_refresh_tokens
+
+  """
+  fetch data from the table: "oauth_scopes"
+  """
+  oauth_scopes(
+    """distinct select on columns"""
+    distinct_on: [oauth_scopes_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [oauth_scopes_order_by!]
+
+    """filter the rows returned"""
+    where: oauth_scopes_bool_exp
+  ): [oauth_scopes!]!
+
+  """
+  fetch aggregated fields from the table: "oauth_scopes"
+  """
+  oauth_scopes_aggregate(
+    """distinct select on columns"""
+    distinct_on: [oauth_scopes_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [oauth_scopes_order_by!]
+
+    """filter the rows returned"""
+    where: oauth_scopes_bool_exp
+  ): oauth_scopes_aggregate!
+
+  """fetch data from the table: "oauth_scopes" using primary key columns"""
+  oauth_scopes_by_pk(id: String!): oauth_scopes
 
   """
   fetch data from the table: "pack"
@@ -38164,13 +40352,16 @@ type rangers_campaign {
     """JSON select path"""
     path: String
   ): jsonb!
+  expansions(
+    """JSON select path"""
+    path: String
+  ): jsonb
   extended_calendar: Boolean
   history(
     """JSON select path"""
     path: String
   ): jsonb!
   id: Int!
-  expansions: jsonb
 
   """An array relationship"""
   latest_decks(
@@ -38483,6 +40674,7 @@ type rangers_campaign_aggregate_fields {
 input rangers_campaign_append_input {
   calendar: jsonb
   events: jsonb
+  expansions: jsonb
   history: jsonb
   missions: jsonb
   notes: jsonb
@@ -38514,6 +40706,7 @@ input rangers_campaign_bool_exp {
   cycle_id: String_comparison_exp
   day: Int_comparison_exp
   events: jsonb_comparison_exp
+  expansions: jsonb_comparison_exp
   extended_calendar: Boolean_comparison_exp
   history: jsonb_comparison_exp
   id: Int_comparison_exp
@@ -38546,6 +40739,7 @@ delete the field or element with specified path (for JSON arrays, negative integ
 input rangers_campaign_delete_at_path_input {
   calendar: [String!]
   events: [String!]
+  expansions: [String!]
   history: [String!]
   missions: [String!]
   notes: [String!]
@@ -38554,12 +40748,12 @@ input rangers_campaign_delete_at_path_input {
 }
 
 """
-delete the array element with specified index (negative integers count from the
-end). throws an error if top level container is not an array
+delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
 """
 input rangers_campaign_delete_elem_input {
   calendar: Int
   events: Int
+  expansions: Int
   history: Int
   missions: Int
   notes: Int
@@ -38573,6 +40767,7 @@ delete key/value pair or string element. key/value pairs are matched based on th
 input rangers_campaign_delete_key_input {
   calendar: String
   events: String
+  expansions: String
   history: String
   missions: String
   notes: String
@@ -38602,10 +40797,10 @@ input rangers_campaign_insert_input {
   cycle_id: String
   day: Int
   events: jsonb
+  expansions: jsonb
   extended_calendar: Boolean
   history: jsonb
   id: Int
-  expansions: jsonb
   latest_decks: rangers_latest_deck_arr_rel_insert_input
   missions: jsonb
   name: String
@@ -38687,6 +40882,7 @@ input rangers_campaign_order_by {
   cycle_id: order_by
   day: order_by
   events: order_by
+  expansions: order_by
   extended_calendar: order_by
   history: order_by
   id: order_by
@@ -38711,6 +40907,7 @@ input rangers_campaign_pk_columns_input {
 input rangers_campaign_prepend_input {
   calendar: jsonb
   events: jsonb
+  expansions: jsonb
   history: jsonb
   missions: jsonb
   notes: jsonb
@@ -38742,6 +40939,9 @@ enum rangers_campaign_select_column {
 
   """column name"""
   events
+
+  """column name"""
+  expansions
 
   """column name"""
   extended_calendar
@@ -38788,10 +40988,10 @@ input rangers_campaign_set_input {
   cycle_id: String
   day: Int
   events: jsonb
+  expansions: jsonb
   extended_calendar: Boolean
   history: jsonb
   id: Int
-  expansions: jsonb
   missions: jsonb
   name: String
   next_campaign_id: Int
@@ -38843,6 +41043,7 @@ input rangers_campaign_stream_cursor_value_input {
   cycle_id: String
   day: Int
   events: jsonb
+  expansions: jsonb
   extended_calendar: Boolean
   history: jsonb
   id: Int
@@ -38889,6 +41090,9 @@ enum rangers_campaign_update_column {
   events
 
   """column name"""
+  expansions
+
+  """column name"""
   extended_calendar
 
   """column name"""
@@ -38932,8 +41136,7 @@ input rangers_campaign_updates {
   _delete_at_path: rangers_campaign_delete_at_path_input
 
   """
-  delete the array element with specified index (negative integers count from
-  the end). throws an error if top level container is not an array
+  delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
   """
   _delete_elem: rangers_campaign_delete_elem_input
 
@@ -39184,8 +41387,7 @@ input rangers_card_delete_at_path_input {
 }
 
 """
-delete the array element with specified index (negative integers count from the
-end). throws an error if top level container is not an array
+delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
 """
 input rangers_card_delete_elem_input {
   locations: Int
@@ -41264,8 +43466,7 @@ input rangers_card_updates {
   _delete_at_path: rangers_card_delete_at_path_input
 
   """
-  delete the array element with specified index (negative integers count from
-  the end). throws an error if top level container is not an array
+  delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
   """
   _delete_elem: rangers_card_delete_elem_input
 
@@ -42385,8 +44586,7 @@ input rangers_deck_delete_at_path_input {
 }
 
 """
-delete the array element with specified index (negative integers count from the
-end). throws an error if top level container is not an array
+delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
 """
 input rangers_deck_delete_elem_input {
   extra_slots: Int
@@ -43585,8 +45785,7 @@ input rangers_deck_updates {
   _delete_at_path: rangers_deck_delete_at_path_input
 
   """
-  delete the array element with specified index (negative integers count from
-  the end). throws an error if top level container is not an array
+  delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
   """
   _delete_elem: rangers_deck_delete_elem_input
 
@@ -45545,8 +47744,7 @@ input rangers_search_deck_delete_at_path_input {
 }
 
 """
-delete the array element with specified index (negative integers count from the
-end). throws an error if top level container is not an array
+delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
 """
 input rangers_search_deck_delete_elem_input {
   meta: Int
@@ -45934,8 +48132,7 @@ input rangers_search_deck_updates {
   _delete_at_path: rangers_search_deck_delete_at_path_input
 
   """
-  delete the array element with specified index (negative integers count from
-  the end). throws an error if top level container is not an array
+  delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
   """
   _delete_elem: rangers_search_deck_delete_elem_input
 
@@ -48224,8 +50421,7 @@ type rangers_taboo_set_localized_aggregate_fields {
 }
 
 """
-Boolean expression to filter rows from the table "rangers.taboo_set_localized".
-All fields are combined with a logical 'AND'.
+Boolean expression to filter rows from the table "rangers.taboo_set_localized". All fields are combined with a logical 'AND'.
 """
 input rangers_taboo_set_localized_bool_exp {
   _and: [rangers_taboo_set_localized_bool_exp!]
@@ -49982,8 +52178,7 @@ input rangers_user_received_friend_requests_arr_rel_insert_input {
 }
 
 """
-Boolean expression to filter rows from the table
-"rangers.user_received_friend_requests". All fields are combined with a logical 'AND'.
+Boolean expression to filter rows from the table "rangers.user_received_friend_requests". All fields are combined with a logical 'AND'.
 """
 input rangers_user_received_friend_requests_bool_exp {
   _and: [rangers_user_received_friend_requests_bool_exp!]
@@ -50318,8 +52513,7 @@ input rangers_user_sent_friend_requests_arr_rel_insert_input {
 }
 
 """
-Boolean expression to filter rows from the table
-"rangers.user_sent_friend_requests". All fields are combined with a logical 'AND'.
+Boolean expression to filter rows from the table "rangers.user_sent_friend_requests". All fields are combined with a logical 'AND'.
 """
 input rangers_user_sent_friend_requests_bool_exp {
   _and: [rangers_user_sent_friend_requests_bool_exp!]
@@ -50453,6 +52647,7 @@ type rangers_user_settings {
     path: String
   ): jsonb
   private_decks: Boolean!
+  public_campaigns: Boolean
   user_id: String!
 }
 
@@ -50488,6 +52683,7 @@ input rangers_user_settings_bool_exp {
   adhere_taboos: Boolean_comparison_exp
   pack_collection: jsonb_comparison_exp
   private_decks: Boolean_comparison_exp
+  public_campaigns: Boolean_comparison_exp
   user_id: String_comparison_exp
 }
 
@@ -50509,8 +52705,7 @@ input rangers_user_settings_delete_at_path_input {
 }
 
 """
-delete the array element with specified index (negative integers count from the
-end). throws an error if top level container is not an array
+delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
 """
 input rangers_user_settings_delete_elem_input {
   pack_collection: Int
@@ -50530,6 +52725,7 @@ input rangers_user_settings_insert_input {
   adhere_taboos: Boolean
   pack_collection: jsonb
   private_decks: Boolean
+  public_campaigns: Boolean
   user_id: String
 }
 
@@ -50578,6 +52774,7 @@ input rangers_user_settings_order_by {
   adhere_taboos: order_by
   pack_collection: order_by
   private_decks: order_by
+  public_campaigns: order_by
   user_id: order_by
 }
 
@@ -50605,6 +52802,9 @@ enum rangers_user_settings_select_column {
   private_decks
 
   """column name"""
+  public_campaigns
+
+  """column name"""
   user_id
 }
 
@@ -50615,6 +52815,7 @@ input rangers_user_settings_set_input {
   adhere_taboos: Boolean
   pack_collection: jsonb
   private_decks: Boolean
+  public_campaigns: Boolean
   user_id: String
 }
 
@@ -50634,6 +52835,7 @@ input rangers_user_settings_stream_cursor_value_input {
   adhere_taboos: Boolean
   pack_collection: jsonb
   private_decks: Boolean
+  public_campaigns: Boolean
   user_id: String
 }
 
@@ -50651,6 +52853,9 @@ enum rangers_user_settings_update_column {
   private_decks
 
   """column name"""
+  public_campaigns
+
+  """column name"""
   user_id
 }
 
@@ -50664,8 +52869,7 @@ input rangers_user_settings_updates {
   _delete_at_path: rangers_user_settings_delete_at_path_input
 
   """
-  delete the array element with specified index (negative integers count from
-  the end). throws an error if top level container is not an array
+  delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
   """
   _delete_elem: rangers_user_settings_delete_elem_input
 
@@ -51068,67 +53272,6 @@ input rangers_users_updates {
 
   """filter the rows which have to be updated"""
   where: rangers_users_bool_exp!
-}
-
-input RefreshDecksInput {
-  force: Boolean!
-}
-
-type RefreshDecksOutput {
-  updated: Boolean!
-}
-
-"""
-Boolean expression to compare columns of type "String". All fields are combined with logical 'AND'.
-"""
-input String_comparison_exp {
-  _eq: String
-  _gt: String
-  _gte: String
-
-  """does the column match the given case-insensitive pattern"""
-  _ilike: String
-  _in: [String!]
-
-  """
-  does the column match the given POSIX regular expression, case insensitive
-  """
-  _iregex: String
-  _is_null: Boolean
-
-  """does the column match the given pattern"""
-  _like: String
-  _lt: String
-  _lte: String
-  _neq: String
-
-  """does the column NOT match the given case-insensitive pattern"""
-  _nilike: String
-  _nin: [String!]
-
-  """
-  does the column NOT match the given POSIX regular expression, case insensitive
-  """
-  _niregex: String
-
-  """does the column NOT match the given pattern"""
-  _nlike: String
-
-  """
-  does the column NOT match the given POSIX regular expression, case sensitive
-  """
-  _nregex: String
-
-  """does the column NOT match the given SQL regular expression"""
-  _nsimilar: String
-
-  """
-  does the column match the given POSIX regular expression, case sensitive
-  """
-  _regex: String
-
-  """does the column match the given SQL regular expression"""
-  _similar: String
 }
 
 type subscription_root {
@@ -54558,6 +56701,297 @@ type subscription_root {
     """filter the rows returned"""
     where: local_decks_bool_exp
   ): [local_decks!]!
+
+  """
+  fetch data from the table: "oauth_access_tokens"
+  """
+  oauth_access_tokens(
+    """distinct select on columns"""
+    distinct_on: [oauth_access_tokens_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [oauth_access_tokens_order_by!]
+
+    """filter the rows returned"""
+    where: oauth_access_tokens_bool_exp
+  ): [oauth_access_tokens!]!
+
+  """
+  fetch aggregated fields from the table: "oauth_access_tokens"
+  """
+  oauth_access_tokens_aggregate(
+    """distinct select on columns"""
+    distinct_on: [oauth_access_tokens_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [oauth_access_tokens_order_by!]
+
+    """filter the rows returned"""
+    where: oauth_access_tokens_bool_exp
+  ): oauth_access_tokens_aggregate!
+
+  """
+  fetch data from the table: "oauth_access_tokens" using primary key columns
+  """
+  oauth_access_tokens_by_pk(id: uuid!): oauth_access_tokens
+
+  """
+  fetch data from the table in a streaming manner: "oauth_access_tokens"
+  """
+  oauth_access_tokens_stream(
+    """maximum number of rows returned in a single batch"""
+    batch_size: Int!
+
+    """cursor to stream the results returned by the query"""
+    cursor: [oauth_access_tokens_stream_cursor_input]!
+
+    """filter the rows returned"""
+    where: oauth_access_tokens_bool_exp
+  ): [oauth_access_tokens!]!
+
+  """
+  fetch data from the table: "oauth_authorization_codes"
+  """
+  oauth_authorization_codes(
+    """distinct select on columns"""
+    distinct_on: [oauth_authorization_codes_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [oauth_authorization_codes_order_by!]
+
+    """filter the rows returned"""
+    where: oauth_authorization_codes_bool_exp
+  ): [oauth_authorization_codes!]!
+
+  """
+  fetch aggregated fields from the table: "oauth_authorization_codes"
+  """
+  oauth_authorization_codes_aggregate(
+    """distinct select on columns"""
+    distinct_on: [oauth_authorization_codes_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [oauth_authorization_codes_order_by!]
+
+    """filter the rows returned"""
+    where: oauth_authorization_codes_bool_exp
+  ): oauth_authorization_codes_aggregate!
+
+  """
+  fetch data from the table: "oauth_authorization_codes" using primary key columns
+  """
+  oauth_authorization_codes_by_pk(id: uuid!): oauth_authorization_codes
+
+  """
+  fetch data from the table in a streaming manner: "oauth_authorization_codes"
+  """
+  oauth_authorization_codes_stream(
+    """maximum number of rows returned in a single batch"""
+    batch_size: Int!
+
+    """cursor to stream the results returned by the query"""
+    cursor: [oauth_authorization_codes_stream_cursor_input]!
+
+    """filter the rows returned"""
+    where: oauth_authorization_codes_bool_exp
+  ): [oauth_authorization_codes!]!
+
+  """
+  fetch data from the table: "oauth_clients"
+  """
+  oauth_clients(
+    """distinct select on columns"""
+    distinct_on: [oauth_clients_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [oauth_clients_order_by!]
+
+    """filter the rows returned"""
+    where: oauth_clients_bool_exp
+  ): [oauth_clients!]!
+
+  """
+  fetch aggregated fields from the table: "oauth_clients"
+  """
+  oauth_clients_aggregate(
+    """distinct select on columns"""
+    distinct_on: [oauth_clients_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [oauth_clients_order_by!]
+
+    """filter the rows returned"""
+    where: oauth_clients_bool_exp
+  ): oauth_clients_aggregate!
+
+  """fetch data from the table: "oauth_clients" using primary key columns"""
+  oauth_clients_by_pk(id: uuid!): oauth_clients
+
+  """
+  fetch data from the table in a streaming manner: "oauth_clients"
+  """
+  oauth_clients_stream(
+    """maximum number of rows returned in a single batch"""
+    batch_size: Int!
+
+    """cursor to stream the results returned by the query"""
+    cursor: [oauth_clients_stream_cursor_input]!
+
+    """filter the rows returned"""
+    where: oauth_clients_bool_exp
+  ): [oauth_clients!]!
+
+  """
+  fetch data from the table: "oauth_refresh_tokens"
+  """
+  oauth_refresh_tokens(
+    """distinct select on columns"""
+    distinct_on: [oauth_refresh_tokens_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [oauth_refresh_tokens_order_by!]
+
+    """filter the rows returned"""
+    where: oauth_refresh_tokens_bool_exp
+  ): [oauth_refresh_tokens!]!
+
+  """
+  fetch aggregated fields from the table: "oauth_refresh_tokens"
+  """
+  oauth_refresh_tokens_aggregate(
+    """distinct select on columns"""
+    distinct_on: [oauth_refresh_tokens_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [oauth_refresh_tokens_order_by!]
+
+    """filter the rows returned"""
+    where: oauth_refresh_tokens_bool_exp
+  ): oauth_refresh_tokens_aggregate!
+
+  """
+  fetch data from the table: "oauth_refresh_tokens" using primary key columns
+  """
+  oauth_refresh_tokens_by_pk(id: uuid!): oauth_refresh_tokens
+
+  """
+  fetch data from the table in a streaming manner: "oauth_refresh_tokens"
+  """
+  oauth_refresh_tokens_stream(
+    """maximum number of rows returned in a single batch"""
+    batch_size: Int!
+
+    """cursor to stream the results returned by the query"""
+    cursor: [oauth_refresh_tokens_stream_cursor_input]!
+
+    """filter the rows returned"""
+    where: oauth_refresh_tokens_bool_exp
+  ): [oauth_refresh_tokens!]!
+
+  """
+  fetch data from the table: "oauth_scopes"
+  """
+  oauth_scopes(
+    """distinct select on columns"""
+    distinct_on: [oauth_scopes_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [oauth_scopes_order_by!]
+
+    """filter the rows returned"""
+    where: oauth_scopes_bool_exp
+  ): [oauth_scopes!]!
+
+  """
+  fetch aggregated fields from the table: "oauth_scopes"
+  """
+  oauth_scopes_aggregate(
+    """distinct select on columns"""
+    distinct_on: [oauth_scopes_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [oauth_scopes_order_by!]
+
+    """filter the rows returned"""
+    where: oauth_scopes_bool_exp
+  ): oauth_scopes_aggregate!
+
+  """fetch data from the table: "oauth_scopes" using primary key columns"""
+  oauth_scopes_by_pk(id: String!): oauth_scopes
+
+  """
+  fetch data from the table in a streaming manner: "oauth_scopes"
+  """
+  oauth_scopes_stream(
+    """maximum number of rows returned in a single batch"""
+    batch_size: Int!
+
+    """cursor to stream the results returned by the query"""
+    cursor: [oauth_scopes_stream_cursor_input]!
+
+    """filter the rows returned"""
+    where: oauth_scopes_bool_exp
+  ): [oauth_scopes!]!
 
   """
   fetch data from the table: "pack"
@@ -58540,37 +60974,6 @@ input timestamptz_comparison_exp {
   _nin: [timestamptz!]
 }
 
-input UpdateHandleInput {
-  handle: String!
-  userId: String
-}
-
-type UpdateHandleOutput {
-  success: Boolean!
-  user: users
-  userId: String!
-}
-
-input UpgradeDeckInput {
-  deckId: Int!
-  exiles: jsonb
-  xp: Int!
-}
-
-type UpgradeDeckOutput {
-  deckId: Int!
-  upgradedDeckId: Int!
-}
-
-input UploadLocalCampaignDeckInput {
-  arkhamDbId: Int!
-  localDeckId: String!
-}
-
-type UploadLocalCampaignDeckOutput {
-  deckIds: [DeckId!]!
-}
-
 """
 columns and relationships of "user_campaigns"
 """
@@ -59480,8 +61883,7 @@ input user_received_friend_requests_arr_rel_insert_input {
 }
 
 """
-Boolean expression to filter rows from the table
-"user_received_friend_requests". All fields are combined with a logical 'AND'.
+Boolean expression to filter rows from the table "user_received_friend_requests". All fields are combined with a logical 'AND'.
 """
 input user_received_friend_requests_bool_exp {
   _and: [user_received_friend_requests_bool_exp!]
@@ -59874,8 +62276,7 @@ input user_settings_delete_at_path_input {
 }
 
 """
-delete the array element with specified index (negative integers count from the
-end). throws an error if top level container is not an array
+delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
 """
 input user_settings_delete_elem_input {
   in_collection: Int
@@ -60095,8 +62496,7 @@ input user_settings_updates {
   _delete_at_path: user_settings_delete_at_path_input
 
   """
-  delete the array element with specified index (negative integers count from
-  the end). throws an error if top level container is not an array
+  delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array
   """
   _delete_elem: user_settings_delete_elem_input
 
@@ -60641,21 +63041,6 @@ input users_updates {
 
   """filter the rows which have to be updated"""
   where: users_bool_exp!
-}
-
-type UserSearchResult {
-  handle: String!
-  id: String!
-}
-
-input UsersSearchInput {
-  continueToken: String
-  search: String!
-}
-
-type UsersSearchOutput {
-  hasMore: String!
-  users: [UserSearchResult!]!
 }
 
 scalar uuid

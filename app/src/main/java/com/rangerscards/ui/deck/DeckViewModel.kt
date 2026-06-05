@@ -27,6 +27,7 @@ import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -466,13 +467,13 @@ class DeckViewModel @Inject constructor(
     fun checkChanges(): Boolean = _deckUiState.value is DeckUiState.Editing &&
             deck.value?.oftenUpdatableDeckValues != _updatableValues.value
 
-    fun saveChanges() {
-        if (checkChanges()) {
+    fun saveChanges(needSaving: Boolean = false): Job? {
+        if (needSaving || checkChanges()) {
             val deck = deck.value
             deck?.let { deck ->
                 val values = updatableValues.value
                 values?.let { values ->
-                    viewModelScope.launch {
+                    return viewModelScope.launch {
                         _deckUiState.value = DeckUiState.Loading
                         decksRepository.saveDeck(deck.copy(
                             deckMeta = deck.deckMeta.copy(
@@ -485,6 +486,7 @@ class DeckViewModel @Inject constructor(
                 }
             }
         } else _deckUiState.value = DeckUiState.Idle
+        return null
     }
 
     fun discardChanges() {

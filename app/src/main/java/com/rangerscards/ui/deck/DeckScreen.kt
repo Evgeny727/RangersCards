@@ -195,8 +195,9 @@ fun DeckScreen(
                 leadingIcon = R.drawable.done_32dp,
                 onClick = {
                     showActionDialog = null
-                    deckViewModel.saveChanges()
-                    navController.navigateUp()
+                    deckViewModel.saveChanges(true)?.invokeOnCompletion {
+                        navController.navigateUp()
+                    } ?: navController.navigateUp()
                 },
             )
         } else {

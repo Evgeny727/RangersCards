@@ -197,14 +197,15 @@ class DecksRepositoryImpl @Inject constructor(
     override suspend fun upgradeDeck(id: String, uploaded: Boolean) = runCatching {
         if (uploaded) {
             val upgradedDeck = decksRemoteDataSource.upgradeDeck(id.toInt())
-                .dataAssertNoErrors.deck!!.deck.toDbDeck()
-            val previousDeck = decksRemoteDataSource.fetchDeckById(upgradedDeck.previousId!!.toInt())
+                .dataAssertNoErrors.deck!!
+            val newDeck = decksRemoteDataSource.fetchDeckById(upgradedDeck.next_deck_id!!)
                 .dataAssertNoErrors.deck!!.deck.toDbDeck()
             db.withTransaction {
-                deckDao.insertDeck(upgradedDeck)
-                deckDao.updateDeck(previousDeck)
+                val oldDeck = deckDao.getDeckById(id)!!
+                deckDao.updateDeck(oldDeck.copy(nextId = newDeck.id))
+                deckDao.insertDeck(newDeck)
             }
-            upgradedDeck.id
+            newDeck.id
         } else {
             val newUuid = Uuid.random().toString()
             val localDeck = deckDao.getDeckById(id)!!
