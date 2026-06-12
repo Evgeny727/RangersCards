@@ -90,6 +90,7 @@ data class Card (
     val packShortName: String?,
     @ColumnInfo(name = "pack_position")
     val packPosition: Int?,
+    val setup: Boolean,
     @ColumnInfo(name = "subset_id")
     val subsetId: String?,
     @ColumnInfo(name = "subset_name")

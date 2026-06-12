@@ -45,6 +45,7 @@ import com.rangerscards.R
 import com.rangerscards.domain.model.CardApproaches
 import com.rangerscards.domain.model.CardAspect
 import com.rangerscards.objects.ImageSrc
+import com.rangerscards.ui.settings.components.RangersRadioButton
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 
@@ -67,6 +68,8 @@ fun CardListItem(
     onAddEnabled: Boolean = false,
     onRemoveClick: (() -> Unit)? = null,
     onRemoveEnabled: Boolean = false,
+    onSelectedChange: ((Boolean) -> Unit)? = null,
+    isSelected: Boolean = false,
 ) {
     Surface(
         onClick = onClick,
@@ -113,7 +116,9 @@ fun CardListItem(
                     onAddClick,
                     onAddEnabled,
                     onRemoveClick,
-                    onRemoveEnabled
+                    onRemoveEnabled,
+                    onSelectedChange,
+                    isSelected,
                 )
             }
             HorizontalDivider(
@@ -342,7 +347,9 @@ fun CardListItemDeckInfo(
     onAddClick: (() -> Unit)?,
     onAddEnabled: Boolean,
     onRemoveClick: (() -> Unit)?,
-    onRemoveEnabled: Boolean
+    onRemoveEnabled: Boolean,
+    onSelectedChange: ((Boolean) -> Unit)?,
+    isSelected: Boolean,
 ) {
     val animatedAlpha by animateFloatAsState(targetValue = if ((currentAmount ?: 0) > 0) 1f else 0.5f)
     Row(
@@ -395,5 +402,10 @@ fun CardListItemDeckInfo(
                 modifier = Modifier.size(24.dp)
             )
         }
+        if (onSelectedChange != null) RangersRadioButton(
+            selected = isSelected,
+            onClick = onSelectedChange,
+            modifier = Modifier.size(24.dp)
+        )
     }
 }

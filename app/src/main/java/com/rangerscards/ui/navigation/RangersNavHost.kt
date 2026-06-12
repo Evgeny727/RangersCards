@@ -107,6 +107,8 @@ import com.rangerscards.ui.deck.DeckChangingRole
 import com.rangerscards.ui.deck.DeckChartsScreen
 import com.rangerscards.ui.deck.DeckFullCardScreen
 import com.rangerscards.ui.deck.DeckFullCardWithPagerScreen
+import com.rangerscards.ui.deck.DeckMulliganScreen
+import com.rangerscards.ui.deck.DeckMulliganViewModel
 import com.rangerscards.ui.deck.DeckScreen
 import com.rangerscards.ui.deck.DeckVersionsScreen
 import com.rangerscards.ui.deck.DeckViewModel
@@ -687,6 +689,23 @@ fun RangersNavHost(
                         contentPadding = innerPadding,
                     )
                 }
+                composable(route = "deck/mulligan") { backStackEntry ->
+                    val parentEntry = remember(backStackEntry) {
+                        navController.getBackStackEntry("deck/{$deckIdArgument}")
+                    }
+                    val deckViewModel: DeckViewModel = hiltViewModel(parentEntry)
+                    val deckMulliganViewModel: DeckMulliganViewModel = hiltViewModel(backStackEntry)
+                    DeckMulliganScreen(
+                        navigateUp = navController::navigateUp,
+                        navigateToCard = { cardId ->
+                            navController.navigate("deck/card/$cardId") { launchSingleTop = true }
+                        },
+                        deckViewModel = deckViewModel,
+                        deckMulliganViewModel = deckMulliganViewModel,
+                        isDarkTheme = isDarkTheme,
+                        contentPadding = innerPadding,
+                    )
+                }
                 composable(
                     route = "deck/{$deckIdArgument}/history",
                     arguments = listOf(navArgument(deckIdArgument) { type = NavType.StringType })
@@ -1014,7 +1033,7 @@ fun RangersNavHost(
                         CampaignJourneyScreen(
                             campaign = campaign!!,
                             buildTravelHistory = campaignViewModel::buildTravelHistory,
-                            getWeatherResId = campaignViewModel::getWeatherResId,
+                            getWeatherByDay = campaignViewModel::getWeatherByDay,
                             contentPadding = innerPadding
                         )
                         title = stringResource(R.string.journey_title)

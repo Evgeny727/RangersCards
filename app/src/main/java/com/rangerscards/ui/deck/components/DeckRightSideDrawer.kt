@@ -62,6 +62,7 @@ fun BoxScope.DeckRightSideDrawer(
     isTabooSet: Boolean,
     toNotes: () -> Unit,
     toCharts: () -> Unit,
+    toMulligan: () -> Unit,
     camp: (() -> Unit)?,
     toPreviousDeck: (() -> Unit)?,
     toNextDeck: (() -> Unit)?,
@@ -143,6 +144,12 @@ fun BoxScope.DeckRightSideDrawer(
                         R.drawable.charts_32dp,
                         stringResource(R.string.tools_section_charts),
                         toCharts,
+                    )
+                    HorizontalDivider(color = CustomTheme.colors.l10)
+                    DrawerSectionButtonRow(
+                        R.drawable.reshuffle,
+                        stringResource(R.string.draw_simulator),
+                        toMulligan,
                     )
                 }
             }

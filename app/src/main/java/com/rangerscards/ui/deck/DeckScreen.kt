@@ -790,6 +790,7 @@ fun DeckScreen(
                     isTabooSet = isTabooSet,
                     toNotes = { /*TODO:Implement notes*/ },
                     toCharts = { navController.navigate("deck/charts") {launchSingleTop = true } },
+                    toMulligan = { navController.navigate("deck/mulligan") {launchSingleTop = true } },
                     camp = if (deck!!.nextId == null) { { if (deckProblems.problems.isNotEmpty())
                         emitError(DeckContainsErrorsException()) else deckViewModel.camp()
                     } } else null,

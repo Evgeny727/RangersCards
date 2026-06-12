@@ -2,6 +2,7 @@ package com.rangerscards.domain.repository
 
 import androidx.paging.PagingData
 import com.rangerscards.domain.model.CardDeckListItem
+import com.rangerscards.domain.model.CardDeckMulliganItem
 import com.rangerscards.domain.model.CardFilterOptions
 import com.rangerscards.domain.model.CardListItem
 import com.rangerscards.domain.model.DeckInfo
@@ -48,4 +49,6 @@ interface CardsRepository {
     ): Flow<PagingData<CardDeckListItem>>
 
     fun getRewards(query: String, taboo: Boolean, packIds: List<String>): Flow<ImmutableList<CardListItem>>
+
+    suspend fun getMulliganCardsByIds(ids: List<String>): List<CardDeckMulliganItem>
 }

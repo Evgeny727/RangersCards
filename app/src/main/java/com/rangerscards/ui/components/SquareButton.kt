@@ -26,7 +26,7 @@ import com.rangerscards.ui.theme.Jost
 @Composable
 fun SquareButton(
     @StringRes stringId: Int,
-    @DrawableRes leadingIcon: Int,
+    @DrawableRes leadingIcon: Int? = null,
     buttonColor: ButtonColors = ButtonDefaults.buttonColors().copy(CustomTheme.colors.d10),
     iconColor: Color = CustomTheme.colors.l20,
     textColor: Color = CustomTheme.colors.l30,
@@ -42,13 +42,15 @@ fun SquareButton(
         contentPadding = PaddingValues(8.dp),
         enabled = isEnabled
     ) {
-        Icon(
-            painterResource(id = leadingIcon),
-            contentDescription = null,
-            tint = iconColor,
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
+        leadingIcon?.let { iconId ->
+            Icon(
+                painterResource(id = iconId),
+                contentDescription = null,
+                tint = iconColor,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+        }
         Text(
             text = stringResource(id = stringId),
             modifier = Modifier.fillMaxWidth(),
