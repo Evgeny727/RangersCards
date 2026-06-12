@@ -299,11 +299,11 @@ class CampaignViewModel @Inject constructor(
         return result.toImmutableList()
     }
 
-    fun getWeatherResId(day: Int): Int {
+    fun getWeatherByDay(day: Int): Weather? {
         val campaign = campaign.value
         val weatherList = CampaignMaps.weather(campaign?.cycleId ?: "core")
         return (weatherList.firstOrNull { day in it.start..it.end }
-            ?: weatherList.firstOrNull { day in (it.start + 30)..(it.end + 30) })?.nameResId ?: R.string.text_none
+            ?: weatherList.firstOrNull { day in (it.start + 30)..(it.end + 30) })
     }
 
     fun extendCampaign() {

@@ -37,7 +37,7 @@ fun FullCardImageContainer(imageSrc: String?) {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.Top,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.clickable { isExpanded = !isExpanded }
         ) {
