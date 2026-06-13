@@ -1,5 +1,6 @@
 package com.rangerscards.ui.deck
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -195,7 +196,6 @@ fun DeckMulliganScreen(
                 ) {
                     SquareButton(
                         stringId = R.string.draw_1,
-                        leadingIcon = R.drawable.add_32dp,
                         buttonColor = ButtonDefaults.buttonColors().copy(
                             containerColor = CustomTheme.colors.d10,
                             disabledContainerColor = CustomTheme.colors.d10.copy(alpha = 0.3f)
@@ -206,7 +206,6 @@ fun DeckMulliganScreen(
                     )
                     SquareButton(
                         stringId = R.string.draw_6,
-                        leadingIcon = R.drawable.add_32dp,
                         buttonColor = ButtonDefaults.buttonColors().copy(
                             containerColor = CustomTheme.colors.d10,
                             disabledContainerColor = CustomTheme.colors.d10.copy(alpha = 0.3f)
@@ -274,7 +273,8 @@ fun DeckMulliganScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(max = 600.dp)
-                        .verticalScroll(rememberScrollState()),
+                        .verticalScroll(rememberScrollState())
+                        .animateContentSize(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     maxItemsInEachRow = 6,
@@ -319,7 +319,8 @@ fun DeckMulliganScreen(
                         if (selected) deckMulliganViewModel.selectedCards.add(card)
                         else deckMulliganViewModel.selectedCards.remove(card)
                     },
-                    isSelected = isSelected
+                    isSelected = isSelected,
+                    modifier = Modifier.animateItem()
                 )
             }
         }

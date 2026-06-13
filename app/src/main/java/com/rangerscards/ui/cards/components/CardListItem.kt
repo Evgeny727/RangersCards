@@ -62,6 +62,7 @@ fun CardListItem(
     level: Int?,
     isDarkTheme: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     charForAmount: String? = null,
     currentAmount: Int? = null,
     onAddClick: (() -> Unit)? = null,
@@ -73,7 +74,7 @@ fun CardListItem(
 ) {
     Surface(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         color = Color.Transparent
     ) {
         Column(
