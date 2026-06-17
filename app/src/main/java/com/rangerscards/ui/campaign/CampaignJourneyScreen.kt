@@ -80,7 +80,7 @@ fun CampaignJourneyScreen(
                     Row(
                         modifier = Modifier.fillMaxWidth().clickable { isExpanded = !isExpanded },
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Top
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         val weather = remember { getWeatherByDay(travelDay.day) }
                         val upperWeather = weather?.nameResId ?: R.string.text_none
@@ -94,7 +94,7 @@ fun CampaignJourneyScreen(
                             fontWeight = FontWeight.Medium,
                             fontSize = 18.sp,
                             lineHeight = 20.sp,
-                            modifier = Modifier.padding(horizontal = 8.dp)
+                            modifier = Modifier.padding(horizontal = 8.dp).weight(1f)
                         )
                         Icon(
                             painterResource(if (isExpanded) R.drawable.arrow_drop_up_32dp

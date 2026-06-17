@@ -477,7 +477,7 @@
     <string name="drawn_cards">Вытянутые карты:</string>
     <string name="draw_1">Взять 1</string>
     <string name="draw_6">Взять 6</string>
-    <string name="reset">Сбросить</string>
+    <string name="reset">Сброс</string>
     <string name="redraw_selected">Перетянуть</string>
     <string name="reshuffle_selected">Перемешать</string>
 </resources>
