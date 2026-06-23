@@ -20,6 +20,9 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import javax.inject.Inject
 import javax.inject.Singleton
 
 const val SERVER_URL = "gapi.rangersdb.com/v1/graphql"
@@ -36,6 +39,7 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideApolloClient(
+        authHttpInterceptor: AuthHttpInterceptor,
         authTokenProvider: AuthTokenProvider,
         @ApplicationContext context: Context
     ): ApolloClient = ApolloClient.Builder()
@@ -49,26 +53,49 @@ object NetworkModule {
                 }))
                 .build()
         )
-        .addHttpInterceptor( object : HttpInterceptor {
-            override suspend fun intercept(
-                request: HttpRequest,
-                chain: HttpInterceptorChain
-            ): HttpResponse {
-                val token = authTokenProvider.getToken()
-                val newRequest = if (token.isNullOrBlank()) {
-                    request
-                } else {
-                    request.newBuilder()
-                        .addHeader("Authorization", "Bearer $token")
-                        .build()
-                }
-
-                return chain.proceed(newRequest)
-            }
-        })
+        .addHttpInterceptor(authHttpInterceptor)
         .retryOnErrorInterceptor(RetryOnErrorInterceptor(NetworkMonitor(context)))
         .failFastIfOffline(true)
         .addCustomScalarAdapter(Jsonb.type, JsonElementAdapter)
         .build()
 
+}
+
+@Singleton
+class AuthHttpInterceptor @Inject constructor(
+    private val authTokenProvider: AuthTokenProvider
+) : HttpInterceptor {
+
+    private val refreshMutex = Mutex()
+
+    override suspend fun intercept(
+        request: HttpRequest,
+        chain: HttpInterceptorChain
+    ): HttpResponse {
+        val token = authTokenProvider.getToken()
+        val initialRequest = request.withBearerToken(token)
+
+        val response = chain.proceed(initialRequest)
+        if (response.statusCode != 401) return response
+
+        val refreshedToken = refreshMutex.withLock {
+            authTokenProvider.getToken(true)
+        }
+
+        if (refreshedToken.isNullOrBlank()) {
+            return response
+        }
+
+        return chain.proceed(request.withBearerToken(refreshedToken))
+    }
+
+    private fun HttpRequest.withBearerToken(token: String?): HttpRequest {
+        return if (token.isNullOrBlank()) {
+            this
+        } else {
+            newBuilder()
+                .addHeader("Authorization", "Bearer $token")
+                .build()
+        }
+    }
 }
