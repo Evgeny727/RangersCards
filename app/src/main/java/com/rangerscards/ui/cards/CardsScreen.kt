@@ -148,8 +148,8 @@ fun CardsScreen(
                     }
                 },
                 contentType = cardsLazyItems.itemContentType { when (it) {
-                    is CardListUiModel.CardItem -> it.card
-                    is CardListUiModel.CategoryHeader -> it.category
+                    is CardListUiModel.CardItem -> it::class
+                    is CardListUiModel.CategoryHeader -> it::class
                 } }
             ) { index ->
                 val item = cardsLazyItems[index] ?: return@items

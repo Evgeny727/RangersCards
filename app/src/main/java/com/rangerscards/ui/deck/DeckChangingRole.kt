@@ -150,7 +150,7 @@ fun DeckChangingRole(
                 } else items(
                     count = roles.itemCount,
                     key = roles.itemKey(RoleCard::id),
-                    contentType = roles.itemContentType { it }
+                    contentType = roles.itemContentType { it::class }
                 ) { index ->
                     val item = roles[index] ?: return@items
                     Text(

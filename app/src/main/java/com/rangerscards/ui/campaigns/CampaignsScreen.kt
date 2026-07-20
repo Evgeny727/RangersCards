@@ -153,7 +153,7 @@ fun CampaignsScreen(
                 items(
                     count = campaignsLazyItems.itemCount,
                     key = campaignsLazyItems.itemKey(CampaignListItemModel::id),
-                    contentType = campaignsLazyItems.itemContentType { it }
+                    contentType = campaignsLazyItems.itemContentType { it::class }
                 ) { index ->
                     val item = campaignsLazyItems[index] ?: return@items
                     val roleImages = campaignsViewModel.getRolesImages(item.latestDecksRoles)

@@ -90,7 +90,7 @@ fun DeckMulliganScreen(
     ) {
         val setupCards = cardsInDeck.filter { it.setup }
         LazyColumn(modifier = Modifier.sizeIn(maxHeight = 400.dp)) {
-            item("no_start_in_play", contentType = { String }) {
+            item("no_start_in_play") {
                 Text(
                     text = stringResource(R.string.text_none),
                     modifier = Modifier
@@ -111,7 +111,7 @@ fun DeckMulliganScreen(
                 )
                 HorizontalDivider(color = CustomTheme.colors.l10)
             }
-            items(items = setupCards, key = { it.id }, contentType = { String }) { card ->
+            items(items = setupCards, key = { it.id }) { card ->
                 Text(
                     text = card.name.toString(),
                     modifier = Modifier

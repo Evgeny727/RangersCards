@@ -250,8 +250,8 @@ fun DeckCardsSearchingListScreen(
                         }
                     },
                     contentType = cardsLazyItems.itemContentType { when (it) {
-                        is DeckCardListUiModel.CardItem -> it.card
-                        is DeckCardListUiModel.CategoryHeader -> it.category
+                        is DeckCardListUiModel.CardItem -> it::class
+                        is DeckCardListUiModel.CategoryHeader -> it::class
                     } }
                 ) { index ->
                     val item = cardsLazyItems[index] ?: return@items
