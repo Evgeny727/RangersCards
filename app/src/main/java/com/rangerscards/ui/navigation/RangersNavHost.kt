@@ -13,10 +13,15 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -148,7 +153,9 @@ fun RangersNavHost(
     val cardsState by appViewModel.cardsSyncState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     Scaffold(
-        modifier = Modifier.safeDrawingPadding(),
+        modifier = Modifier.windowInsetsPadding(
+            WindowInsets.statusBars.union(WindowInsets.navigationBars)
+        ),
         topBar = {
             AnimatedVisibility(showBars) {
                 RangersTopAppBar(
