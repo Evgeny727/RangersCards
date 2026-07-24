@@ -568,7 +568,7 @@
     <string name="draw_1">Draw 1</string>
     <string name="draw_6">Draw 6</string>
     <string name="reset">Reset</string>
-    <string name="redraw_selected">Rerdaw</string>
+    <string name="redraw_selected">Redraw</string>
     <string name="reshuffle_selected">Reshuffle</string>
 
 </resources>
