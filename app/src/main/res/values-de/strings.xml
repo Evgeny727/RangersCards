@@ -198,6 +198,7 @@
     <string name="section_notes">Notizen</string>
     <string name="tools_section_header">Tools</string>
     <string name="tools_section_charts">Statistiken</string>
+    <string name="draw_simulator">Kartenzieh-Simulator</string>
     <string name="campaign_section_header">Kampagne</string>
     <string name="campaign_section_camp">Nachtlager</string>
     <string name="campaign_section_camp_additional_text">Zum Hinzufügen von Belohnungen und zur Nachverfolgung von Änderungen</string>
@@ -287,7 +288,7 @@
     //Campaign screen
     <string name="current_location">Aktuelle Position</string>
     <string name="current_path_terrain">Aktueller Terrain-Typ</string>
-    <string name="text_none">Keiner</string>
+    <string name="text_none">Keine(r)</string>
     <string name="recorded_journey_button">Aufgezeichnete Reise</string>
     <string name="extend_campaign_button">Kampagne verlängern</string>
 
@@ -521,4 +522,13 @@
 
     <string name="cards_update_available_header">Aktualisierte Karten</string>
     <string name="cards_update_available_text">Aktualisierte Karten verfügbar.</string>
+
+    //Draw simulator
+    <string name="card_in_play">Karte im Spiel</string>
+    <string name="drawn_cards">Gezogene Karten:</string>
+    <string name="draw_1">Ziehe 1</string>
+    <string name="draw_6">Ziehe 6</string>
+    <string name="reset">Zurücksetzen</string>
+    <string name="redraw_selected">Neu ziehen</string>
+    <string name="reshuffle_selected">Zurückmischen</string>
 </resources>
