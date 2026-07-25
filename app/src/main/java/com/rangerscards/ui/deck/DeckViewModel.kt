@@ -46,6 +46,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.uuid.ExperimentalUuidApi
 
 sealed interface DeckUiState {
@@ -186,7 +187,7 @@ class DeckViewModel @Inject constructor(
     val deckProblems: StateFlow<DeckErrors> =
         combine(slotsCards, _updatableValues, deck) { slots, values, deck ->
             Triple(slots, values, deck?.deckMeta)
-        }.debounce(1_000L).mapLatest { (slots, values, deckMeta) ->
+        }.debounce(500L.milliseconds).mapLatest { (slots, values, deckMeta) ->
             if (deckMeta != null) parseDeckForErrors(
                 listOf(values?.awa, values?.spi, values?.fit, values?.foc),
                 slots,
@@ -425,15 +426,15 @@ class DeckViewModel @Inject constructor(
         val previousDeck = deck.value?.previousDeck
         _updatableValues.update { values ->
             values?.let {
-                if (previousDeck == null) it.copy(slots = it.slots.put(id, 2))
+                if (previousDeck == null) it.copy(slots = it.slots.putting(id, 2))
                 else it.sideSlots[id]?.let { sideSlot ->
                     it.copy(
-                        slots = it.slots.put(id, (it.slots[id] ?: 0) + 1),
+                        slots = it.slots.putting(id, (it.slots[id] ?: 0) + 1),
                         sideSlots = if (sideSlot > 1)
-                            it.sideSlots.put(id, sideSlot - 1)
-                        else it.sideSlots.remove(id)
+                            it.sideSlots.putting(id, sideSlot - 1)
+                        else it.sideSlots.removing(id)
                     )
-                } ?: it.copy(slots = it.slots.put(id, (it.slots[id] ?: 0) + 1))
+                } ?: it.copy(slots = it.slots.putting(id, (it.slots[id] ?: 0) + 1))
             }
         }
     }
@@ -442,26 +443,26 @@ class DeckViewModel @Inject constructor(
         val previousDeck = deck.value?.previousDeck
         _updatableValues.update { values ->
             values?.let {
-                if (previousDeck == null) it.copy(slots = it.slots.remove(id))
+                if (previousDeck == null) it.copy(slots = it.slots.removing(id))
                 else if ((it.slots[id] ?: 0) > 1) it.copy(
-                    slots = it.slots.put(id, it.slots[id]!! - 1),
+                    slots = it.slots.putting(id, it.slots[id]!! - 1),
                     sideSlots = if (setId == "reward" || setId == "malady") it.sideSlots
-                        else it.sideSlots.put(id, (it.sideSlots[id] ?: 0) + 1)
+                        else it.sideSlots.putting(id, (it.sideSlots[id] ?: 0) + 1)
                 ) else it.copy(
-                    slots = it.slots.remove(id),
+                    slots = it.slots.removing(id),
                     sideSlots = if (setId == "reward" || setId == "malady") it.sideSlots
-                    else it.sideSlots.put(id, (it.sideSlots[id] ?: 0) + 1)
+                    else it.sideSlots.putting(id, (it.sideSlots[id] ?: 0) + 1)
                 )
             }
         }
     }
 
     fun addExtraCard(id: String) {
-        _updatableValues.update { it?.copy(extraSlots = it.extraSlots.put(id, 1)) }
+        _updatableValues.update { it?.copy(extraSlots = it.extraSlots.putting(id, 1)) }
     }
 
     fun removeExtraCard(id: String) {
-        _updatableValues.update { it?.copy(extraSlots = it.extraSlots.remove(id)) }
+        _updatableValues.update { it?.copy(extraSlots = it.extraSlots.removing(id)) }
     }
 
     fun checkChanges(): Boolean = _deckUiState.value is DeckUiState.Editing &&
@@ -511,7 +512,7 @@ class DeckViewModel @Inject constructor(
         val deck = deck.value
         deck?.let { deck ->
             val values = updatableValues.value
-            values?.let { values ->
+            values?.let {
                 viewModelScope.launch {
                     _deckUiState.value = DeckUiState.Loading
                     decksRepository.upgradeDeck(
@@ -564,7 +565,7 @@ class DeckViewModel @Inject constructor(
         deck?.let { deck ->
             if (deck.name == newName) return@let
             val values = updatableValues.value
-            values?.let { values ->
+            values?.let {
                 viewModelScope.launch {
                     _deckUiState.value = DeckUiState.Loading
                     decksRepository.saveDeck(
@@ -612,7 +613,7 @@ class DeckViewModel @Inject constructor(
         val deck = deck.value
         deck?.let { deck ->
             val values = updatableValues.value
-            values?.let { values ->
+            values?.let {
                 viewModelScope.launch {
                     _deckUiState.value = DeckUiState.Loading
                     decksRepository.deleteDeckById(
@@ -633,7 +634,7 @@ class DeckViewModel @Inject constructor(
         val deck = deck.value
         deck?.let { deck ->
             val values = updatableValues.value
-            values?.let { values ->
+            values?.let {
                 viewModelScope.launch {
                     _deckUiState.value = DeckUiState.Loading
                     decksRepository.deleteAllDeckVersionsById(
@@ -654,7 +655,7 @@ class DeckViewModel @Inject constructor(
         val deck = deck.value
         deck?.let { deck ->
             val values = updatableValues.value
-            values?.let { values ->
+            values?.let {
                 viewModelScope.launch {
                     _deckUiState.value = DeckUiState.Loading
                     decksRepository.saveDeckTabooSet(
@@ -675,7 +676,7 @@ class DeckViewModel @Inject constructor(
         val deck = deck.value
         deck?.let { deck ->
             val values = updatableValues.value
-            values?.let { values ->
+            values?.let {
                 viewModelScope.launch {
                     _deckUiState.value = DeckUiState.Loading
                     decksRepository.saveDeck(

@@ -1,36 +1,36 @@
 [versions]
-agp = "8.13.2"
+agp = "9.2.1"
 appUpdate = "2.1.0"
-kotlin = "2.3.20"
-ksp = "2.2.21-2.0.4"
+kotlin = "2.4.10"
+ksp = "2.3.10"
 
-coreKtx = "1.18.0"
+coreKtx = "1.19.0"
 appcompat = "1.7.1"
 activityCompose = "1.13.0"
-lifecycle = "2.10.0"
+lifecycle = "2.11.0"
 navigationCompose = "2.9.8"
-composeBom = "2026.05.00"
+composeBom = "2026.06.01"
 splashscreen = "1.2.0"
 
 datastore = "1.2.1"
 paging = "3.5.0"
 room = "2.8.4"
 
-coil = "3.4.0"
+coil = "3.5.0"
 serializationJson = "1.11.0"
-collectionsImmutable = "0.4.0"
+collectionsImmutable = "0.5.1"
 coroutines = "1.11.0"
 
-firebaseBom = "34.13.0"
-gms = "4.4.4"
+firebaseBom = "34.16.0"
+gms = "4.5.0"
 playServicesBase = "18.10.0"
 
-apollo = "5.0.0"
-charts = "0.2.5"
+apollo = "5.0.1"
+charts = "1.0.0"
 reorderable = "3.1.0"
 
-hilt = "2.58"
-hiltNavigation = "1.3.0"
+hilt = "2.60.1"
+hiltNavigation = "1.4.0"
 
 junit = "4.13.2"
 androidxTestJunit = "1.3.0"
@@ -104,7 +104,6 @@ espresso-core = { group = "androidx.test.espresso", name = "espresso-core", vers
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

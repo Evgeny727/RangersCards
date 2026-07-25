@@ -143,7 +143,6 @@ fun CampaignChallengeDeckScreen(
                 items(revealedCardIds.dropLast(1), { id -> id }) { id ->
                     ChallengeCard(id, isDarkTheme, true) { id ->
                         when(returnInOrderMode) {
-                            null -> null
                             ReturnChallengeCard.Bottom -> {
                                 bottomList.add(id)
                                 revealedCardIds.remove(id)
@@ -152,6 +151,7 @@ fun CampaignChallengeDeckScreen(
                                 topList.add(0, id)
                                 revealedCardIds.remove(id)
                             }
+                            else -> {}
                         }
                     }
                 }
@@ -179,7 +179,6 @@ fun CampaignChallengeDeckScreen(
                 )
             } else ChallengeCard(revealedCardIds.last(), isDarkTheme) { id ->
                 when(returnInOrderMode) {
-                    null -> null
                     ReturnChallengeCard.Bottom -> {
                         bottomList.add(id)
                         revealedCardIds.remove(id)
@@ -188,6 +187,7 @@ fun CampaignChallengeDeckScreen(
                         topList.add(0, id)
                         revealedCardIds.remove(id)
                     }
+                    else -> {}
                 }
             }
         }

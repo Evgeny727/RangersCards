@@ -43,7 +43,6 @@ class FirebaseAuthRepository @Inject constructor(
             if (validateEmail(email)) {
                 if (validatePassword(password)) {
                     auth.signInWithEmailAndPassword(email, password).await()
-                    Unit
                 } else throw InvalidPasswordException()
             } else throw InvalidEmailException()
         }
@@ -53,7 +52,6 @@ class FirebaseAuthRepository @Inject constructor(
             if (validateEmail(email)) {
                 if (validatePassword(password)) {
                     auth.createUserWithEmailAndPassword(email, password).await()
-                    Unit
                 } else throw InvalidPasswordException()
             } else throw InvalidEmailException()
         }
@@ -62,7 +60,6 @@ class FirebaseAuthRepository @Inject constructor(
         runCatching {
             if (validateEmail(email)) {
                 auth.sendPasswordResetEmail(email).await()
-                Unit
             } else throw InvalidEmailException()
         }
 
@@ -72,7 +69,6 @@ class FirebaseAuthRepository @Inject constructor(
                 if (validatePassword(password)) {
                     auth.currentUser?.reauthenticate(EmailAuthProvider.getCredential(email, password))?.await()
                     auth.currentUser?.delete()?.await()
-                    Unit
                 } else throw InvalidPasswordException()
             } else throw InvalidEmailException()
         }

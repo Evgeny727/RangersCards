@@ -310,9 +310,9 @@ fun DrawerSectionButtonRow(
         }
         if (radioButton != null) RangersRadioButton(
             selected = radioButton,
-            onClick = { onClick },
+            onClick = { onClick() },
             enabled = isClickable,
-            modifier = Modifier.size(12.dp)
+            modifier = Modifier.size(24.dp)
         )
     }
 }

@@ -2,6 +2,7 @@ package com.rangerscards
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,6 +33,7 @@ class MainActivity : AppCompatActivity() {
         val splashScreen = installSplashScreen()
         var isDataLoaded = false
         splashScreen.setKeepOnScreenCondition { !isDataLoaded }
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         val isPlayServicesAvailable = GoogleApiAvailability.getInstance()
