@@ -8,6 +8,7 @@ import androidx.room.Upsert
 import androidx.sqlite.db.SupportSQLiteQuery
 import com.rangerscards.data.local.card.Card
 import com.rangerscards.data.local.card.CardDeckListItemProjection
+import com.rangerscards.data.local.card.CardDeckMulliganProjection
 import com.rangerscards.data.local.card.CardFts
 import com.rangerscards.data.local.card.CardListItemProjection
 import com.rangerscards.data.local.card.FullCardProjection
@@ -168,4 +169,9 @@ interface CardDao {
 
     @Query("Select id, code, name, text, real_image_src, taboo_id FROM card WHERE id IN (:ids)")
     fun getRolesImages(ids: List<String>): Flow<List<RoleCardProjection>>
+
+    @Query("Select id, code, taboo_id, name, approach_conflict, approach_reason, " +
+            "approach_exploration, approach_connection, traits, level, type_name, setup, " +
+            "cost, aspect_id, aspect_short_name, image_src, real_image_src FROM card WHERE id IN (:ids)")
+    suspend fun getMulliganCardsByIds(ids: List<String>): List<CardDeckMulliganProjection>
 }

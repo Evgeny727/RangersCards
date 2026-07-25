@@ -38,6 +38,7 @@ import com.rangerscards.ui.settings.components.SettingsInputField
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.toImmutableList
 
 enum class DayInfoDialog {
     Edit,
@@ -59,7 +60,12 @@ fun DayInfoDialog(
     var showInputDialog by rememberSaveable { mutableStateOf<DayInfoDialog?>(null) }
     var guideEntryEditing by rememberSaveable { mutableStateOf("") }
     var guideEntryPrevious by rememberSaveable { mutableStateOf("") }
-    val fixedGuides = remember { CampaignMaps.fixedGuideEntries[campaign.cycleId] }
+    val fixedGuides = remember(campaign.cycleId, campaign.expansions) {
+        ((CampaignMaps.fixedGuideEntries[campaign.cycleId] ?: emptyList()) +
+                campaign.expansions.map { expansion ->
+                     (CampaignMaps.fixedExpansionGuideEntries[expansion] ?: emptyList())
+                 }.flatten()).toImmutableList()
+    }
     RangersDialogWithContent(
         headerId = R.string.campaigns_current_day,
         formatArgs = dayId,
@@ -95,7 +101,7 @@ fun DayInfoDialog(
                             lineHeight = 18.sp,
                             modifier = Modifier.weight(1f)
                         )
-                        if (!isViewOnly && fixedGuides?.firstOrNull { it.day == dayId }?.guides?.contains(guideEntry) != true) {
+                        if (!isViewOnly && fixedGuides.firstOrNull { it.day == dayId }?.guides?.contains(guideEntry) != true) {
                             IconButton(
                                 onClick = { guideEntryEditing = guideEntry
                                     guideEntryPrevious = guideEntry

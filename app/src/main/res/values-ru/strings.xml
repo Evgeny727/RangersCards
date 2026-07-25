@@ -186,6 +186,7 @@
     <string name="section_notes">Заметки</string>
     <string name="tools_section_header">Утилиты</string>
     <string name="tools_section_charts">Диаграммы</string>
+    <string name="draw_simulator">Тест взятия карт</string>
     <string name="campaign_section_header">Кампания</string>
     <string name="campaign_section_camp">Разбить лагерь</string>
     <string name="campaign_section_camp_additional_text">Для добавления наград и отслеживания изменений</string>
@@ -470,4 +471,13 @@
 
     <string name="cards_update_available_header">Обновление карт</string>
     <string name="cards_update_available_text">Доступно обновление карт.</string>
+
+    //Draw simulator
+    <string name="card_in_play">Карта в игре</string>
+    <string name="drawn_cards">Вытянутые карты:</string>
+    <string name="draw_1">Взять 1</string>
+    <string name="draw_6">Взять 6</string>
+    <string name="reset">Сброс</string>
+    <string name="redraw_selected">Перетянуть</string>
+    <string name="reshuffle_selected">Перемешать</string>
 </resources>

@@ -13,6 +13,7 @@ import com.rangerscards.data.local.dao.DeckDao
 import com.rangerscards.data.local.migrations.MigrationCampaignChallengeDeck
 import com.rangerscards.data.local.migrations.MigrationCampaignExpansions
 import com.rangerscards.data.local.migrations.MigrationCampaignTransfer
+import com.rangerscards.data.local.migrations.MigrationCardSetupField
 import com.rangerscards.data.local.migrations.MigrationRemoveFlavorFromFTS
 import dagger.Module
 import dagger.Provides
@@ -50,6 +51,7 @@ object DataModule {
                 MigrationCampaignChallengeDeck,
                 MigrationRemoveFlavorFromFTS,
                 MigrationCampaignExpansions,
+                MigrationCardSetupField,
             )
             .build()
     }

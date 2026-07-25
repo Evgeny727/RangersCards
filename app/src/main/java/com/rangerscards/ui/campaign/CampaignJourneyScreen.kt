@@ -46,6 +46,7 @@ import com.rangerscards.domain.model.CampaignHistory
 import com.rangerscards.domain.model.CampaignTravelDay
 import com.rangerscards.objects.CampaignMaps
 import com.rangerscards.objects.Path
+import com.rangerscards.objects.Weather
 import com.rangerscards.ui.theme.CustomTheme
 import com.rangerscards.ui.theme.Jost
 import com.rangerscards.utils.applyScaffoldPaddings
@@ -55,7 +56,7 @@ import kotlinx.collections.immutable.ImmutableList
 fun CampaignJourneyScreen(
     campaign: Campaign,
     buildTravelHistory: (List<CampaignHistory>) -> ImmutableList<CampaignTravelDay>,
-    getWeatherResId: (Int) -> Int,
+    getWeatherByDay: (Int) -> Weather?,
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
     val travelHistory by remember(campaign.history) {
@@ -78,18 +79,22 @@ fun CampaignJourneyScreen(
                 Column(modifier = Modifier.fillMaxWidth().animateContentSize()) {
                     Row(
                         modifier = Modifier.fillMaxWidth().clickable { isExpanded = !isExpanded },
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        val weatherId = remember { getWeatherResId(travelDay.day) }
+                        val weather = remember { getWeatherByDay(travelDay.day) }
+                        val upperWeather = weather?.nameResId ?: R.string.text_none
+                        val undergroundWeather = weather?.secondNameResId
                         Text(
                             text = stringResource(R.string.campaigns_current_day, travelDay.day) +
-                                    " - ${stringResource(weatherId)}",
+                                    " - ${stringResource(upperWeather)}" +
+                                    undergroundWeather?.let { " (${stringResource(it)})" },
                             color = CustomTheme.colors.d30,
                             fontFamily = Jost,
                             fontWeight = FontWeight.Medium,
                             fontSize = 18.sp,
                             lineHeight = 20.sp,
-                            modifier = Modifier.padding(horizontal = 8.dp)
+                            modifier = Modifier.padding(horizontal = 8.dp).weight(1f)
                         )
                         Icon(
                             painterResource(if (isExpanded) R.drawable.arrow_drop_up_32dp

@@ -2,6 +2,7 @@ package com.rangerscards.data.mapper
 
 import com.rangerscards.GetAllCardsQuery
 import com.rangerscards.data.local.card.Card
+import com.rangerscards.data.remote.patches.CardMulligan
 import com.rangerscards.fragment.Card as RemoteCard
 
 /**
@@ -59,6 +60,7 @@ fun RemoteCard.toDbCard(locale: String): Card? {
             packName = pack_name,
             packShortName = pack_short_name,
             packPosition = pack_position,
+            setup = CardMulligan.setupField.contains(code),
             subsetId = subset_id,
             subsetName = set_name,
             subsetPosition = subset_position,

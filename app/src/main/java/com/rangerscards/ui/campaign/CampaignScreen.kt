@@ -147,9 +147,12 @@ fun CampaignScreen(
                 popUpTo(BottomNavScreen.Campaigns.startDestination) { inclusive = false }
                 launchSingleTop = true
             } } ?: navController.navigateUp()
-            is CampaignUiState.FriendDeckDownloaded -> navController.navigate(
-                "deck/${state.deckId}"
-            ) { launchSingleTop = true }
+            is CampaignUiState.FriendDeckDownloaded -> {
+                campaignViewModel.resetCampaignUiState()
+                navController.navigate(
+                    "deck/${state.deckId}"
+                ) { launchSingleTop = true }
+            }
             is CampaignUiState.CampaignUploaded -> navController.navigate(
                 "${BottomNavScreen.Campaigns.route}/campaign/${state.campaignId}"
             ) {
@@ -454,7 +457,7 @@ fun CampaignScreen(
                                         missions = remember(campaign.missions, isCampaignMissionsOnlyActive) {
                                             campaign.missions.filter {
                                                 mission -> !isCampaignMissionsOnlyActive || !mission.completed
-                                            }.toImmutableList()
+                                            }.distinctBy { it.name }.toImmutableList()
                                         },
                                         onClick = { navController.navigate(
                                             "${BottomNavScreen.Campaigns.route}/campaign/mission/${Uri.encode(it)}")
@@ -530,7 +533,7 @@ fun CampaignScreen(
                                             launchSingleTop = true
                                         } },
                                         events = remember(campaign.events) {
-                                            campaign.events.toImmutableList()
+                                            campaign.events.distinctBy { it.name }.toImmutableList()
                                         },
                                         onClick = { navController.navigate(
                                             "${BottomNavScreen.Campaigns.route}/campaign/event/${Uri.encode(it)}"
@@ -547,7 +550,9 @@ fun CampaignScreen(
                                         ) {
                                             launchSingleTop = true
                                         } },
-                                        notes = campaign.notes.toImmutableList(),
+                                        notes = remember(campaign.notes) {
+                                            campaign.notes.distinct().toImmutableList()
+                                        },
                                         onClick = { navController.navigate(
                                             "${BottomNavScreen.Campaigns.route}/campaign/note/$it"
                                         ) {
@@ -565,7 +570,7 @@ fun CampaignScreen(
                                         } },
                                         removedSets = campaignViewModel.getRemovedSetsInfo(),
                                         removed = remember(campaign.removed) {
-                                            campaign.removed.toImmutableList()
+                                            campaign.removed.distinctBy { it.name }.toImmutableList()
                                         },
                                         onRemove = { removedName ->
                                             campaignViewModel.updateCampaignRemoved(removedName)

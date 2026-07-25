@@ -28,7 +28,7 @@ import javax.inject.Inject
 
 data class UiErrorState(val exception: Throwable)
 
-val SUPPORTED_LANGUAGES = listOf("en", "ru", "de", "fr", "it", "es")
+val SUPPORTED_LANGUAGES = setOf("en", "ru", "de", "fr", "it", "es")
 
 @HiltViewModel
 class AppViewModel @Inject constructor(

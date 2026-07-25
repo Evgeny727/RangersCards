@@ -1,6 +1,7 @@
 package com.rangerscards.data.mapper
 
 import com.rangerscards.data.local.card.CardDeckListItemProjection
+import com.rangerscards.data.local.card.CardDeckMulliganProjection
 import com.rangerscards.data.local.card.CardListItemProjection
 import com.rangerscards.data.local.card.FullCardProjection
 import com.rangerscards.data.local.deck.RoleCardProjection
@@ -8,6 +9,7 @@ import com.rangerscards.domain.model.CardApproaches
 import com.rangerscards.domain.model.CardAspect
 import com.rangerscards.domain.model.CardChallenges
 import com.rangerscards.domain.model.CardDeckListItem
+import com.rangerscards.domain.model.CardDeckMulliganItem
 import com.rangerscards.domain.model.CardImage
 import com.rangerscards.domain.model.CardListItem
 import com.rangerscards.domain.model.CardSet
@@ -147,4 +149,32 @@ fun CardDeckListItemProjection.toDomain(): CardDeckListItem =
         setId = setId,
         setTypeId = setTypeId,
         deckLimit = deckLimit
+    )
+
+/**
+ * Extension function to convert [CardDeckMulliganProjection] to [CardDeckMulliganItem]
+ */
+fun CardDeckMulliganProjection.toDomain(): CardDeckMulliganItem =
+    CardDeckMulliganItem(
+        id = id,
+        code = code,
+        tabooId = tabooId,
+        name = name,
+        approaches = CardApproaches(
+            connection = approachConnection,
+            reason = approachReason,
+            conflict = approachConflict,
+            exploration = approachExploration
+        ),
+        traits = traits,
+        level = level,
+        typeName = typeName,
+        cost = cost,
+        aspect = aspectId?.let { id ->
+            aspectShortName?.let { shortName ->
+                CardAspect(id, shortName)
+            }
+        },
+        setup = setup,
+        imageSrc = imageSrc ?: realImageSrc,
     )

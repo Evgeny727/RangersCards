@@ -70,6 +70,9 @@ class CardsRepositoryImpl @Inject constructor(
     override suspend fun getChangedDeckCardsById(ids: List<String>, tabooId: String?) =
         cardDao.getChangedCardsByCodes(ids, tabooId).map { it.toDomain() }
 
+    override suspend fun getMulliganCardsByIds(ids: List<String>) =
+        cardDao.getMulliganCardsByIds(ids).map { it.toDomain() }
+
     override fun getAllPaginatedRoleCardsFlow(
         specialty: String,
         taboo: Boolean,

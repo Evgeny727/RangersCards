@@ -14,7 +14,7 @@ import com.rangerscards.data.local.deck.Deck
 import com.rangerscards.data.objects.JsonElementConverter
 
 @Database(entities = [Card::class, CardFts::class, Deck::class, Campaign::class, ChallengeDeck::class],
-    version = 5,
+    version = 6,
     exportSchema = false)
 @TypeConverters(JsonElementConverter::class)
 abstract class RangersDatabase : RoomDatabase() {

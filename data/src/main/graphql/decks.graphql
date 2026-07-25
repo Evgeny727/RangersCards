@@ -5,7 +5,8 @@ mutation upgradeDeck(
     deck_id: $deckId,
     upgrade_data: {}
   }) {
-    ...Deck
+    id
+    next_deck_id
   }
 }
 

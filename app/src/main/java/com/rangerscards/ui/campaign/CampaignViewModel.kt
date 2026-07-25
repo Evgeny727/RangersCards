@@ -102,6 +102,10 @@ class CampaignViewModel @Inject constructor(
         initialValue = false
     )
 
+    fun resetCampaignUiState() {
+        _campaignUiState.value = CampaignUiState.Idle
+    }
+
     private val _events = MutableSharedFlow<UiErrorState>(
         replay = 0,
         extraBufferCapacity = 1
@@ -211,7 +215,10 @@ class CampaignViewModel @Inject constructor(
         if (campaign == null) return persistentMapOf()
         val weathers = getExtendedWeatherList(campaign)
         val guidesMap = campaign.calendar.associate { it.day to it.guides }.toMutableMap()
-        val starterGuides = CampaignMaps.fixedGuideEntries[campaign.cycleId]!!
+        val starterGuides = (CampaignMaps.fixedGuideEntries[campaign.cycleId] ?: emptyList()) +
+                campaign.expansions.map { expansion ->
+                    (CampaignMaps.fixedExpansionGuideEntries[expansion] ?: emptyList())
+                }.flatten()
         for ((key, value) in starterGuides) {
             // Check if the key exists in the first map
             if (guidesMap.containsKey(key)) {
@@ -295,11 +302,11 @@ class CampaignViewModel @Inject constructor(
         return result.toImmutableList()
     }
 
-    fun getWeatherResId(day: Int): Int {
+    fun getWeatherByDay(day: Int): Weather? {
         val campaign = campaign.value
         val weatherList = CampaignMaps.weather(campaign?.cycleId ?: "core")
         return (weatherList.firstOrNull { day in it.start..it.end }
-            ?: weatherList.firstOrNull { day in (it.start + 30)..(it.end + 30) })?.nameResId ?: R.string.text_none
+            ?: weatherList.firstOrNull { day in (it.start + 30)..(it.end + 30) })
     }
 
     fun extendCampaign() {

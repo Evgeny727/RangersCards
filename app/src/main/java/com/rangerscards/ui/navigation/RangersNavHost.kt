@@ -13,10 +13,15 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -107,6 +112,8 @@ import com.rangerscards.ui.deck.DeckChangingRole
 import com.rangerscards.ui.deck.DeckChartsScreen
 import com.rangerscards.ui.deck.DeckFullCardScreen
 import com.rangerscards.ui.deck.DeckFullCardWithPagerScreen
+import com.rangerscards.ui.deck.DeckMulliganScreen
+import com.rangerscards.ui.deck.DeckMulliganViewModel
 import com.rangerscards.ui.deck.DeckScreen
 import com.rangerscards.ui.deck.DeckVersionsScreen
 import com.rangerscards.ui.deck.DeckViewModel
@@ -146,7 +153,9 @@ fun RangersNavHost(
     val cardsState by appViewModel.cardsSyncState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     Scaffold(
-        modifier = Modifier.safeDrawingPadding(),
+        modifier = Modifier.windowInsetsPadding(
+            WindowInsets.statusBars.union(WindowInsets.navigationBars)
+        ),
         topBar = {
             AnimatedVisibility(showBars) {
                 RangersTopAppBar(
@@ -658,12 +667,12 @@ fun RangersNavHost(
                     route = "deck/card/{$cardIdArgument}",
                     arguments = listOf(navArgument(cardIdArgument) { type = NavType.StringType })
                 ) { backStackEntry ->
-                    val parentEntry = remember(backStackEntry) {
-                        navController.getBackStackEntry("deck/{$deckIdArgument}")
-                    }
-                    val deckViewModel: DeckViewModel = hiltViewModel(parentEntry)
                     val cardCode = backStackEntry.arguments?.getString(cardIdArgument)
                     if (cardCode != null) {
+                        val parentEntry = remember(backStackEntry) {
+                            navController.getBackStackEntry("deck/{$deckIdArgument}")
+                        }
+                        val deckViewModel: DeckViewModel = hiltViewModel(parentEntry)
                         DeckFullCardScreen(
                             navigateUp = navController::navigateUp,
                             deckViewModel = deckViewModel,
@@ -684,6 +693,23 @@ fun RangersNavHost(
                     DeckChartsScreen(
                         navigateUp = navController::navigateUp,
                         deckViewModel = deckViewModel,
+                        contentPadding = innerPadding,
+                    )
+                }
+                composable(route = "deck/mulligan") { backStackEntry ->
+                    val parentEntry = remember(backStackEntry) {
+                        navController.getBackStackEntry("deck/{$deckIdArgument}")
+                    }
+                    val deckViewModel: DeckViewModel = hiltViewModel(parentEntry)
+                    val deckMulliganViewModel: DeckMulliganViewModel = hiltViewModel(backStackEntry)
+                    DeckMulliganScreen(
+                        navigateUp = navController::navigateUp,
+                        navigateToCard = { cardId ->
+                            navController.navigate("deck/card/$cardId") { launchSingleTop = true }
+                        },
+                        deckViewModel = deckViewModel,
+                        deckMulliganViewModel = deckMulliganViewModel,
+                        isDarkTheme = isDarkTheme,
                         contentPadding = innerPadding,
                     )
                 }
@@ -1014,7 +1040,7 @@ fun RangersNavHost(
                         CampaignJourneyScreen(
                             campaign = campaign!!,
                             buildTravelHistory = campaignViewModel::buildTravelHistory,
-                            getWeatherResId = campaignViewModel::getWeatherResId,
+                            getWeatherByDay = campaignViewModel::getWeatherByDay,
                             contentPadding = innerPadding
                         )
                         title = stringResource(R.string.journey_title)

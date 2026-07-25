@@ -149,7 +149,7 @@ fun DecksScreen(
                 items(
                     count = decksLazyItems.itemCount,
                     key = decksLazyItems.itemKey(DeckListItemModel::id),
-                    contentType = decksLazyItems.itemContentType { it }
+                    contentType = decksLazyItems.itemContentType { it::class }
                 ) { index ->
                     val item = decksLazyItems[index] ?: return@items
                     val role by decksViewModel.getRoleCard(

@@ -159,7 +159,7 @@ fun CampaignCreationScreen(
             items(
                 count = campaignsForTransfer.itemCount,
                 key = campaignsForTransfer.itemKey { it.id },
-                contentType = campaignsForTransfer.itemContentType { it }
+                contentType = campaignsForTransfer.itemContentType { it::class }
             ) { index ->
                 val campaignForTransfer = campaignsForTransfer[index] ?: return@items
                 Text(

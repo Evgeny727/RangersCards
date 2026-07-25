@@ -150,9 +150,10 @@ object CampaignMaps {
                 Connection("northern_outpost", "terra_lodge", Path.OLD_GROWTH, expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)),
                 Connection("the_otherwoods", "terra_lodge", Path.OLD_GROWTH, expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)),
                 Connection("crystal_basin", "the_otherwoods", Path.WOODS, expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)),
-                Connection("crystal_basin", "atrox_mountains", Path.RAVINE, expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)),
-                Connection("crystal_basin", "sentinal_peak", Path.MOUNTAIN_PASS, expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)),
-                Connection("terra_lodge", "sentinal_peak", Path.MOUNTAIN_PASS, expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)),
+                Connection("crystal_basin", "atrox_mountain", Path.RAVINE, expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)),
+                Connection("crystal_basin", "sentinel_peak", Path.MOUNTAIN_PASS, expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)),
+                Connection("crystal_basin", "terra_lodge", Path.LAKESHORE, expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)),
+                Connection("terra_lodge", "sentinel_peak", Path.MOUNTAIN_PASS, expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)),
                 Connection("nimbus_facility", "arbor_mists", Path.NIMBUS, expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)),
                 Connection("arbor_mists", "the_undergrove", Path.NIMBUS, expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)),
             )
@@ -377,6 +378,17 @@ object CampaignMaps {
             "loa" to listOf(
                 CampaignCalendar(1, persistentListOf("1")),
                 CampaignCalendar(4, persistentListOf("199.2")),
+            )
+        )
+    }
+
+    val fixedExpansionGuideEntries by lazy {
+        mapOf(
+            "sib" to listOf(
+                CampaignCalendar(8, persistentListOf("216.1")),
+            ),
+            "sos" to listOf(
+                CampaignCalendar(24, persistentListOf("246.1")),
             )
         )
     }

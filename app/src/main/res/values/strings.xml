@@ -219,6 +219,7 @@
     <string name="section_notes">Notes</string>
     <string name="tools_section_header">Tools</string>
     <string name="tools_section_charts">Charts</string>
+    <string name="draw_simulator">Draw simulator</string>
     <string name="campaign_section_header">Campaign</string>
     <string name="campaign_section_camp">Camp</string>
     <string name="campaign_section_camp_additional_text">For adding rewards and tracking changes</string>
@@ -560,5 +561,14 @@
     <string name="nimbus_facility">Nimbus Facility</string>
     <string name="arbor_mists">Arbor Mists</string>
     <string name="the_undergrove">The Undergrove</string>
+
+    //Draw simulator
+    <string name="card_in_play">Card in play</string>
+    <string name="drawn_cards">Drawn cards:</string>
+    <string name="draw_1">Draw 1</string>
+    <string name="draw_6">Draw 6</string>
+    <string name="reset">Reset</string>
+    <string name="redraw_selected">Redraw</string>
+    <string name="reshuffle_selected">Reshuffle</string>
 
 </resources>

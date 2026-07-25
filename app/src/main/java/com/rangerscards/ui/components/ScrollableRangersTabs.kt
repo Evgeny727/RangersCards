@@ -11,9 +11,8 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rangerscards.R
@@ -40,20 +40,24 @@ fun ScrollableRangersTabs(
     selectedTabIndex: Int,
     onTabSelected: (Int) -> Unit
 ) {
-    ScrollableTabRow(
+    PrimaryScrollableTabRow(
         modifier = Modifier.fillMaxWidth(),
         selectedTabIndex = selectedTabIndex,
         containerColor = CustomTheme.colors.l20,
         contentColor = CustomTheme.colors.d30,
         edgePadding = 8.dp,
-        // Custom indicator
-        indicator = { tabPositions ->
+        indicator = {
             TabRowDefaults.PrimaryIndicator(
-                modifier = Modifier
-                    .tabIndicatorOffset(tabPositions[selectedTabIndex]),
+                modifier = Modifier.tabIndicatorOffset(
+                    selectedTabIndex = selectedTabIndex,
+                    matchContentSize = true
+                ),
+                width = Dp.Unspecified,
                 color = CustomTheme.colors.d30,
-                shape = AbsoluteRoundedCornerShape(topLeft = 50.dp, topRight = 50.dp),
-                width = tabPositions[selectedTabIndex].contentWidth
+                shape = AbsoluteRoundedCornerShape(
+                    topLeft = 50.dp,
+                    topRight = 50.dp
+                )
             )
         },
         divider = {

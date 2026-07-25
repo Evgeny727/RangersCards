@@ -84,6 +84,7 @@ import com.rangerscards.utils.applyScaffoldPaddings
 import com.rangerscards.utils.openLink
 import kotlinx.collections.immutable.persistentListOf
 import java.util.Locale
+import androidx.compose.ui.platform.LocalLocale
 
 enum class DialogType {
     Save,
@@ -194,8 +195,9 @@ fun DeckScreen(
                 leadingIcon = R.drawable.done_32dp,
                 onClick = {
                     showActionDialog = null
-                    deckViewModel.saveChanges()
-                    navController.navigateUp()
+                    deckViewModel.saveChanges(true)?.invokeOnCompletion {
+                        navController.navigateUp()
+                    } ?: navController.navigateUp()
                 },
             )
         } else {
@@ -772,7 +774,7 @@ fun DeckScreen(
                     }
                 }
                 val isTabooSet = remember(deck?.tabooSetId) { deck?.tabooSetId != null }
-                val locale = Locale.getDefault().language.take(2)
+                val locale = LocalLocale.current.platformLocale.language.take(2)
                 val supportedLocale = if (SUPPORTED_LANGUAGES.contains(locale)) locale
                 else ""
                 val context = LocalContext.current
@@ -788,6 +790,7 @@ fun DeckScreen(
                     isTabooSet = isTabooSet,
                     toNotes = { /*TODO:Implement notes*/ },
                     toCharts = { navController.navigate("deck/charts") {launchSingleTop = true } },
+                    toMulligan = { navController.navigate("deck/mulligan") {launchSingleTop = true } },
                     camp = if (deck!!.nextId == null) { { if (deckProblems.problems.isNotEmpty())
                         emitError(DeckContainsErrorsException()) else deckViewModel.camp()
                     } } else null,

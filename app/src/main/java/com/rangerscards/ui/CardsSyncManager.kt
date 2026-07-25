@@ -31,6 +31,7 @@ class CardsSyncManager @Inject constructor(
     private val cardsUpdatedAt = userPreferencesRepository.cardsUpdatedAt
 
     suspend fun ensureCardsReady(language: String) {
+        if (_state.value == CardsSyncState.Loading) return
         if (!cardsRepository.isCardsTableExists()) {
             download(language)
         } else {
