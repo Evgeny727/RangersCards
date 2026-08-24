@@ -88,7 +88,7 @@ fun CampaignJourneyScreen(
                         Text(
                             text = stringResource(R.string.campaigns_current_day, travelDay.day) +
                                     " - ${stringResource(upperWeather)}" +
-                                    undergroundWeather?.let { " (${stringResource(it)})" },
+                                    (undergroundWeather?.let { " (${stringResource(it)})" } ?: ""),
                             color = CustomTheme.colors.d30,
                             fontFamily = Jost,
                             fontWeight = FontWeight.Medium,
