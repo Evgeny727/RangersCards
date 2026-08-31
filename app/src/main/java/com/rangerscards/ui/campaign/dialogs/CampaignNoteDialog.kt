@@ -146,7 +146,7 @@ fun CampaignNoteDialog(
             buttonColor = ButtonDefaults.buttonColors().copy(
                 containerColor = CustomTheme.colors.warn,
             ),
-            onClick = { updateCampaignNotes(index, CampaignNote(day.toInt(), "")); onBack() },
+            onClick = { updateCampaignNotes(index, CampaignNote(day.toIntOrNull() ?: 0, "")); onBack() },
             modifier = Modifier.padding(horizontal = 8.dp)
         )
         SquareButton(
@@ -160,6 +160,7 @@ fun CampaignNoteDialog(
                 text = text,
                 crossedOut = crossedOut
             )); onBack() },
+            isEnabled = day.isNotEmpty(),
             modifier = Modifier.padding(8.dp)
         )
     }

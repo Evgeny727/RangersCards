@@ -194,6 +194,7 @@ fun CampaignMissionDialog(
                 checks = checks,
                 completed = completed
             )); onBack() },
+            isEnabled = day.isNotEmpty(),
             modifier = Modifier.padding(8.dp)
         )
     }
