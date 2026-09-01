@@ -25,6 +25,10 @@ object CampaignMaps {
                 CampaignExpansion(
                     id = "sos",
                     name = R.string.shadow_of_the_storm
+                ),
+                CampaignExpansion(
+                    id = "itm",
+                    name = R.string.into_the_maw
                 )
             ),
         )
@@ -156,6 +160,12 @@ object CampaignMaps {
                 Connection("terra_lodge", "sentinel_peak", Path.MOUNTAIN_PASS, expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)),
                 Connection("nimbus_facility", "arbor_mists", Path.NIMBUS, expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)),
                 Connection("arbor_mists", "the_undergrove", Path.NIMBUS, expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)),
+                Connection("terravore", "the_gastric_mill", Path.TERRAVORE, expansionConditions = mapOf("itm" to ExpansionMapCondition.ADD)),
+                Connection("the_gastric_mill", "intestinal_corridors", Path.TERRAVORE, expansionConditions = mapOf("itm" to ExpansionMapCondition.ADD)),
+                Connection("the_gastric_mill", "the_cesspit", Path.TERRAVORE, expansionConditions = mapOf("itm" to ExpansionMapCondition.ADD)),
+                Connection("intestinal_corridors", "ileocecal_junction", Path.TERRAVORE, expansionConditions = mapOf("itm" to ExpansionMapCondition.ADD)),
+                Connection("ileocecal_junction", "the_cesspit", Path.TERRAVORE, expansionConditions = mapOf("itm" to ExpansionMapCondition.ADD)),
+                Connection("the_cesspit", "the_greenbridge", Path.TERRAVORE, expansionConditions = mapOf("itm" to ExpansionMapCondition.ADD)),
             )
             "loa" -> listOf(
                 Connection("greenbriar_knoll", "the_concordant_ziggurats", Path.GRASSLAND),
@@ -325,6 +335,21 @@ object CampaignMaps {
                 MapLocation("the_undergrove",          R.string.the_undergrove,            R.drawable.the_undergrove,
                     expansionConditions = mapOf("sos" to ExpansionMapCondition.ADD)
                 ),
+                MapLocation("intestinal_corridors",          R.string.intestinal_corridors,            R.drawable.intestinal_corridors,
+                    expansionConditions = mapOf("itm" to ExpansionMapCondition.ADD)
+                ),
+                MapLocation("the_gastric_mill",          R.string.the_gastric_mill,            R.drawable.the_gastric_mill,
+                    expansionConditions = mapOf("itm" to ExpansionMapCondition.ADD)
+                ),
+                MapLocation("abyssal_liver",          R.string.abyssal_liver,            R.drawable.abyssal_liver,
+                    expansionConditions = mapOf("itm" to ExpansionMapCondition.ADD)
+                ),
+                MapLocation("ileocecal_junction",          R.string.ileocecal_junction,            R.drawable.ileocecal_junction,
+                    expansionConditions = mapOf("itm" to ExpansionMapCondition.ADD)
+                ),
+                MapLocation("the_cesspit",          R.string.the_cesspit,            R.drawable.the_cesspit,
+                    expansionConditions = mapOf("itm" to ExpansionMapCondition.ADD)
+                ),
             )
         }
         return when {
@@ -389,6 +414,9 @@ object CampaignMaps {
             ),
             "sos" to listOf(
                 CampaignCalendar(24, persistentListOf("246.1")),
+            ),
+            "itm" to listOf(
+                CampaignCalendar(30, persistentListOf("266.1")),
             )
         )
     }
@@ -491,6 +519,7 @@ enum class Path(
     RIVER("river", R.string.river, R.drawable.river, listOf("core", "loa")),
     THOROUGHFARE("thoroughfare", R.string.thoroughfare, R.drawable.thoroughfare, listOf("core"), listOf("sib")),
     NIMBUS("nimbus", R.string.nimbus, R.drawable.nimbus, listOf("core"), listOf("sos")),
+    TERRAVORE("terravore", R.string.terravore, R.drawable.terravore_path, listOf("core"), listOf("itm")),
     ANCIENT_RUINS("ancient_ruins", R.string.ancient_ruins, R.drawable.ancient_ruins, listOf("loa")),
     FLOODED_RUINS("flooded_ruins", R.string.flooded_ruins, R.drawable.flooded_ruins, listOf("loa")),
     DEEP_ROOTS("deep_roots", R.string.deep_roots, R.drawable.deep_roots, listOf("loa")),

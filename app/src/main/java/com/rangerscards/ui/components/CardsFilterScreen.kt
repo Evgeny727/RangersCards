@@ -388,6 +388,7 @@ fun CardsFilterScreen(
                                         "sotv" to R.string.sotv_expansion,
                                         "sib" to R.string.spire_in_bloom,
                                         "sos" to R.string.shadow_of_the_storm,
+                                        "itm" to R.string.into_the_maw,
                                     ),
                                     false),
                                 selectedOptions = selectedPacks,

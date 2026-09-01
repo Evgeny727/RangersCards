@@ -102,5 +102,21 @@ fun SettingsCollectionScreen(
                 HorizontalDivider(color = CustomTheme.colors.l10)
             }
         }
+        item("itm") {
+            val selected = userCollection.contains("itm")
+            Column {
+                RangersRadioButtonRow(
+                    text = stringResource(R.string.into_the_maw),
+                    isSelected = selected,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                ) { value ->
+                    setCollection(
+                        user.userInfo?.id,
+                        if (value) userCollection + "itm" else userCollection.filterNot { it == "itm" }
+                    )
+                }
+                HorizontalDivider(color = CustomTheme.colors.l10)
+            }
+        }
     }
 }

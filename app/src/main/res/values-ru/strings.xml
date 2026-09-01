@@ -480,4 +480,7 @@
     <string name="reset">Сброс</string>
     <string name="redraw_selected">Перетянуть</string>
     <string name="reshuffle_selected">Перемешать</string>
+
+    //Into the Maw
+    <string name="into_the_maw">Into the Maw</string>
 </resources>

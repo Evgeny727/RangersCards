@@ -571,4 +571,12 @@
     <string name="redraw_selected">Redraw</string>
     <string name="reshuffle_selected">Reshuffle</string>
 
+    //Into the Maw
+    <string name="into_the_maw">Into the Maw</string>
+    <string name="intestinal_corridors">Intestinal Corridors</string>
+    <string name="abyssal_liver">Abyssal Liver</string>
+    <string name="the_gastric_mill">The Gastric Mill</string>
+    <string name="ileocecal_junction">Ileocecal Junction</string>
+    <string name="the_cesspit">The Cesspit</string>
+
 </resources>
