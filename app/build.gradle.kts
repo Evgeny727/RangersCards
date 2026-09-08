@@ -15,8 +15,8 @@ android {
         applicationId = "com.rangerscards"
         minSdk = 24
         targetSdk = 37
-        versionCode = 109
-        versionName = "3.2.0"
+        versionCode = 110
+        versionName = "3.2.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -27,21 +27,34 @@ android {
     }
 
     buildTypes {
+        create("staging") {
+            initWith(getByName("release"))
+
+            isDebuggable = false
+            signingConfig = signingConfigs.getByName("debug")
+
+            matchingFallbacks += listOf("release")
+        }
+
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
+
     buildFeatures {
         compose = true
     }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"

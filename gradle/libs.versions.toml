@@ -13,19 +13,19 @@ composeBom = "2026.06.01"
 splashscreen = "1.2.0"
 
 datastore = "1.2.1"
-paging = "3.5.0"
+paging = "3.5.1"
 room = "2.8.4"
 
-coil = "3.5.0"
+coil = "3.6.2"
 serializationJson = "1.11.0"
-collectionsImmutable = "0.5.1"
+collectionsImmutable = "0.5.2"
 coroutines = "1.11.0"
 
-firebaseBom = "34.16.0"
+firebaseBom = "34.17.0"
 gms = "4.5.0"
-playServicesBase = "18.10.0"
+playServicesBase = "18.10.1"
 
-apollo = "5.0.1"
+apollo = "5.1.0"
 charts = "1.0.0"
 reorderable = "3.1.0"
 
