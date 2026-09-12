@@ -305,7 +305,7 @@ fun CampaignScreen(
                         ) { launchSingleTop = true }
                     }
                 }
-                if (campaign.currentDay >= 30 && !campaign.extendedCalendar && !isViewOnly) item("extend_button") {
+                if (!campaign.extendedCalendar && !isViewOnly) item("extend_button") {
                     SquareButton(
                         stringId = R.string.extend_campaign_button,
                         leadingIcon = R.drawable.add_32dp,
